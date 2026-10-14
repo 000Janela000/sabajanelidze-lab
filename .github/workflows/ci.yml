@@ -23,6 +23,12 @@ jobs:
         run: pnpm --filter @lab/core run typecheck
       - name: unit and property tests
         run: pnpm --filter @lab/core run test
+      - name: shared race figure (typecheck, tests, and the committed recording and build are up to date)
+        run: |
+          pnpm --filter @lab/race-figure run typecheck
+          pnpm --filter @lab/race-figure run test
+          pnpm --filter @lab/race-figure run check
+          git diff --exit-code -- packages/race-figure
       - name: lint and format
         run: pnpm exec biome ci .
 

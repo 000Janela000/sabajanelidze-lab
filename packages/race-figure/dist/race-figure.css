@@ -1,0 +1,269 @@
+/*
+ * <race-figure>, styled only through these variables. By default they use the sabajanelidze.com design tokens of
+ * the page around it (light or dark), with the light values as a fallback when a page has no tokens.
+ * Motion: transform and opacity only, 150-250 ms; nothing moves with reduced motion.
+ */
+race-figure {
+  --rf-fg: var(--fg, #18233a);
+  --rf-muted: var(--muted, #4a5366);
+  --rf-line: var(--line-strong, #80848e);
+  --rf-hair: var(--line, #e2ddd2);
+  --rf-bg: var(--surface, #fdfcf9);
+  --rf-accent: var(--accent, #2b4aa6);
+  --rf-danger: var(--danger, #a8321c);
+  --rf-focus: var(--focus, #2b4aa6);
+  --rf-font: var(--font-body, system-ui, sans-serif);
+  --rf-mono: var(--font-code, ui-monospace, monospace);
+  --rf-radius: var(--radius-card, 12px);
+  --rf-row: 2.6rem;
+  display: block;
+  max-width: 28rem;
+  color: var(--rf-fg);
+  font-family: var(--rf-font);
+  font-size: 0.9375rem;
+  line-height: 1.35;
+}
+
+race-figure .rf {
+  margin: 0;
+  padding: 1rem 1rem 0.875rem;
+  border: 1px solid var(--rf-hair);
+  border-radius: var(--rf-radius);
+  background: var(--rf-bg);
+}
+
+/* Steps are rows, A and B are columns. */
+race-figure .rf-lanes {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 4.5rem 4.5rem;
+  column-gap: 0.5rem;
+}
+
+race-figure .rf-steps,
+race-figure .rf-lane {
+  display: grid;
+  grid-template-rows: 1.5rem repeat(4, var(--rf-row)) 1.6rem;
+  min-width: 0;
+}
+
+race-figure .rf-step {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.875rem;
+  line-height: 1.25;
+  color: var(--rf-muted);
+}
+
+race-figure .rf-step b {
+  font-weight: 600;
+  color: var(--rf-fg);
+}
+
+race-figure .rf-name {
+  font-weight: 600;
+}
+
+race-figure .rf-lane[data-lane="A"] .rf-name {
+  color: var(--rf-accent);
+}
+
+race-figure .rf-track {
+  position: relative;
+  grid-row: 2 / span 4;
+  display: grid;
+  grid-template-rows: repeat(4, var(--rf-row));
+}
+
+/* The line the steps sit on, from the first step to the last. */
+race-figure .rf-rail {
+  position: absolute;
+  top: calc(var(--rf-row) / 2);
+  bottom: calc(var(--rf-row) / 2);
+  left: calc(0.5rem - 1px);
+  border-left: 2px solid var(--rf-hair);
+}
+
+race-figure .rf-node {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+race-figure .rf-dot {
+  flex: 0 0 auto;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid var(--rf-line);
+  border-radius: 50%;
+  background: var(--rf-bg);
+}
+
+race-figure .rf-ran .rf-dot {
+  border-color: var(--rf-fg);
+  background: var(--rf-fg);
+}
+
+race-figure [data-lane="A"] .rf-ran .rf-dot {
+  border-color: var(--rf-accent);
+  background: var(--rf-accent);
+}
+
+race-figure .rf-val,
+race-figure .rf-books dd {
+  font-family: var(--rf-mono);
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* The request itself: a ring that moves down to the step it is about to run. */
+race-figure .rf-runner {
+  position: absolute;
+  top: calc(var(--rf-row) / 2 - 0.8rem);
+  left: -0.3rem;
+  width: 1.6rem;
+  height: 1.6rem;
+  border: 2px solid var(--rf-fg);
+  border-radius: 50%;
+  pointer-events: none;
+  transform: translateY(calc(var(--rf-pos) * var(--rf-row)));
+}
+
+race-figure [data-lane="A"] .rf-runner {
+  border-color: var(--rf-accent);
+}
+
+race-figure .rf-done .rf-runner {
+  opacity: 0;
+}
+
+race-figure .rf-res {
+  grid-row: 6;
+  display: flex;
+  align-items: center;
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* The two payouts of a run that lost money. */
+race-figure .rf-lost .rf-paid .rf-res {
+  color: var(--rf-danger);
+}
+
+race-figure .rf-books {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.25rem;
+  margin: 0.75rem 0 0;
+  padding-top: 0.625rem;
+  border-top: 1px solid var(--rf-hair);
+}
+
+race-figure .rf-books div {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+
+race-figure .rf-books div[hidden] {
+  display: none;
+}
+
+race-figure .rf-books dt {
+  font-size: 0.875rem;
+  color: var(--rf-muted);
+}
+
+race-figure .rf-books dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+race-figure .rf-short-row dt,
+race-figure .rf-short-row dd {
+  color: var(--rf-danger);
+}
+
+race-figure .rf-caption {
+  min-height: 2.7em;
+  margin-top: 0.5rem;
+}
+
+race-figure .rf-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  margin-top: 0.5rem;
+}
+
+race-figure .rf-btn {
+  min-height: 44px;
+  padding: 0 0.9rem;
+  border: 1px solid var(--rf-line);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--rf-fg);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+race-figure .rf-btn[hidden] {
+  display: none;
+}
+
+race-figure .rf-btn:hover {
+  border-color: var(--rf-accent);
+}
+
+race-figure .rf-link {
+  color: var(--rf-accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+race-figure .rf-note {
+  margin: 0.625rem 0 0;
+  font-size: 0.875rem;
+  color: var(--rf-muted);
+}
+
+race-figure :focus-visible {
+  outline: 2px solid var(--rf-focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  race-figure .rf-runner {
+    transition:
+      transform 250ms cubic-bezier(0.65, 0, 0.35, 1),
+      opacity 150ms linear;
+  }
+
+  /* A value appears when its step ran. */
+  race-figure .rf-val:not(:empty),
+  race-figure .rf-res:not(:empty) {
+    animation: rf-in 150ms linear both;
+  }
+}
+
+@keyframes rf-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (max-width: 30rem) {
+  race-figure {
+    --rf-row: 2.3rem;
+    max-width: none;
+  }
+
+  race-figure .rf-lanes {
+    grid-template-columns: minmax(0, 1fr) 4rem 4rem;
+  }
+}

@@ -5,6 +5,8 @@
 # Dependencies and build output
 node_modules/
 dist/
+# Except the shared race figure: other sites vendor these built files by commit.
+!packages/race-figure/dist/
 .astro/
 .wrangler/
 *.tsbuildinfo

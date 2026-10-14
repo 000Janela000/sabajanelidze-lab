@@ -32,6 +32,9 @@ importers:
       '@lab/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@lab/race-figure':
+        specifier: workspace:*
+        version: link:../../packages/race-figure
       astro:
         specifier: 7.3.8
         version: 7.3.8(@types/node@24.19.2)(yaml@2.9.1)
@@ -69,6 +72,24 @@ importers:
       pg:
         specifier: 8.23.1
         version: 8.23.1
+      typescript:
+        specifier: 6.0.3
+        version: 6.0.3
+      vitest:
+        specifier: 5.0.4
+        version: 5.0.4(@types/node@24.19.2)(vite@8.3.4(@types/node@24.19.2)(yaml@2.9.1))
+
+  packages/race-figure:
+    devDependencies:
+      '@lab/core':
+        specifier: workspace:*
+        version: link:../core
+      '@types/node':
+        specifier: 24.19.2
+        version: 24.19.2
+      rolldown:
+        specifier: 1.2.14
+        version: 1.2.14
       typescript:
         specifier: 6.0.3
         version: 6.0.3

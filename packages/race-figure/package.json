@@ -1,0 +1,27 @@
+{
+  "name": "@lab/race-figure",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The payments race as one embeddable element, <race-figure>: two withdrawals of 80 from a balance of 100, replayed from recorded traces of the lab's real code.",
+  "exports": {
+    ".": "./src/element.ts",
+    "./end-state": "./src/end-state.ts",
+    "./style.css": "./src/race-figure.css",
+    "./dist/*": "./dist/*"
+  },
+  "scripts": {
+    "generate": "node scripts/generate.ts",
+    "build": "node scripts/build.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "check": "node scripts/generate.ts && node scripts/build.ts"
+  },
+  "devDependencies": {
+    "@lab/core": "workspace:*",
+    "@types/node": "24.19.2",
+    "rolldown": "1.2.14",
+    "typescript": "6.0.3",
+    "vitest": "5.0.4"
+  }
+}

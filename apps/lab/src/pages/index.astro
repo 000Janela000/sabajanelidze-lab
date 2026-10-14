@@ -1,4 +1,6 @@
 ---
+import { endStateHtml } from '@lab/race-figure/end-state'
+import '@lab/race-figure/style.css'
 import Base from '../layouts/Base.astro'
 import { STATIONS } from '../lib/stations.ts'
 import { FRAME, HOME, STATION_NAME, TEST_MODE } from '../site-texts.ts'
@@ -8,14 +10,17 @@ const ready = STATIONS.filter((station) => station.ready).length
 
 <Base title={HOME.title} description={HOME.description} station="home">
   <section class="intro">
-    <p class="meta">{HOME.meta(ready, STATIONS.length)} · {TEST_MODE}</p>
-    <p class="frame">{FRAME}</p>
-    <h1 class="h1">{HOME.heading}</h1>
-    <p class="lead">{HOME.lead}</p>
-    <p class="start">
-      <a class="btn" href="/day/payments">{HOME.start}</a>
-      <span class="meta">{HOME.startNote}</span>
-    </p>
+    <div class="intro-text">
+      <p class="meta">{HOME.meta(ready, STATIONS.length)} · {TEST_MODE}</p>
+      <p class="frame">{FRAME}</p>
+      <h1 class="h1">{HOME.heading}</h1>
+      <p class="lead">{HOME.lead}</p>
+      <p class="start">
+        <a class="btn" href="/day/payments">{HOME.start}</a>
+        <span class="meta">{HOME.startNote}</span>
+      </p>
+    </div>
+    <race-figure class="console intro-figure" lab-url="/day/payments" set:html={endStateHtml('/day/payments')} />
   </section>
 
   <section class="section" aria-labelledby="how-heading">
@@ -59,14 +64,34 @@ const ready = STATIONS.filter((station) => station.ready).length
   </section>
 </Base>
 
+<script>
+  import '@lab/race-figure'
+</script>
+
 <style>
   .intro {
     display: grid;
-    gap: var(--space-4);
+    gap: var(--space-6);
     padding-top: var(--space-7);
+  }
+  .intro-text {
+    display: grid;
+    align-content: start;
+    gap: var(--space-4);
   }
   .intro .h1 {
     margin-top: var(--space-3);
+  }
+  /* The shared race figure, in the lab's dark console colours (the element styles its own card). */
+  .intro-figure {
+    align-self: start;
+    background: none;
+  }
+  @media (min-width: 1024px) {
+    .intro {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 28rem);
+      gap: var(--space-7);
+    }
   }
   .lead {
     max-width: 40em;

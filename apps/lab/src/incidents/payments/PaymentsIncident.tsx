@@ -44,8 +44,11 @@ export function PaymentsIncident(props: Props) {
   const [paused, setPaused] = useState(false)
   const gate = useRef(new PauseGate())
   const heading = useRef<HTMLHeadingElement>(null)
+  // The first step shows at once on arrival; only later steps fade in (a move forward).
+  const moved = useRef(false)
 
   function goTo(next: Stage) {
+    moved.current = true
     setStage(next)
     requestAnimationFrame(() => {
       const element = heading.current
@@ -141,7 +144,7 @@ export function PaymentsIncident(props: Props) {
             )}
           </ul>
         ) : null}
-        <div class="stage" key={stage}>
+        <div class={moved.current ? 'stage stage-in' : 'stage'} key={stage}>
           <h2 ref={heading} tabIndex={-1} class="step-h">
             {stage === STAGE.SOLVED && fixed ? (
               <>

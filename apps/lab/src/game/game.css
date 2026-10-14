@@ -95,7 +95,7 @@
 
 /* A new step fades in and rises a little: we moved forward. */
 @media (prefers-reduced-motion: no-preference) {
-  .stage {
+  .stage-in {
     animation: stage-in var(--dur-base) var(--ease-out) both;
   }
 
@@ -108,7 +108,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .stage {
+  .stage-in {
     animation: fade-in var(--dur-fast) linear both;
   }
 }
