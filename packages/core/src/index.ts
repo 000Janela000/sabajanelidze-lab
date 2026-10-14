@@ -7,10 +7,15 @@ export {
   type BankAnswer,
   type BankStatus,
   BankTimeout,
+  isValidAmount,
   type PaymentPorts,
   type PaymentsStore,
+  type PayoutRecord,
+  type PayoutStatus,
+  type ReserveResult,
 } from './payments/ports.ts'
-export { type MoneyPicture, moneyPicture, type ReconcileLine, reconcileHolds } from './payments/reconcile.ts'
+export { POSTGRES_SCHEMA, PostgresPaymentsStore, type Sql } from './payments/postgres.ts'
+export { type MoneyPicture, moneyPicture, type ReconcileLine, reconcile } from './payments/reconcile.ts'
 export {
   ALL_DEFENCES,
   type PaymentDefences,

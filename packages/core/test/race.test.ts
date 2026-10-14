@@ -24,41 +24,25 @@ async function losingPausePoints(code: Withdraw): Promise<number[]> {
 }
 
 // These numbers are the ones the game and the design document show. If the code changes, they must change too.
-describe('incident 1: every order of two withdrawals of 80 from 100', () => {
+describe('incident 1: every distinct run of two withdrawals of 80 from 100', () => {
   test.each([
-    { name: 'build v0.1', code: withdrawV01, lines: 4, orders: 70, possible: 70, losing: 36 },
-    {
-      name: 'patch: check twice',
-      code: withdrawCheckTwice,
-      lines: 5,
-      orders: 252,
-      possible: 252,
-      losing: 120,
-    },
-    {
-      name: 'patch: lock only the read',
-      code: withdrawLockRead,
-      lines: 6,
-      orders: 924,
-      possible: 224,
-      losing: 100,
-    },
-    {
-      name: 'patch: lock read and save',
-      code: withdrawLockReadAndSave,
-      lines: 6,
-      orders: 924,
-      possible: 74,
-      losing: 0,
-    },
-    { name: 'build v1: reserve, then settle', code: withdraw, lines: 4, orders: 70, possible: 70, losing: 0 },
-  ])(
-    '$name: $losing of $possible possible orders lose money',
-    async ({ code, lines, orders, possible, losing }) => {
-      const summary = await allOrders(code, opening, amount)
-      expect(summary).toMatchObject({ linesPerRequest: lines, orders, possible, losing })
-    },
-  )
+    { name: 'build v0.1', code: withdrawV01, lines: 4, runs: 54, losing: 36 },
+    { name: 'patch: check twice', code: withdrawCheckTwice, lines: 5, runs: 182, losing: 120 },
+    { name: 'patch: lock only the read', code: withdrawLockRead, lines: 6, runs: 180, losing: 100 },
+    { name: 'patch: lock read and save', code: withdrawLockReadAndSave, lines: 6, runs: 50, losing: 0 },
+    { name: 'build v1: reserve, then settle', code: withdraw, lines: 4, runs: 24, losing: 0 },
+  ])('$name: $losing of $runs runs lose money', async ({ code, lines, runs, losing }) => {
+    const summary = await allOrders(code, opening, amount)
+    expect(summary).toMatchObject({ linesPerRequest: lines, runs, losing })
+  })
+
+  test('no two counted runs are the same sequence of steps', async () => {
+    const summary = await allOrders(withdrawV01, opening, amount)
+    const keys = summary.outcomes.map((outcome) =>
+      outcome.trace.map((line) => `${line.requestId}:${line.label}`).join('|'),
+    )
+    expect(new Set(keys).size).toBe(keys.length)
+  })
 
   test('a losing order of build v0.1 pays out 160 and still shows 20', async () => {
     const summary = await allOrders(withdrawV01, opening, amount)

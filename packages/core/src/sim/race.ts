@@ -121,29 +121,36 @@ export async function runOrder(setup: RaceSetup, order: readonly string[]): Prom
 
 export interface AllOrdersSummary {
   readonly linesPerRequest: number
-  readonly orders: number
-  readonly possible: number
+  /** Distinct ways the two requests can really run (each one a different sequence of steps). */
+  readonly runs: number
   readonly losing: number
+  /** One outcome per distinct run. */
   readonly outcomes: readonly RaceOutcome[]
 }
 
-/** Runs every possible order of two equal requests and counts the ones that lose money. */
+/**
+ * Runs every possible order of two equal requests and counts the ones that lose money.
+ * Schedules that end up running the same steps (for example once a request was refused early)
+ * count once, and schedules a lock makes impossible don't count at all.
+ */
 export async function allOrders(
   withdraw: Withdraw,
   opening: Cents,
   amount: Cents,
 ): Promise<AllOrdersSummary> {
   const lines = await stepsAlone(withdraw, opening, amount)
-  const outcomes: RaceOutcome[] = []
+  const runs = new Map<string, RaceOutcome>()
   for (const order of interleavings(lines, lines)) {
-    outcomes.push(await runOrder({ withdraw, opening, amounts: [amount, amount] }, order))
+    const outcome = await runOrder({ withdraw, opening, amounts: [amount, amount] }, order)
+    if (!outcome.possible) continue
+    const key = outcome.trace.map((line) => `${line.requestId}:${line.label}`).join('|')
+    if (!runs.has(key)) runs.set(key, outcome)
   }
-  const possible = outcomes.filter((outcome) => outcome.possible)
+  const outcomes = [...runs.values()]
   return {
     linesPerRequest: lines,
-    orders: outcomes.length,
-    possible: possible.length,
-    losing: possible.filter((outcome) => outcome.picture.lost !== 0).length,
+    runs: outcomes.length,
+    losing: outcomes.filter((outcome) => outcome.picture.lost !== 0).length,
     outcomes,
   }
 }

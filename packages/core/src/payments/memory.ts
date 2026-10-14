@@ -1,12 +1,21 @@
 import { Ledger } from '../ledger.ts'
 import { type Cents, cents } from '../money.ts'
-import { type Bank, type BankAnswer, type BankStatus, BankTimeout, type PaymentsStore } from './ports.ts'
+import {
+  type Bank,
+  type BankAnswer,
+  type BankStatus,
+  BankTimeout,
+  isValidAmount,
+  type PaymentsStore,
+  type PayoutRecord,
+  type ReserveResult,
+} from './ports.ts'
 
 /** An in-memory stand-in for the balances table. The game and the unit tests use it. */
 export class MemoryPaymentsStore implements PaymentsStore {
   readonly ledger = new Ledger()
   readonly #available = new Map<string, Cents>()
-  readonly #holds = new Map<string, { readonly customerId: string; readonly amount: Cents }>()
+  readonly #payouts = new Map<string, PayoutRecord>()
   readonly #lockOwner = new Map<string, string>()
   readonly #lockQueue = new Map<string, Array<() => void>>()
 
@@ -36,11 +45,12 @@ export class MemoryPaymentsStore implements PaymentsStore {
     this.#available.set(customerId, cents(value))
   }
 
-  async reserve(customerId: string, amount: Cents, payoutId: string): Promise<boolean> {
+  async reserve(customerId: string, amount: Cents, payoutId: string): Promise<ReserveResult> {
+    if (!isValidAmount(amount)) throw new RangeError(`Not a valid amount: ${amount}`)
+    // Every check comes before the first change, so a refused reserve changes nothing.
+    if (this.#payouts.has(payoutId)) return 'duplicate'
     const available = this.available(customerId)
-    if (available < amount) return false
-    this.#available.set(customerId, available - amount)
-    this.#holds.set(payoutId, { customerId, amount })
+    if (available < amount) return 'not enough money'
     this.ledger.post({
       id: `reserve:${payoutId}`,
       memo: 'reserve for payout',
@@ -49,11 +59,17 @@ export class MemoryPaymentsStore implements PaymentsStore {
         { account: `customer:${customerId}:held`, amount },
       ],
     })
-    return true
+    this.#available.set(customerId, available - amount)
+    this.#payouts.set(payoutId, { payoutId, customerId, amount, status: 'held' })
+    return 'reserved'
+  }
+
+  async payout(payoutId: string): Promise<PayoutRecord | null> {
+    return this.#payouts.get(payoutId) ?? null
   }
 
   async settle(payoutId: string): Promise<void> {
-    const hold = this.#takeHold(payoutId)
+    const hold = this.#openHold(payoutId)
     this.ledger.post({
       id: `settle:${payoutId}`,
       memo: 'payout settled',
@@ -62,11 +78,11 @@ export class MemoryPaymentsStore implements PaymentsStore {
         { account: `outside:${hold.customerId}`, amount: hold.amount },
       ],
     })
+    this.#payouts.set(payoutId, { ...hold, status: 'paid' })
   }
 
   async release(payoutId: string): Promise<void> {
-    const hold = this.#takeHold(payoutId)
-    this.#available.set(hold.customerId, this.available(hold.customerId) + hold.amount)
+    const hold = this.#openHold(payoutId)
     this.ledger.post({
       id: `release:${payoutId}`,
       memo: 'hold released',
@@ -75,6 +91,8 @@ export class MemoryPaymentsStore implements PaymentsStore {
         { account: `customer:${hold.customerId}:available`, amount: hold.amount },
       ],
     })
+    this.#available.set(hold.customerId, this.available(hold.customerId) + hold.amount)
+    this.#payouts.set(payoutId, { ...hold, status: 'released' })
   }
 
   async lock(customerId: string): Promise<void> {
@@ -112,20 +130,24 @@ export class MemoryPaymentsStore implements PaymentsStore {
   }
 
   /** Payouts still on hold, oldest first. */
-  openHolds(): Array<{ readonly payoutId: string; readonly customerId: string; readonly amount: Cents }> {
-    return [...this.#holds].map(([payoutId, hold]) => ({ payoutId, ...hold }))
+  openHolds(): PayoutRecord[] {
+    return [...this.#payouts.values()].filter((payout) => payout.status === 'held')
+  }
+
+  /** Every payout we have a record of. */
+  payouts(): PayoutRecord[] {
+    return [...this.#payouts.values()]
   }
 
   held(customerId: string): Cents {
     let total = 0
-    for (const hold of this.#holds.values()) if (hold.customerId === customerId) total += hold.amount
+    for (const hold of this.openHolds()) if (hold.customerId === customerId) total += hold.amount
     return total
   }
 
-  #takeHold(payoutId: string) {
-    const hold = this.#holds.get(payoutId)
-    if (!hold) throw new Error(`No hold for payout ${payoutId}`)
-    this.#holds.delete(payoutId)
+  #openHold(payoutId: string): PayoutRecord {
+    const hold = this.#payouts.get(payoutId)
+    if (hold?.status !== 'held') throw new Error(`No open hold for payout ${payoutId}`)
     return hold
   }
 

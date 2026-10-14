@@ -9,6 +9,7 @@ export const STEP_LABELS = {
   readAvailable: 'read the balance',
   writeAvailable: 'save the new balance',
   reserve: 'reserve, if the money is there',
+  payout: 'look up the earlier payout',
   settle: 'settle the payout',
   release: 'release the hold',
   lock: 'lock the account',
@@ -37,6 +38,7 @@ export function gatedPaymentPorts(
         step(STEP_LABELS.writeAvailable, () => store.writeAvailable(customerId, value)),
       reserve: (customerId: string, amount: Cents, payoutId: string) =>
         step(STEP_LABELS.reserve, () => store.reserve(customerId, amount, payoutId)),
+      payout: (payoutId: string) => step(STEP_LABELS.payout, () => store.payout(payoutId)),
       settle: (payoutId: string) => step(STEP_LABELS.settle, () => store.settle(payoutId)),
       release: (payoutId: string) => step(STEP_LABELS.release, () => store.release(payoutId)),
       lock: (customerId: string) =>
