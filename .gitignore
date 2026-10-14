@@ -1,0 +1,23 @@
+# Secrets
+.env*
+.dev.vars*
+
+# Dependencies and build output
+node_modules/
+dist/
+.astro/
+.wrangler/
+*.tsbuildinfo
+
+# Test output
+coverage-report/
+playwright-report/
+test-results/
+
+# Personal notes (this repo is meant to be public)
+private/
+
+# System junk
+.DS_Store
+Thumbs.db
+desktop.ini
