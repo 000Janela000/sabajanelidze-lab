@@ -31,9 +31,11 @@ describe('Postgres store on PGlite (the SQL, one request at a time)', () => {
   beforeAll(async () => {
     db = new PGlite()
     await db.exec(POSTGRES_SCHEMA)
-    sql = {
-      query: async (text, params) => ({ rows: (await db.query(text, params)).rows as never[] }),
-    }
+    const wrap = (target: Pick<PGlite, 'query'>): Sql => ({
+      query: async (text, params) => ({ rows: (await target.query(text, params)).rows as never[] }),
+      transaction: (work) => db.transaction((tx) => work(wrap(tx))),
+    })
+    sql = wrap(db)
   })
 
   afterAll(async () => {
@@ -95,7 +97,27 @@ describe.skipIf(!process.env.DATABASE_URL)('Postgres store on a real server (20 
 
   beforeAll(async () => {
     pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 25 })
-    sql = { query: async (text, params) => ({ rows: (await pool.query(text, params)).rows as never[] }) }
+    sql = {
+      query: async (text, params) => ({ rows: (await pool.query(text, params)).rows as never[] }),
+      transaction: async (work) => {
+        const client = await pool.connect()
+        const tx: Sql = {
+          query: async (text, params) => ({ rows: (await client.query(text, params)).rows as never[] }),
+          transaction: () => Promise.reject(new Error('Nested transactions are not used')),
+        }
+        try {
+          await client.query('BEGIN')
+          const result = await work(tx)
+          await client.query('COMMIT')
+          return result
+        } catch (error) {
+          await client.query('ROLLBACK')
+          throw error
+        } finally {
+          client.release()
+        }
+      },
+    }
     await pool.query(
       'DROP TABLE IF EXISTS payouts; DROP TABLE IF EXISTS holds; DROP TABLE IF EXISTS balances',
     )

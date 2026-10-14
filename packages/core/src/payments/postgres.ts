@@ -7,9 +7,11 @@ import {
   type ReserveResult,
 } from './ports.ts'
 
-/** The one thing both node-postgres and PGlite can do: run a statement. */
+/** What both node-postgres and PGlite can do: run a statement, or several in one transaction. */
 export interface Sql {
   query<Row = Record<string, unknown>>(text: string, params?: unknown[]): Promise<{ rows: Row[] }>
+  /** Runs `work` in one transaction, on one connection. */
+  transaction<T>(work: (tx: Sql) => Promise<T>): Promise<T>
 }
 
 /** The tables the store needs. The CHECKs are a backstop, not the fix: the fix is the reserve statement. */
@@ -117,15 +119,28 @@ export class PostgresPaymentsStore implements PaymentsStore {
   }
 
   async #closeHold(payoutId: string, status: PayoutStatus, change: string): Promise<void> {
-    const { rows } = await this.#sql.query(
-      `WITH p AS (
-         UPDATE payouts SET status = $2 WHERE payout_id = $1 AND status = 'held'
-         RETURNING customer_id, amount
-       )
-       UPDATE balances b SET ${change} FROM p WHERE b.customer_id = p.customer_id
-       RETURNING b.customer_id`,
-      [payoutId, status],
-    )
-    if (rows.length === 0) throw new Error(`No open hold for payout ${payoutId}`)
+    await this.#sql.transaction(async (tx) => {
+      // #region postgres-lock-order
+      // Lock order: the balance row first, then the payout row, the same order as the reserve.
+      // Payout first here would deadlock with a reserve that repeats this payout ID
+      // (the real-database test in CI found it).
+      await tx.query(
+        `SELECT 1 FROM balances
+          WHERE customer_id = (SELECT customer_id FROM payouts WHERE payout_id = $1)
+            FOR UPDATE`,
+        [payoutId],
+      )
+      // #endregion postgres-lock-order
+      const { rows } = await tx.query(
+        `WITH p AS (
+           UPDATE payouts SET status = $2 WHERE payout_id = $1 AND status = 'held'
+           RETURNING customer_id, amount
+         )
+         UPDATE balances b SET ${change} FROM p WHERE b.customer_id = p.customer_id
+         RETURNING b.customer_id`,
+        [payoutId, status],
+      )
+      if (rows.length === 0) throw new Error(`No open hold for payout ${payoutId}`)
+    })
   }
 }

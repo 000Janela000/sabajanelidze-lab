@@ -32,6 +32,7 @@ const lockBoth = excerpt(PATCHES, 'patch-lock-read-and-save')
 const resolveUnknown = excerpt(WITHDRAW, 'resolve-unknown')
 const reconcile = excerpt(RECONCILE, 'reconcile')
 const postgresReserve = excerpt(POSTGRES, 'postgres-reserve')
+const postgresLockOrder = excerpt(POSTGRES, 'postgres-lock-order')
 
 // Every number on this page is computed here, at build time, by running the same code the game runs.
 const OPENING = 10000
@@ -171,6 +172,13 @@ const v01Steps = codeLines(v01).filter((line) => line.step)
         CI, 20 withdrawals of 80 hit a real Postgres server at once, each waiting 20 ms after its read like a slow
         network. Build v1 pays out exactly once. Build v0.1, on the same database, pays out more than once.
       </p>
+      <p>
+        That test also caught a bug the in-memory model can't show: a <strong>deadlock</strong>. A request repeating a
+        payout ID held the balance row and waited for the payout row, while the settle of the first request held the
+        payout row and waited for the balance row. The fix is the usual one: every statement takes the balance row
+        first.
+      </p>
+      <CodeBlock title="The lock order (found by the real-database test)" source={postgresLockOrder} />
 
       <h2>The clean-up code</h2>
       <div class="side-by-side">
