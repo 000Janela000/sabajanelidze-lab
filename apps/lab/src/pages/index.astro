@@ -5,148 +5,154 @@ import { HOME, STATION_NAME } from '../site-texts.ts'
 ---
 
 <Base title={HOME.title} description={HOME.description} station="home">
-  <section class="hero">
-    <p class="kicker">{HOME.kicker}</p>
-    <h1>{HOME.heading}</h1>
-    <p class="lead">{HOME.lead}</p>
-    <p class="start">
-      <a class="button primary" href="/day/payments">{HOME.start}</a>
-      <span class="start-note">{HOME.startNote}</span>
-    </p>
+  <section class="sec">
+    <div class="sec-in">
+      <p class="margin">{HOME.margin}<small>{HOME.marginSub}</small></p>
+      <div>
+        <p class="kicker">{HOME.kicker}</p>
+        <h1 class="h1">{HOME.heading}</h1>
+        <p class="lead">{HOME.lead}</p>
+        <p class="start">
+          <a class="nb-btn" href="/day/payments">{HOME.start}</a>
+          <span class="start-note nb-mono">{HOME.startNote}</span>
+        </p>
+      </div>
+    </div>
   </section>
 
-  <section class="how" aria-labelledby="how-heading">
-    <h2 id="how-heading">{HOME.howHeading}</h2>
-    <ol class="how-steps">
-      {
-        HOME.how.map((item, index) => (
-          <li>
-            <span class="how-number">{index + 1}</span>
-            <strong>{item.step}:</strong> {item.text}
-          </li>
-        ))
-      }
-    </ol>
-    <p class="no-code">{HOME.noCode}</p>
+  <section class="sec" aria-labelledby="how-heading">
+    <div class="sec-in">
+      <p class="margin">{HOME.howMargin}<small>{HOME.howMarginSub}</small></p>
+      <div>
+        <h2 id="how-heading" class="h2">{HOME.howHeading}</h2>
+        <ol class="how">
+          {
+            HOME.how.map((item, index) => (
+              <li>
+                <span class="num">{index + 1}</span>
+                <span>
+                  <b>{item.step}:</b> {item.text}
+                </span>
+              </li>
+            ))
+          }
+        </ol>
+        <p class="no-code">{HOME.noCode}</p>
+      </div>
+    </div>
   </section>
 
-  <section aria-labelledby="day-heading">
-    <h2 id="day-heading">{HOME.dayHeading}</h2>
-    <ol class="incidents">
-      {
-        STATIONS.map((station, index) => (
-          <li class:list={['incident-card', { soon: !station.ready }]}>
-            <p class="meta">{HOME.incident(index + 1, station.time, STATION_NAME[station.slug] ?? station.slug)}</p>
-            <p class="ticket">{HOME.tickets[station.slug]}</p>
-            {station.ready ? (
-              <a class="button primary" href={`/day/${station.slug}`}>
-                {HOME.take}
-              </a>
-            ) : (
-              <p class="soon-label">{HOME.comingSoon}</p>
-            )}
-          </li>
-        ))
-      }
-    </ol>
+  <section class="sec" aria-labelledby="day-heading">
+    <div class="sec-in">
+      <p class="margin">{HOME.dayMargin}<small>{HOME.dayMarginSub}</small></p>
+      <div>
+        <h2 id="day-heading" class="h2">{HOME.dayHeading}</h2>
+        <ol class="incidents">
+          {
+            STATIONS.map((station, index) => (
+              <li class:list={['card', { soon: !station.ready }]}>
+                <p class="meta nb-mono">{HOME.incident(index + 1, station.time, STATION_NAME[station.slug] ?? station.slug)}</p>
+                <p class="card-ticket">{HOME.tickets[station.slug]}</p>
+                {station.ready ? (
+                  <a class="nb-btn" href={`/day/${station.slug}`}>
+                    {HOME.take}
+                  </a>
+                ) : (
+                  <span class="nb-stamp">{HOME.comingSoon}</span>
+                )}
+              </li>
+            ))
+          }
+        </ol>
+      </div>
+    </div>
   </section>
 </Base>
 
 <style>
-  .hero {
-    max-width: 68ch;
-    padding: 32px 0 8px;
-  }
-  .kicker {
-    margin: 0;
-    color: var(--text-muted);
-    font-size: 0.875rem;
-  }
-  h1 {
-    margin: 8px 0 12px;
-    font-size: clamp(1.875rem, 5vw, 3rem);
-    line-height: 1.1;
-  }
   .lead {
-    margin: 0;
-    font-size: 1.125rem;
+    margin-top: var(--space-4);
+    max-width: 40em;
+    font-size: var(--fs-lg);
+    line-height: 1.5;
   }
   .start {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 12px;
-    margin-top: 20px;
+    gap: var(--space-4);
+    margin-top: var(--space-5);
   }
   .start-note {
-    color: var(--text-muted);
-    font-size: 0.875rem;
+    font-size: var(--fs-xs);
+    color: var(--muted);
   }
-  h2 {
-    margin-top: 40px;
-    font-size: 1.25rem;
+  .h2 {
+    font-size: var(--fs-2xl);
+    font-weight: var(--weight-strong);
+    line-height: var(--lh-heading);
+    letter-spacing: var(--tracking-heading);
   }
-  .how-steps {
+  .how {
     display: grid;
-    gap: 8px;
-    max-width: 68ch;
-    margin: 0;
+    gap: var(--space-3);
+    max-width: 44em;
+    margin: var(--space-4) 0 0;
     padding: 0;
     list-style: none;
   }
-  .how-number {
+  .how li {
+    display: flex;
+    gap: var(--space-3);
+    align-items: baseline;
+  }
+  .num {
+    flex: 0 0 auto;
     display: inline-grid;
     place-items: center;
-    width: 1.5em;
-    height: 1.5em;
-    margin-right: 6px;
-    border: 1px solid currentColor;
-    border-radius: 999px;
-    font-size: 0.8125rem;
-    font-weight: 700;
+    width: 22px;
+    height: 22px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-tag);
+    font-family: var(--font-code);
+    font-size: var(--fs-xs);
+    transform: translateY(0.2rem);
   }
   .no-code {
-    max-width: 68ch;
-    color: var(--text-muted);
+    max-width: 44em;
+    margin-top: var(--space-4);
+    color: var(--muted);
   }
   .incidents {
     display: grid;
-    gap: var(--gap);
-    margin: 0;
+    gap: var(--space-4);
+    margin: var(--space-4) 0 0;
     padding: 0;
     list-style: none;
   }
   @media (min-width: 760px) {
     .incidents {
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
-  .incident-card {
+  .card {
     display: grid;
     align-content: start;
-    gap: 8px;
-    padding: 16px;
-    border: 1px solid var(--border);
+    justify-items: start;
+    gap: var(--space-3);
+    padding: var(--space-5);
+    border: 1px solid var(--line);
     border-radius: var(--radius);
     background: var(--surface);
   }
-  .incident-card.soon {
-    background: transparent;
+  .card.soon {
+    background: var(--surface-2);
   }
   .meta {
-    margin: 0;
-    color: var(--text-muted);
-    font-size: 0.875rem;
+    font-size: var(--fs-xs);
+    color: var(--muted);
   }
-  .ticket {
-    margin: 0;
-  }
-  .soon-label {
-    margin: 0;
-    color: var(--text-muted);
-    font-size: 0.875rem;
-  }
-  .incident-card .button {
-    justify-self: start;
+  .card-ticket {
+    font-size: var(--fs-md);
   }
 </style>

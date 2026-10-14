@@ -36,6 +36,9 @@ export const REFUSAL_TEXT: Record<Refusal, string> = {
 }
 
 export const MONEY_TEXT = {
+  title: 'The books',
+  subtitle: 'our ledger vs the bank',
+  stamp: 'MONEY LOST',
   had: 'Customer had',
   balance: 'Balance shows',
   held: 'On hold',
@@ -49,21 +52,33 @@ export const PAGE = {
   title: 'Incident 1: the bank paid out twice · On call',
   description:
     'A puzzle on real code: find how two withdrawals of 80 from a balance of 100 make the bank pay out 160, then pick the fix that survives every way they can run. Test mode, fake money.',
-  kicker: 'Incident 1 · 09:30 · Payments',
+  margin: 'incident 1',
+  marginSub: '09:30 · payments',
+  ticketNumber: 'ticket #1041',
+  ticketMeta: '· 09:30 · Customer #42',
   heading: 'The bank paid out twice',
   ticket:
     'I had 100. I tapped Withdraw 80 twice by accident. The bank paid me 160, and my balance still shows 20.',
-  ticketFrom: 'Customer #42',
+  ticketFrom: 'Customer #42 · via support chat',
+  proofMargin: 'proof',
+  proofMarginSub: 'code · tests · build',
+  textMargin: 'text',
+  textMarginSub: 'no JavaScript needed',
 }
 
 export const BRIEFING = {
-  kicker: 'Your shift · Incident 1',
-  situation: 'A customer was paid 160 from a balance of 100.',
-  task: "Find out how, then make sure it can't happen again.",
-  steps: ['Reproduce', 'Count', 'Fix'],
+  margin: 'your shift',
+  stamp: 'YOUR SHIFT · INCIDENT 1',
   duration: 'about 2 min',
+  situation:
+    'Two withdrawals of 80 ran at the same moment on a balance of 100. Find how the bank ended up paying 160, then pick the fix that survives every way they can run.',
+  steps: [
+    { name: 'Reproduce', rest: 'the loss' },
+    { name: 'Count', rest: 'how often it happens' },
+    { name: 'Fix', rest: 'it; the machine attacks your fix' },
+  ],
   start: 'Start',
-  skip: 'Skip to the code',
+  skip: 'Skip to the code →',
 }
 
 export const STEPS_STRIP_LABEL = 'Steps of this incident'
@@ -71,37 +86,61 @@ export const STEPS_STRIP_LABEL = 'Steps of this incident'
 export const REPRODUCE = {
   heading: 'Reproduce it',
   goal: 'Two copies of this withdrawal of 80 run at the same moment. Tap the line after which request A gets slow (a network lag). Then B runs, then A finishes. Find where the slowness makes the bank pay out 160.',
-  hint: '👆 Tap a line: request A gets slow right after it.',
+  hintLabel: 'Hint:',
+  hintFirst: 'tap a numbered line. Request A gets slow right after it.',
+  hintAfterSafe: (line: number) =>
+    `no money lost after line ${line}. Where is the gap between reading and saving?`,
   requestTitle: (name: string) => `Request ${name}`,
-  compactNote: 'Same code as request A; only the current line is shown.',
+  tagA: 'build v0.1 · withdraw 80',
+  tagB: 'same code',
+  compactNote: 'Runs the same code. Here: where it is.',
+  stepState: { DONE: 'done', NOW: 'now', TODO: '' },
+  pause: 'A got slow here',
   pickLabel: (name: string, line: number, step: string) =>
     `Make request ${name} slow after line ${line}: ${step}`,
+  lostLead: (tries: number) => `Reproduced on try ${tries}.`,
   lost: (line: number, paidOut: number, available: number, short: number) =>
-    `Reproduced. With request A slow after line ${line}, the bank paid out ${formatCents(paidOut)} and the balance still shows ${formatCents(available)}. The exchange is ${formatCents(short)} short.`,
-  safe: (line: number) => `No money lost with request A slow after line ${line}. Try another line.`,
-  next: 'Next: how often does this happen?',
+    `With request A slow after line ${line}, the bank paid out ${formatCents(paidOut)} and the balance still shows ${formatCents(available)}. The exchange is ${formatCents(short)} short.`,
+  safeLead: 'No money lost.',
+  safe: (line: number) => `With request A slow after line ${line}, both requests behaved. Try another line.`,
+  next: 'Next: how often does this happen? →',
+  replay: 'Replay the losing order',
 }
 
 export const COUNT = {
   heading: 'How often does it happen?',
+  receipt: (tries: number, line: number, paidOut: number, available: number, short: number) =>
+    `Reproduced on try ${tries}: A slow after line ${line} → bank paid ${formatCents(paidOut)} · balance ${formatCents(available)} · ${formatCents(short)} short`,
   question: (runs: number) =>
-    `The two requests can run in ${runs} different ways (different orders of their steps). How many of them lose money?`,
+    `The two requests can run in ${runs} different ways (different orders of their steps). How many of them lose money? Guess first, then let the machine run them all.`,
   guessLabel: 'Your guess',
   run: (runs: number) => `Run all ${runs}`,
+  of: (runs: number) => `of ${runs} ways to run`,
+  loseMoney: 'lose money',
+  yourGuess: (guess: string) => `· your guess: ${guess}`,
+  legendSafe: (count: number) => `safe · ${count}`,
+  legendLost: (count: number) => `lost money · ${count}`,
+  figure: 'fig. 2',
+  figureTitle: 'Every way the two requests can run.',
+  figureText: (runs: number) =>
+    `Build v0.1 loses money whenever both requests read the balance before either one saves. Each square is one order of the eight steps; the machine ran all ${runs} and checked the books after each.`,
   result: (losing: number, runs: number, guess: string) =>
     `${losing} of ${runs} ways to run lose money${guess ? ` (your guess: ${guess})` : ''}. Build v0.1 loses money whenever both requests read the balance before either one saves.`,
-  next: 'Next: fix it',
+  next: 'Next: fix it →',
 }
 
 export const FIX = {
   heading: 'Fix it',
+  receipt: (losing: number, runs: number, guess: string) =>
+    `${losing} of ${runs} ways to run lose money${guess ? ` · you guessed ${guess}` : ''}`,
   goal: 'Pick a patch. The machine will attack it with every way the two requests can run.',
   patchesLegend: 'Patches',
-  showCode: 'Show the code',
+  showCode: 'show the code',
   attack: 'Attack this patch',
   stillLoses: (losing: number, runs: number, line: number | null) =>
     `Still loses money in ${losing} of ${runs} ways to run${line ? `, for example when A gets slow after line ${line}` : ''}.`,
   stillLosesWhy: 'The gap between reading and saving is still open. Try another patch.',
+  figure: 'fig. 3',
   patches: {
     CHECK_TWICE: {
       name: 'Check the balance twice',
@@ -118,6 +157,7 @@ export const FIX = {
 export const SOLVED = {
   heading: (runs: number) => `Fixed: it holds in all ${runs} ways to run`,
   grid: (runs: number) => `"Reserve, then settle" loses money in 0 of ${runs} ways to run.`,
+  figure: 'fig. 4',
   why: 'The check and the move are now one atomic step: "move 80 from available to on hold, only if 80 is there". A second request can never reserve money the first one already holds.',
   readCode: 'Read the code and the tests',
   book: 'Book a call',
@@ -156,6 +196,7 @@ export const CLEAN_UP = {
 }
 
 export const PROOF = {
+  mark: 'fig. P',
   summary: 'How it works: the code, the tests, and how it was built',
   whatHappenedHeading: 'What happened, and the fix',
   whatHappened:

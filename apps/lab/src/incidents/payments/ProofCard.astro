@@ -14,99 +14,146 @@ const { code, runs, tests, chain } = data
 ---
 
 <details id={id} class="proof">
-  <summary>{PROOF.summary}</summary>
+  <summary><span class="mark">{PROOF.mark}</span> {PROOF.summary}</summary>
+  <div class="proof-body">
+    <h2>{PROOF.whatHappenedHeading}</h2>
+    <p>{PROOF.whatHappened}</p>
+    <div class="side">
+      <CodeBlock title={PROOF.v01Title} source={code.v01} />
+      <CodeBlock title={PROOF.v1Title} source={code.v1} />
+    </div>
 
-  <h2>{PROOF.whatHappenedHeading}</h2>
-  <p>{PROOF.whatHappened}</p>
-  <div class="side-by-side">
-    <CodeBlock title={PROOF.v01Title} source={code.v01} />
-    <CodeBlock title={PROOF.v1Title} source={code.v1} />
+    <h2>{PROOF.testsHeading}</h2>
+    <ul class="tests">
+      <li>
+        <a class="nb-link" href={tests.everyRun}>{PROOF.tests.everyRun}</a>{
+          PROOF.tests.everyRunText(runs.naive.runs, runs.naive.losing)
+        }
+      </li>
+      <li><a class="nb-link" href={tests.randomSchedules}>{PROOF.tests.randomSchedules}</a>{PROOF.tests.randomSchedulesText}</li>
+      <li>
+        <a class="nb-link" href={tests.defenceCheck}>{PROOF.tests.defenceCheck}</a>{PROOF.tests.defenceCheckText}
+        <span class="nb-stamp">{PROOF.tests.defenceBadge}</span>
+      </li>
+      <li><a class="nb-link" href={tests.unknownOutcome}>{PROOF.tests.unknownOutcome}</a>{PROOF.tests.unknownOutcomeText}</li>
+    </ul>
+
+    <h2>{PROOF.tradeOffHeading}</h2>
+    <p>{PROOF.tradeOff(runs.lockBoth.losing, runs.lockBoth.runs)}</p>
+    <CodeBlock title={PROOF.lockBothTitle} source={code.lockBoth} />
+    <p class="spaced">{PROOF.postgresIntro}</p>
+    <CodeBlock title={PROOF.postgresTitle} source={code.postgresReserve} />
+    <p class="spaced"><a class="nb-link" href={tests.realDatabase}>{PROOF.realDatabase}</a>{PROOF.realDatabaseText}</p>
+    <p class="spaced">{PROOF.deadlock}</p>
+    <CodeBlock title={PROOF.lockOrderTitle} source={code.postgresLockOrder} />
+
+    <h2>{PROOF.cleanUpHeading}</h2>
+    <div class="side">
+      <CodeBlock title={PROOF.resolveTitle} source={code.resolveUnknown} />
+      <CodeBlock title={PROOF.reconcileTitle} source={code.reconcile} />
+    </div>
+
+    <h2>{PROOF.chainHeading}</h2>
+    <p class="chain">
+      {PROOF.chain(chain.commits, chain.agentCommits, chain.checksRun, chain.refusals)}
+      <a class="nb-link" href={chain.lastCommitUrl}>{chain.lastCommit}</a>. {PROOF.approval}
+    </p>
+
+    <p class="book">
+      {PROOF.book} <a class="nb-btn" href={bookACall('payments')}>{PROOF.bookButton}</a>
+    </p>
   </div>
-
-  <h2>{PROOF.testsHeading}</h2>
-  <ul class="tests">
-    <li><a href={tests.everyRun}>{PROOF.tests.everyRun}</a>{PROOF.tests.everyRunText(runs.naive.runs, runs.naive.losing)}</li>
-    <li><a href={tests.randomSchedules}>{PROOF.tests.randomSchedules}</a>{PROOF.tests.randomSchedulesText}</li>
-    <li>
-      <a href={tests.defenceCheck}>{PROOF.tests.defenceCheck}</a>{PROOF.tests.defenceCheckText}
-      <span class="badge">{PROOF.tests.defenceBadge}</span>
-    </li>
-    <li><a href={tests.unknownOutcome}>{PROOF.tests.unknownOutcome}</a>{PROOF.tests.unknownOutcomeText}</li>
-  </ul>
-
-  <h2>{PROOF.tradeOffHeading}</h2>
-  <p>{PROOF.tradeOff(runs.lockBoth.losing, runs.lockBoth.runs)}</p>
-  <CodeBlock title={PROOF.lockBothTitle} source={code.lockBoth} />
-  <p>{PROOF.postgresIntro}</p>
-  <CodeBlock title={PROOF.postgresTitle} source={code.postgresReserve} />
-  <p><a href={tests.realDatabase}>{PROOF.realDatabase}</a>{PROOF.realDatabaseText}</p>
-  <p>{PROOF.deadlock}</p>
-  <CodeBlock title={PROOF.lockOrderTitle} source={code.postgresLockOrder} />
-
-  <h2>{PROOF.cleanUpHeading}</h2>
-  <div class="side-by-side">
-    <CodeBlock title={PROOF.resolveTitle} source={code.resolveUnknown} />
-    <CodeBlock title={PROOF.reconcileTitle} source={code.reconcile} />
-  </div>
-
-  <h2>{PROOF.chainHeading}</h2>
-  <p class="chain">
-    {PROOF.chain(chain.commits, chain.agentCommits, chain.checksRun, chain.refusals)}
-    <a href={chain.lastCommitUrl}>{chain.lastCommit}</a>. {PROOF.approval}
-  </p>
-
-  <p class="book">
-    {PROOF.book} <a class="button primary" href={bookACall('payments')}>{PROOF.bookButton}</a>
-  </p>
 </details>
 
 <style>
   .proof {
-    margin-top: 32px;
-    padding: 12px 16px;
-    border: 1px solid var(--border);
+    border: 1px solid var(--line);
     border-radius: var(--radius);
     background: var(--surface);
   }
   .proof summary {
     display: flex;
     align-items: center;
-    min-height: 44px;
-    font-weight: 700;
+    gap: var(--space-3);
+    min-height: 56px;
+    padding: var(--space-3) var(--space-5);
+    font-size: var(--fs-lg);
+    font-weight: var(--weight-strong);
     cursor: pointer;
+    list-style: none;
   }
-  .proof h2 {
-    margin: 24px 0 8px;
-    font-size: 1.125rem;
+  .proof summary::-webkit-details-marker {
+    display: none;
   }
-  .side-by-side {
+  .mark {
+    white-space: nowrap;
+    font-family: var(--font-code);
+    font-size: var(--fs-sm);
+    font-weight: var(--weight-regular);
+    color: var(--accent);
+  }
+  .proof[open] summary {
+    border-bottom: 1px solid var(--line-strong);
+  }
+  .proof-body {
+    padding: var(--space-5);
+  }
+  h2 {
+    margin: var(--space-6) 0 var(--space-3);
+    font-size: var(--fs-xl);
+    font-weight: var(--weight-strong);
+    line-height: var(--lh-heading);
+    letter-spacing: var(--tracking-heading);
+  }
+  h2:first-child {
+    margin-top: 0;
+  }
+  p {
+    max-width: 62em;
+  }
+  .spaced {
+    margin-top: var(--space-4);
+  }
+  .side {
     display: grid;
+    gap: var(--space-4);
+    margin-top: var(--space-4);
     align-items: start;
-    gap: var(--gap);
   }
-  @media (min-width: 900px) {
-    .side-by-side {
+  .side > * {
+    min-width: 0;
+  }
+  @media (min-width: 1024px) {
+    .side {
       grid-template-columns: 1fr 1fr;
     }
   }
-  .tests li {
-    margin-bottom: 6px;
+  .tests {
+    margin: var(--space-3) 0 0;
+    padding-left: 1.2em;
   }
-  .badge {
-    display: inline-block;
-    padding: 0 8px;
-    border-radius: 999px;
-    background: var(--safe-bg);
-    color: var(--safe);
-    font-size: 0.8125rem;
-    font-weight: 600;
+  .tests li {
+    margin-bottom: 0.5rem;
+    max-width: 62em;
+  }
+  .chain {
+    margin-top: var(--space-4);
+    padding: var(--space-3) var(--space-4);
+    border-left: 3px solid var(--accent);
+    background: var(--surface-2);
+    font-family: var(--font-code);
+    font-size: var(--fs-sm);
+    line-height: 1.6;
   }
   .book {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 12px;
-    margin-top: 24px;
-    font-weight: 600;
+    gap: var(--space-4);
+    margin-top: var(--space-6);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--line-strong);
+    font-size: var(--fs-lg);
+    font-weight: var(--weight-strong);
   }
 </style>

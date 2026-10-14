@@ -15,23 +15,26 @@ test('incident 1 plays from reproduce to clean-up on the real code', async ({ pa
   await expect(page.getByRole('note').first()).toContainText('TEST MODE')
 
   // The briefing card comes first: the situation, the steps, Start.
-  await expect(page.getByText('A customer was paid 160 from a balance of 100.')).toBeVisible()
+  await expect(page.getByText('YOUR SHIFT · INCIDENT 1')).toBeVisible()
   await page.getByRole('button', { name: 'Start' }).click()
-  await expect(page.getByText('Tap a line: request A gets slow right after it.')).toBeVisible()
+  await expect(page.getByText('tap a numbered line. Request A gets slow right after it.')).toBeVisible()
 
   // A safe line first: no money lost.
   await page.getByRole('button', { name: /Make request A slow after line 1/ }).click()
-  await expect(page.getByText(/No money lost with request A slow after line 1/)).toBeVisible()
+  await expect(page.getByText(/With request A slow after line 1, both requests behaved/)).toBeVisible()
 
-  // The line that loses money.
+  // The line that loses money: the books turn red and get stamped.
   await page.getByRole('button', { name: /Make request A slow after line 2/ }).click()
-  await expect(page.getByText(/^Reproduced\./)).toBeVisible()
-  await expect(page.getByText('80.00', { exact: false }).first()).toBeVisible()
+  await expect(page.getByText(/^Reproduced on try 2\./)).toBeVisible()
+  await expect(page.getByRole('region', { name: 'The books' }).first()).toContainText('80.00')
+  await expect(page.getByText('MONEY LOST')).toBeVisible()
 
   await page.getByRole('button', { name: 'Next: how often does this happen?' }).click()
   await page.getByLabel('Your guess').fill('20')
   await page.getByRole('button', { name: 'Run all 54' }).click()
-  await expect(page.getByText(/36 of 54 ways to run lose money \(your guess: 20\)/)).toBeVisible()
+  await expect(
+    page.getByRole('img', { name: /36 of 54 ways to run lose money \(your guess: 20\)/ }),
+  ).toBeVisible()
 
   await page.getByRole('button', { name: 'Next: fix it' }).click()
   await page.getByRole('radio', { name: /Check the balance twice/ }).check()
@@ -75,7 +78,7 @@ test.describe('without JavaScript (bots, AI crawlers, screen readers before load
 
   test('the whole incident is readable as text', async ({ page }) => {
     await page.goto('/day/payments')
-    const text = page.locator('.text-version')
+    const text = page.locator('.textv')
     await expect(text).toContainText('Only one of the 4 places loses money: after line 2')
     await expect(text).toContainText('36 of them (67%) lose money')
     await expect(text).toContainText('still loses in 120 of 182 ways to run (66%)')

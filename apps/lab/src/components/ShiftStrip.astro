@@ -9,54 +9,48 @@ interface Props {
 const { current } = Astro.props
 ---
 
-<nav aria-label={LAYOUT.shiftLabel}>
-  <ol class="strip">
-    {
-      STATIONS.map((station) => (
-        <li class:list={[{ current: station.slug === current, soon: !station.ready }]}>
-          {station.ready ? (
-            <a href={`/day/${station.slug}`} aria-current={station.slug === current ? 'page' : undefined}>
-              <span class="time">{station.time}</span> {STATION_NAME[station.slug] ?? station.slug}
-            </a>
-          ) : (
-            <span>
-              <span class="time">{station.time}</span> {STATION_NAME[station.slug] ?? station.slug} <em>{LAYOUT.soon}</em>
-            </span>
-          )}
-        </li>
-      ))
-    }
-  </ol>
-</nav>
+<ol class="strip">
+  {
+    STATIONS.map((station) => (
+      <li class:list={{ current: station.slug === current }}>
+        {station.ready ? (
+          <a href={`/day/${station.slug}`} aria-current={station.slug === current ? 'page' : undefined}>
+            {station.time} {STATION_NAME[station.slug]}
+          </a>
+        ) : (
+          <span>
+            {station.time} {STATION_NAME[station.slug]} <em>{LAYOUT.soon}</em>
+          </span>
+        )}
+      </li>
+    ))
+  }
+</ol>
 
 <style>
   .strip {
     display: flex;
     flex-wrap: wrap;
-    gap: 4px 16px;
+    gap: var(--space-1) var(--space-4);
     margin: 0;
     padding: 0;
     list-style: none;
-    font-size: 0.875rem;
+    font-family: var(--font-code);
+    font-size: var(--fs-xs);
+    color: var(--muted);
+    white-space: nowrap;
   }
   .strip a {
-    color: var(--text);
+    color: var(--fg);
     text-decoration: none;
   }
   .strip .current a {
-    font-weight: 700;
+    color: var(--accent);
     text-decoration: underline;
     text-underline-offset: 4px;
   }
-  .strip .soon {
-    color: var(--text-muted);
-  }
-  .time {
-    font-variant-numeric: tabular-nums;
-    color: var(--text-muted);
-  }
-  em {
+  .strip em {
     font-style: normal;
-    font-size: 0.75rem;
+    opacity: 0.8;
   }
 </style>

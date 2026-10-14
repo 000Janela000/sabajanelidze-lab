@@ -1,0 +1,123 @@
+---
+// The Paper / Blueprint switch, with the same behaviour as the portfolio's:
+// - the data-theme attribute on <html>, values "paper" and "blueprint", remembered in localStorage under "theme";
+// - hidden without JavaScript (the page then follows the system setting);
+// - a growing-circle reveal (View Transitions) with a mouse, instant with the keyboard or reduced motion.
+---
+
+<button
+  type="button"
+  class="tt"
+  data-theme-toggle
+  aria-pressed="false"
+  aria-label="Dark theme (Blueprint)"
+  title="Switch between Paper (light) and Blueprint (dark)"
+>
+  <svg class="tt-icon" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
+    <rect x="2.5" y="2.5" width="15" height="15" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5"
+    ></rect>
+    <path d="M17.5 2.5 L2.5 17.5 L17.5 17.5 Z" fill="currentColor"></path>
+  </svg>
+</button>
+
+<style>
+  .tt {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--fg);
+    cursor: pointer;
+  }
+  :global(html.js) .tt {
+    display: inline-flex;
+  }
+  .tt:hover {
+    border-color: var(--fg);
+  }
+  .tt-icon {
+    display: block;
+  }
+  .tt[aria-pressed='true'] .tt-icon {
+    transform: rotate(180deg);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .tt-icon {
+      transition: transform var(--dur-fast) var(--ease-out);
+    }
+  }
+</style>
+
+<script>
+  type Theme = 'paper' | 'blueprint'
+  const root = document.documentElement
+  const dark = window.matchMedia('(prefers-color-scheme: dark)')
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)')
+  const COLOR: Record<Theme, string> = { paper: '#f5f3ec', blueprint: '#0a0b0e' }
+  const buttons = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-theme-toggle]'))
+
+  const current = (): Theme => {
+    const theme = root.getAttribute('data-theme')
+    return theme === 'paper' || theme === 'blueprint' ? theme : dark.matches ? 'blueprint' : 'paper'
+  }
+
+  function sync() {
+    const theme = current()
+    for (const button of buttons) button.setAttribute('aria-pressed', String(theme === 'blueprint'))
+    if (root.hasAttribute('data-theme')) {
+      for (const meta of document.querySelectorAll('meta[name="theme-color"]')) meta.setAttribute('content', COLOR[theme])
+    }
+  }
+
+  function apply(theme: Theme) {
+    root.setAttribute('data-theme', theme)
+    try {
+      localStorage.setItem('theme', theme)
+    } catch {
+      // Storage blocked: the choice lasts for this page only.
+    }
+    sync()
+  }
+
+  let running: ViewTransition | null = null
+
+  for (const button of buttons) {
+    button.addEventListener('click', (event) => {
+      const next: Theme = current() === 'blueprint' ? 'paper' : 'blueprint'
+      running?.skipTransition()
+      const keyboard = event.detail === 0
+      if (typeof document.startViewTransition !== 'function' || reduce.matches || keyboard) {
+        apply(next)
+        return
+      }
+      const box = button.getBoundingClientRect()
+      const x = box.left + box.width / 2
+      const y = box.top + box.height / 2
+      const radius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y))
+      const transition = document.startViewTransition(() => apply(next))
+      running = transition
+      transition.ready
+        .then(() => {
+          root.animate(
+            { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`] },
+            { duration: 400, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)', pseudoElement: '::view-transition-new(root)' },
+          )
+        })
+        .catch(() => {})
+      const done = () => {
+        if (running === transition) running = null
+      }
+      transition.finished.then(done, done)
+    })
+  }
+
+  dark.addEventListener('change', () => {
+    if (!root.hasAttribute('data-theme')) sync()
+  })
+
+  sync()
+</script>

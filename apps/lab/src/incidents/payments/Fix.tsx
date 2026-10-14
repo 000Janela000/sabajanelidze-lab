@@ -10,7 +10,7 @@ import {
 import { useState } from 'preact/hooks'
 import { RunGrid } from '../../game/RunGrid.tsx'
 import { AMOUNT, OPENING, type PatchId, type PatchOption } from './setup.ts'
-import { FIX } from './texts.ts'
+import { COUNT, FIX } from './texts.ts'
 
 const PATCH_CODE: Record<PatchId, Withdraw> = {
   CHECK_TWICE: withdrawCheckTwice,
@@ -49,12 +49,12 @@ export function Fix(props: {
   }
 
   return (
-    <section class="stage">
+    <>
       <p class="goal">{FIX.goal}</p>
       <fieldset class="patches">
         <legend class="visually-hidden">{FIX.patchesLegend}</legend>
         {props.patches.map((patch) => (
-          <label key={patch.id} class={`patch${choice === patch.id ? ' patch-chosen' : ''}`}>
+          <label key={patch.id} class={`patch${choice === patch.id ? ' chosen' : ''}`}>
             <input
               type="radio"
               name="patch"
@@ -62,8 +62,9 @@ export function Fix(props: {
               checked={choice === patch.id}
               onChange={() => setChoice(patch.id)}
             />
-            <span class="patch-name">{FIX.patches[patch.id].name}</span>
-            <span class="patch-summary">{FIX.patches[patch.id].summary}</span>
+            <span class="dot" aria-hidden="true" />
+            <span class="name">{FIX.patches[patch.id].name}</span>
+            <span class="sum">{FIX.patches[patch.id].summary}</span>
             <details>
               <summary>{FIX.showCode}</summary>
               <pre>
@@ -73,18 +74,34 @@ export function Fix(props: {
           </label>
         ))}
       </fieldset>
-      <button type="button" class="button primary" disabled={!choice || running} onClick={attack}>
-        {FIX.attack}
-      </button>
+      <div class="attack">
+        <button type="button" class="nb-btn" disabled={!choice || running} onClick={attack}>
+          {FIX.attack}
+        </button>
+      </div>
       {result && result.summary.losing > 0 ? (
-        <div class="patch-result" aria-live="polite">
+        <div aria-live="polite">
           <RunGrid
             outcomes={result.summary.outcomes}
-            caption={FIX.stillLoses(result.summary.losing, result.summary.runs, result.losingLine)}
+            texts={{
+              of: COUNT.of(result.summary.runs),
+              loseMoney: COUNT.loseMoney,
+              legendSafe: COUNT.legendSafe,
+              legendLost: COUNT.legendLost,
+              figure: FIX.figure,
+              caption: (
+                <>
+                  <strong>
+                    {FIX.stillLoses(result.summary.losing, result.summary.runs, result.losingLine)}
+                  </strong>{' '}
+                  {FIX.stillLosesWhy}
+                </>
+              ),
+              summary: FIX.stillLoses(result.summary.losing, result.summary.runs, result.losingLine),
+            }}
           />
-          <p>{FIX.stillLosesWhy}</p>
         </div>
       ) : null}
-    </section>
+    </>
   )
 }

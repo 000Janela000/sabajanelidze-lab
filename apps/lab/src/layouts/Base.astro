@@ -1,7 +1,9 @@
 ---
 import '../styles/global.css'
+import Fonts from '../components/Fonts.astro'
 import ShiftStrip from '../components/ShiftStrip.astro'
-import { portfolio } from '../lib/links.ts'
+import ThemeToggle from '../components/ThemeToggle.astro'
+import { bookACall, portfolio } from '../lib/links.ts'
 import { LAYOUT } from '../site-texts.ts'
 
 interface Props {
@@ -12,6 +14,10 @@ interface Props {
 
 const { title, description, station } = Astro.props
 const canonical = new URL(Astro.url.pathname, Astro.site)
+
+// Applies a saved Paper/Blueprint choice before the first paint, the same as the portfolio (key "theme").
+// If storage is blocked, the system setting decides, as it does without JavaScript.
+const themeBoot = `(function(){var d=document.documentElement;d.classList.add("js");try{var t=localStorage.getItem("theme");if(t==="paper"||t==="blueprint"){d.setAttribute("data-theme",t);var c=t==="paper"?"#f5f3ec":"#0a0b0e";document.querySelectorAll('meta[name="theme-color"]').forEach(function(m){m.setAttribute("content",c)})}}catch(e){}})();`
 ---
 
 <!doctype html>
@@ -26,61 +32,35 @@ const canonical = new URL(Astro.url.pathname, Astro.site)
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
-    <meta name="theme-color" content="#f7f7f5" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#121315" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f5f3ec" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0a0b0e" media="(prefers-color-scheme: dark)" />
+    <Fonts />
+    <script is:inline set:html={themeBoot} />
   </head>
-  <body>
-    <header>
-      <p class="test-mode" role="note"><strong>{LAYOUT.testMode}</strong> · {LAYOUT.testModeNote}</p>
-      <div class="site-header wrap">
-        <a class="brand" href="/">{LAYOUT.brand} <span>{LAYOUT.brandSub}</span></a>
-        <ShiftStrip current={station} />
+  <body class="grid-paper">
+    <a class="skip-link" href="#main">{LAYOUT.skip}</a>
+    <header class="site-head">
+      <div class="nb-wrap site-head-in">
+        <a class="brand" href="/"><strong>{LAYOUT.name}</strong> <span class="nb-mono">{LAYOUT.lab}</span></a>
+        <nav class="site-nav" aria-label={LAYOUT.navLabel}>
+          <a href="/" aria-current={station === 'home' ? 'page' : undefined}>{LAYOUT.shift}</a>
+        </nav>
+        <div class="site-tools">
+          <span class="testmode nb-mono" role="note">{LAYOUT.testMode}</span>
+          <a class="nb-btn nb-btn--sm" href={bookACall(station)}>{LAYOUT.book}</a>
+          <ThemeToggle />
+        </div>
       </div>
     </header>
-    <main class="wrap">
+    <nav class="nb-wrap strip-row" aria-label={LAYOUT.shiftLabel}>
+      <ShiftStrip current={station} />
+      <span class="testmode nb-mono" role="note">{LAYOUT.testMode}</span>
+    </nav>
+    <main id="main" class="nb-wrap">
       <slot />
-    </main>
-    <footer class="site-footer wrap">
-      <p>
-        {LAYOUT.footerBefore} <a href={portfolio(station)}>{LAYOUT.footerName}</a>{LAYOUT.footerAfter}
+      <p class="foot">
+        {LAYOUT.footerBefore} <a class="nb-link" href={portfolio(station)}>{LAYOUT.footerName}</a>{LAYOUT.footerAfter}
       </p>
-    </footer>
+    </main>
   </body>
 </html>
-
-<style>
-  .test-mode {
-    margin: 0;
-    padding: 6px 16px;
-    background: var(--warn-bg);
-    color: var(--warn-text);
-    font-size: 0.875rem;
-    text-align: center;
-  }
-  .site-header {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px 24px;
-    padding-top: 16px;
-    padding-bottom: 16px;
-  }
-  .brand {
-    color: var(--text);
-    font-weight: 700;
-    text-decoration: none;
-  }
-  .brand span {
-    color: var(--text-muted);
-    font-weight: 400;
-  }
-  .site-footer {
-    margin-top: 64px;
-    padding-top: 24px;
-    padding-bottom: 40px;
-    border-top: 1px solid var(--border);
-    color: var(--text-muted);
-    font-size: 0.875rem;
-  }
-</style>

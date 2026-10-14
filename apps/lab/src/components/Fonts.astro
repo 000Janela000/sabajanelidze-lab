@@ -1,0 +1,18 @@
+---
+// Self-hosted Inter (Latin), the two weights the design uses (400 and 600), woff2 only.
+// The same set-up as the portfolio, so the two sites look like one family.
+import inter400 from '@fontsource/inter/files/inter-latin-400-normal.woff2?url'
+import inter600 from '@fontsource/inter/files/inter-latin-600-normal.woff2?url'
+
+const LATIN =
+  'U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD'
+
+const face = (weight: number, url: string) =>
+  `@font-face{font-family:"Inter";font-style:normal;font-weight:${weight};font-display:swap;src:url(${url}) format("woff2");unicode-range:${LATIN}}`
+
+const css = face(400, inter400) + face(600, inter600)
+---
+
+<link rel="preload" href={inter400} as="font" type="font/woff2" crossorigin />
+<link rel="preload" href={inter600} as="font" type="font/woff2" crossorigin />
+<style is:inline set:html={css}></style>

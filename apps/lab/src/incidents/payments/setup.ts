@@ -13,3 +13,12 @@ export interface PatchOption {
   readonly id: PatchId
   readonly lines: readonly CodeLine[]
 }
+
+/** What step 1 found, shown as a one-line receipt above the later steps. */
+export interface Reproduction {
+  readonly tries: number
+  readonly line: number
+  readonly paidOut: number
+  readonly available: number
+  readonly short: number
+}

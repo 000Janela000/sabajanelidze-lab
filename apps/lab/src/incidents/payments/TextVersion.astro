@@ -13,7 +13,7 @@ const percent = (part: number, whole: number) => `${Math.round((100 * part) / wh
 const steps = v01Lines.flatMap((line) => (line.step ? [line.step] : []))
 ---
 
-<section class="text-version" aria-labelledby="text-version">
+<div class="textv">
   <h2 id="text-version">{TEXT_VERSION.heading}</h2>
 
   <h3>{TEXT_VERSION.codeHeading}</h3>
@@ -34,33 +34,55 @@ const steps = v01Lines.flatMap((line) => (line.step ? [line.step] : []))
   <h3>{TEXT_VERSION.fixHeading}</h3>
   <ul>
     <li>
-      <strong>{FIX.patches.CHECK_TWICE.name}:</strong>
-      {TEXT_VERSION.fix.checkTwice(runs.checkTwice.losing, runs.checkTwice.runs, percent(runs.checkTwice.losing, runs.checkTwice.runs))}
+      <strong>{FIX.patches.CHECK_TWICE.name}:</strong>{' '}
+      {
+        TEXT_VERSION.fix.checkTwice(
+          runs.checkTwice.losing,
+          runs.checkTwice.runs,
+          percent(runs.checkTwice.losing, runs.checkTwice.runs),
+        )
+      }
     </li>
     <li>
-      <strong>{FIX.patches.LOCK_READ.name}:</strong>
-      {TEXT_VERSION.fix.lockRead(runs.lockRead.losing, runs.lockRead.runs, percent(runs.lockRead.losing, runs.lockRead.runs))}
+      <strong>{FIX.patches.LOCK_READ.name}:</strong>{' '}
+      {
+        TEXT_VERSION.fix.lockRead(
+          runs.lockRead.losing,
+          runs.lockRead.runs,
+          percent(runs.lockRead.losing, runs.lockRead.runs),
+        )
+      }
     </li>
     <li>
-      <strong>{FIX.patches.RESERVE.name}:</strong>
+      <strong>{FIX.patches.RESERVE.name}:</strong>{' '}
       {TEXT_VERSION.fix.reserve(runs.reserve.losing, runs.reserve.runs)}
     </li>
   </ul>
 
   <h3>{TEXT_VERSION.cleanUpHeading}</h3>
   <p>{TEXT_VERSION.cleanUp}</p>
-</section>
+</div>
 
 <style>
-  .text-version {
-    max-width: 72ch;
-    margin-top: 48px;
+  .textv {
+    max-width: 62em;
   }
-  .text-version h2 {
-    font-size: 1.25rem;
+  h2 {
+    font-size: var(--fs-xl);
+    font-weight: var(--weight-strong);
   }
-  .text-version h3 {
-    margin-bottom: 4px;
-    font-size: 1.0625rem;
+  h3 {
+    margin-top: var(--space-5);
+    font-size: var(--fs-md);
+    font-weight: var(--weight-strong);
+  }
+  p,
+  ol,
+  ul {
+    margin-top: var(--space-2);
+    color: var(--muted);
+  }
+  strong {
+    color: var(--fg);
   }
 </style>

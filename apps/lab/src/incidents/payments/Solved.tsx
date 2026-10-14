@@ -2,7 +2,7 @@ import type { AllRunsSummary } from '@lab/core'
 import { useState } from 'preact/hooks'
 import { RunGrid } from '../../game/RunGrid.tsx'
 import { CleanUp } from './CleanUp.tsx'
-import { SOLVED } from './texts.ts'
+import { COUNT, SOLVED } from './texts.ts'
 
 const COPY = { RESULT: 'RESULT', LINK: 'LINK', FAILED: 'FAILED' } as const
 type Copied = (typeof COPY)[keyof typeof COPY]
@@ -36,25 +36,36 @@ export function Solved(props: {
   }
 
   return (
-    <section class="stage solved">
-      <RunGrid outcomes={props.fixed.outcomes} caption={SOLVED.grid(props.fixed.runs)} />
-      <p>{SOLVED.why}</p>
+    <>
+      <RunGrid
+        outcomes={props.fixed.outcomes}
+        texts={{
+          of: COUNT.of(props.fixed.runs),
+          loseMoney: COUNT.loseMoney,
+          legendSafe: COUNT.legendSafe,
+          legendLost: COUNT.legendLost,
+          figure: SOLVED.figure,
+          caption: <strong>{SOLVED.grid(props.fixed.runs)}</strong>,
+          summary: SOLVED.grid(props.fixed.runs),
+        }}
+      />
+      <p class="why">{SOLVED.why}</p>
       <div class="actions">
-        <button type="button" class="button primary" onClick={openProof}>
+        <button type="button" class="nb-btn" onClick={openProof}>
           {SOLVED.readCode}
         </button>
-        <a class="button" href={props.bookUrl}>
+        <a class="btn-2" href={props.bookUrl}>
           {SOLVED.book}
         </a>
-        <button type="button" class="button" onClick={() => copy(props.shareText, COPY.RESULT)}>
+        <button type="button" class="btn-2" onClick={() => copy(props.shareText, COPY.RESULT)}>
           {copied === COPY.RESULT ? SOLVED.copied : SOLVED.copyResult}
         </button>
-        <button type="button" class="button" onClick={() => copy(props.shareUrl, COPY.LINK)}>
+        <button type="button" class="btn-2" onClick={() => copy(props.shareUrl, COPY.LINK)}>
           {copied === COPY.LINK ? SOLVED.linkCopied : SOLVED.sendToCto}
         </button>
       </div>
-      {copied === COPY.FAILED ? <p class="note">{SOLVED.copyFailed(props.shareUrl)}</p> : null}
+      {copied === COPY.FAILED ? <p class="why">{SOLVED.copyFailed(props.shareUrl)}</p> : null}
       <CleanUp />
-    </section>
+    </>
   )
 }

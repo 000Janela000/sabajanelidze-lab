@@ -1,538 +1,884 @@
-.incident {
-  display: grid;
-  /* minmax(0, 1fr): a wide child (the result grid) must never widen the page on a phone. */
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--gap);
-  margin-top: 24px;
+/*
+ * The game layer: briefing card, step rail, code panels, the books, result grid, patches, proof card.
+ * Designed by the designer agent on 2026-10-15 (mockups in private/design/), approved by Saba.
+ * Element → token mapping: cards --surface + 1px --line; insets --surface-2; the current line --accent-soft with
+ * an --accent bar; the line where A got slow and lost --lost bar + --lost-soft; safe = --safe (blue), lost = --lost
+ * (red, hatched); the books turn --lost and get a "MONEY LOST" stamp. Colours switch, they never animate.
+ */
+
+/* ---------- Briefing card ---------- */
+.brief {
+  padding: var(--space-5);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  max-width: 62em;
 }
 
-.incident h2 {
-  margin: 8px 0 0;
-  font-size: 1.375rem;
+.brief-top {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
 }
 
-.incident h2:focus {
+.brief-top .time {
+  margin-left: auto;
+  font-family: var(--font-code);
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+
+.brief-lead {
+  margin-top: var(--space-4);
+  font-size: var(--fs-lg);
+  line-height: 1.5;
+  max-width: 36em;
+}
+
+.brief-task {
+  margin-top: var(--space-2);
+  color: var(--muted);
+}
+
+.brief-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3) var(--space-5);
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+
+.brief-steps li {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.brief-steps .num {
+  flex: 0 0 auto;
+  transform: translateY(0.25rem);
+}
+
+.brief-steps b {
+  font-weight: var(--weight-regular);
+  color: var(--fg);
+}
+
+.num {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-tag);
+  font-family: var(--font-code);
+  font-size: var(--fs-xs);
+  color: var(--fg);
+}
+
+.brief-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-4) var(--space-5);
+  margin-top: var(--space-5);
+}
+
+/* ---------- The step rail (in the notebook margin on desktop) ---------- */
+.rail {
+  margin: 0 0 var(--space-5);
+  padding: 0;
+  list-style: none;
+  display: flex;
+  gap: var(--space-4);
+  font-family: var(--font-code);
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+
+.rail li {
+  display: flex;
+  gap: 0.5rem;
+  align-items: baseline;
+  white-space: nowrap;
+}
+
+.rail .n {
+  font-size: var(--fs-xs);
+}
+
+.rail .now {
+  color: var(--accent);
+}
+
+.rail .now .n::after {
+  content: " ▸";
+}
+
+.rail .done .n::after {
+  content: " ✓";
+}
+
+.rail .later .label {
+  opacity: 0.75;
+}
+
+@media (min-width: 1024px) {
+  .rail {
+    position: sticky;
+    top: calc(var(--header-h) + var(--space-5));
+    align-self: start;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin: 0;
+  }
+}
+
+/* ---------- Step heading, goal, hint ---------- */
+.step-h {
+  font-size: var(--fs-2xl);
+  font-weight: var(--weight-strong);
+  line-height: var(--lh-heading);
+  letter-spacing: var(--tracking-heading);
+}
+
+.step-h:focus {
   outline: none;
 }
 
-.beats {
-  display: flex;
-  gap: 16px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  color: var(--text-muted);
-  font-size: 0.875rem;
-}
-
-.beats .beat-current {
-  color: var(--text);
-  font-weight: 700;
-}
-
-.beats .beat-done::after {
-  content: " ✓";
+.step-h .ok {
+  margin-right: 0.35em;
+  font-family: var(--font-code);
   color: var(--safe);
 }
 
 .goal {
-  margin: 0;
-  max-width: 68ch;
+  margin-top: var(--space-3);
+  max-width: 44em;
+  font-size: var(--fs-md);
 }
 
-.requests {
+.hint {
+  margin-top: var(--space-3);
+  font-family: var(--font-code);
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+
+.hint b {
+  font-weight: var(--weight-regular);
+  color: var(--accent);
+}
+
+/* ---------- The board: two code panels and the books ---------- */
+.board {
   display: grid;
-  gap: var(--gap);
+  gap: var(--space-5);
+  margin-top: var(--space-5);
+  align-items: start;
 }
 
-@media (min-width: 760px) {
-  .requests {
-    grid-template-columns: 1fr 1fr;
+@media (min-width: 1024px) {
+  .board {
+    grid-template-columns: minmax(0, 1.4fr) minmax(300px, 1fr);
   }
 }
 
-.code-panel {
-  border: 1px solid var(--border);
+.col {
+  display: grid;
+  gap: var(--space-5);
+  min-width: 0;
+}
+
+.req {
+  border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface);
-  overflow: hidden;
 }
 
-.code-panel-head {
+.req-head {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--border);
-  background: var(--surface-2);
+  gap: var(--space-1) var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--line);
 }
 
-.code-panel-title {
-  font-weight: 700;
+.req-head strong {
+  font-weight: var(--weight-strong);
+  white-space: nowrap;
+}
+
+.req-head .tag {
+  font-family: var(--font-code);
+  font-size: var(--fs-xs);
+  color: var(--muted);
 }
 
 .chip {
-  padding: 2px 8px;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  background: var(--surface);
-  border: 1px solid var(--border);
+  margin-left: auto;
+  padding: 0.05rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-tag);
+  font-family: var(--font-code);
+  font-size: var(--fs-xs);
+  color: var(--muted);
+  white-space: nowrap;
 }
 
 .chip-paid {
-  background: var(--safe-bg);
-  color: var(--safe);
-  border-color: transparent;
-}
-
-.chip-refused {
-  background: var(--surface-2);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .chip-slow {
-  background: var(--warn-bg);
-  color: var(--warn-text);
   border-color: transparent;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.chip-unknown {
+  border-color: var(--line-strong);
+  color: var(--fg);
 }
 
 .code {
   margin: 0;
-  padding: 4px 0;
+  padding: var(--space-2) 0;
   list-style: none;
 }
 
-.code .line-static,
-.code .line-pick {
-  display: grid;
-  grid-template-columns: 1.75rem 1fr;
-  align-items: baseline;
-  gap: 0 8px;
-  width: 100%;
-  padding: 4px 12px;
-  border: 0;
-  background: none;
-  color: inherit;
-  font: inherit;
-  text-align: left;
+.line {
+  position: relative;
 }
 
-.code .line-pick {
+.row {
+  display: grid;
+  grid-template-columns: 2.25rem minmax(0, 1fr);
+  gap: 0 var(--space-2);
+  align-items: baseline;
+  width: 100%;
+  padding: 0.3rem var(--space-4) 0.3rem 0;
+  border: 0;
+  border-left: 3px solid transparent;
+  background: none;
+  text-align: left;
+  font-family: var(--font-code);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+  color: var(--fg);
+}
+
+.row .n {
+  justify-self: end;
+  font-size: var(--fs-xs);
+  color: var(--accent);
+}
+
+.row code {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.row .label {
+  grid-column: 2;
+  font-family: var(--font-body);
+  font-size: var(--fs-xs);
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+@media (min-width: 1280px) {
+  .row {
+    grid-template-columns: 2.25rem minmax(0, 1fr) auto;
+  }
+
+  .row .label {
+    grid-column: 3;
+    justify-self: end;
+    padding-left: var(--space-3);
+    white-space: nowrap;
+  }
+}
+
+.frame .row code {
+  color: var(--muted);
+}
+
+button.row {
   min-height: 44px;
   cursor: pointer;
 }
 
-.code .line-pick:hover {
+button.row:hover {
   background: var(--surface-2);
 }
 
-.code .line-pick.picked {
-  box-shadow: inset 3px 0 0 var(--warn-text);
+.line.current .row {
+  border-left-color: var(--accent);
+  background: var(--accent-soft);
 }
 
-.code code {
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  font-size: 0.8125rem;
+.line.lost .row {
+  border-left-color: var(--lost);
+  background: var(--lost-soft);
 }
 
-.line-number {
-  color: var(--text-muted);
-  font-variant-numeric: tabular-nums;
-  text-align: right;
+/* The line after which A got slow: a dashed "pause" rule with a short note. */
+.pause {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.15rem var(--space-4) 0.25rem 2.5rem;
+  font-family: var(--font-code);
+  font-size: var(--fs-xs);
+  color: var(--accent);
 }
 
-.line-label {
-  grid-column: 2;
-  color: var(--text-muted);
-  font-size: 0.8125rem;
+.pause::before,
+.pause::after {
+  content: "";
+  flex: 1;
+  border-top: 1px dashed currentColor;
 }
 
-.line:not(.step) {
-  opacity: 0.7;
+.pause::after {
+  flex: 0 0 var(--space-5);
 }
 
-.line.current {
-  background: var(--warn-bg);
-  opacity: 1;
+.line.lost .pause {
+  color: var(--lost);
 }
 
-.money {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-  gap: 8px;
-  margin: 0;
-  padding: 12px;
-  border: 1px solid var(--border);
+/* The first-move hint: the tappable lines glow three times (opacity only), not at all with reduced motion. */
+.req-hinting button.row::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--accent-soft);
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .req-hinting button.row::after {
+    animation: hint-glow 1.2s var(--ease-in-out) 3;
+  }
+
+  @keyframes hint-glow {
+    50% {
+      opacity: 1;
+    }
+  }
+}
+
+/* Request B, compact: the same code, only the step labels and where it is. */
+.req-compact .note {
+  padding: var(--space-2) var(--space-4) 0;
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+
+.req-compact .row {
+  grid-template-columns: 2.25rem minmax(0, 1fr) auto;
+  font-family: var(--font-body);
+  font-size: var(--fs-sm);
+  padding-top: 0.2rem;
+  padding-bottom: 0.2rem;
+}
+
+.req-compact .row .n {
+  font-family: var(--font-code);
+}
+
+.req-compact .row .state {
+  margin-left: auto;
+  font-family: var(--font-code);
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+
+/* ---------- The books (our ledger vs the bank) ---------- */
+.books {
+  position: relative;
+  padding: var(--space-4);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface);
 }
 
-.money div {
-  display: grid;
+.books h3 {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  font-size: var(--fs-base);
+  font-weight: var(--weight-strong);
 }
 
-.money dt {
-  color: var(--text-muted);
-  font-size: 0.8125rem;
+.books h3 span {
+  font-family: var(--font-code);
+  font-size: var(--fs-xs);
+  font-weight: var(--weight-regular);
+  color: var(--muted);
 }
 
-.money dd {
+.books dl {
+  margin: var(--space-3) 0 0;
+}
+
+.books .r {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 0.3rem 0;
+  border-top: 1px solid var(--line);
+}
+
+.books dt {
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+
+.books dd {
   margin: 0;
-  font-family: var(--font-mono);
-  font-size: 1.125rem;
+  font-family: var(--font-code);
+  font-size: var(--fs-base);
   font-variant-numeric: tabular-nums;
 }
 
-.money-lost {
+.books .verdict {
+  margin-top: var(--space-2);
+  padding: 0.45rem var(--space-2);
+  border-top: 1px solid var(--line-strong);
+}
+
+.books .verdict dt {
+  color: var(--fg);
+}
+
+.books .verdict dd {
+  font-weight: var(--weight-strong);
+}
+
+.books.lost {
   border-color: var(--lost);
-  background: var(--lost-bg);
 }
 
-.money-lost .money-verdict dd {
+.books.lost h3 {
+  padding-right: 7.5rem; /* room for the stamp */
+}
+
+.books.lost .verdict {
+  margin-inline: calc(-1 * var(--space-2));
+  background: var(--lost-soft);
+  border-top-color: var(--lost);
+}
+
+.books.lost .verdict dd,
+.books.lost .verdict dt {
   color: var(--lost);
-  font-weight: 700;
 }
 
-.money-safe .money-verdict dd {
+.books.safe .verdict dd {
   color: var(--safe);
-  font-weight: 700;
+}
+
+.stamp-lost {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-4);
+  padding: 0.15rem 0.5rem;
+  border: 2px solid var(--lost);
+  border-radius: var(--radius-tag);
+  color: var(--lost);
+  font-family: var(--font-code);
+  font-size: var(--fs-xs);
+  font-weight: var(--weight-strong);
+  letter-spacing: 0.08em;
+  transform: rotate(-4deg);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .stamp-lost {
+    animation: stamp var(--dur-fast) var(--ease-out) both;
+  }
+
+  @keyframes stamp {
+    from {
+      opacity: 0;
+      transform: rotate(-4deg) scale(1.15);
+    }
+
+    to {
+      opacity: 1;
+      transform: rotate(-4deg) scale(1);
+    }
+  }
 }
 
 .announce {
   min-height: 1.5em;
-  margin: 0;
-  font-weight: 600;
+  margin-top: var(--space-4);
+  max-width: 44em;
+  font-size: var(--fs-md);
 }
 
-.guess-row {
+.announce b {
+  font-weight: var(--weight-strong);
+}
+
+.announce .x,
+.receipt .x {
+  color: var(--lost);
+  font-family: var(--font-code);
+}
+
+.announce .ok {
+  color: var(--safe);
+  font-family: var(--font-code);
+}
+
+.next {
+  margin-top: var(--space-5);
   display: flex;
   flex-wrap: wrap;
-  align-items: end;
-  gap: 12px;
+  gap: var(--space-4);
+  align-items: center;
+}
+
+/* ---------- Receipt of a finished step, shown above the next one ---------- */
+.receipt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  margin-bottom: var(--space-5);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+
+.receipt .nb-mono {
+  color: var(--fg);
+}
+
+/* ---------- The guess and the result grid ---------- */
+.guess-row {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin-top: var(--space-4);
 }
 
 .guess-row label {
   display: grid;
-  gap: 4px;
-  font-size: 0.875rem;
+  gap: 0.25rem;
+  font-size: var(--fs-sm);
+  color: var(--muted);
 }
 
 .guess-row input {
   width: 7rem;
-  min-height: 44px;
-  padding: 0 12px;
-  border: 1px solid var(--border);
+  min-height: 48px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  color: var(--fg);
+  font-family: var(--font-code);
+  font-size: var(--fs-lg);
+}
+
+.runs-fig {
+  margin: var(--space-5) 0 0;
+  padding: var(--space-5);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface);
-  color: var(--text);
-  font: inherit;
 }
 
-.run-grid-figure {
-  margin: 8px 0;
+.runs-head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  margin-bottom: var(--space-4);
 }
 
-.run-grid {
+.runs-head strong {
+  font-size: var(--fs-lg);
+  font-weight: var(--weight-strong);
+}
+
+.runs-head .big {
+  font-family: var(--font-code);
+  font-size: var(--fs-2xl);
+  line-height: 1;
+  color: var(--lost);
+}
+
+.runs-head .big.ok {
+  color: var(--safe);
+}
+
+.runs-head .of {
+  font-family: var(--font-code);
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+
+.runs {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(18px, 1fr));
+  grid-template-columns: repeat(auto-fill, var(--run-cell));
   gap: 3px;
-  max-width: 420px;
+  max-width: calc(18 * (var(--run-cell) + 3px));
 }
 
 .cell {
-  aspect-ratio: 1;
-  border-radius: 3px;
-}
-
-/* Stripes as well as colour, so the grid reads without telling red from green. */
-.cell-lost {
-  background: repeating-linear-gradient(135deg, var(--lost) 0 3px, var(--lost-bg) 3px 5px);
+  width: var(--run-cell);
+  height: var(--run-cell);
 }
 
 .cell-safe {
   background: var(--safe);
 }
 
-.cell-impossible {
-  background: var(--border);
+/* Stripes as well as colour, so lost runs read without telling colours apart. */
+.cell-lost {
+  background-color: var(--lost);
+  background-image: repeating-linear-gradient(135deg, transparent 0 3px, rgba(255, 255, 255, 0.55) 3px 5px);
 }
 
-.run-grid-figure figcaption {
-  margin-top: 8px;
-  font-weight: 600;
+.cell-blocked {
+  border: 1px solid var(--blocked);
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  .runs .cell {
+    opacity: 0;
+    animation: cell-in var(--dur-instant) linear forwards;
+    animation-delay: calc(var(--i, 0) * 25ms);
+  }
+
+  @keyframes cell-in {
+    to {
+      opacity: 1;
+    }
+  }
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-code);
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+
+.legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.legend .cell {
+  width: 12px;
+  height: 12px;
+  opacity: 1;
+  animation: none;
+}
+
+/* ---------- Patch cards (fix step) ---------- */
 .patches {
   display: grid;
-  gap: 8px;
-  margin: 0;
+  gap: var(--space-3);
+  margin: var(--space-4) 0 0;
   padding: 0;
   border: 0;
 }
 
 .patch {
+  position: relative;
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: 2px 10px;
-  padding: 12px;
-  border: 1px solid var(--border);
+  gap: 0.2rem var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface);
   cursor: pointer;
 }
 
+/* The real radio covers the whole card (invisible), so a click anywhere on the card picks it. */
 .patch input {
-  grid-row: span 2;
-  width: 20px;
-  height: 20px;
-  margin-top: 2px;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
 }
 
-.patch-chosen {
+.patch details {
+  position: relative;
+  z-index: 1; /* "show the code" stays clickable above the radio */
+}
+
+.patch:has(input:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.patch.chosen {
+  border-color: var(--line-strong);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+
+.patch .dot {
+  width: 18px;
+  height: 18px;
+  margin-top: 0.2rem;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-tag);
+}
+
+.patch.chosen .dot {
+  background: var(--accent);
   border-color: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent);
+  box-shadow: inset 0 0 0 3px var(--surface);
 }
 
-.patch-name {
-  font-weight: 700;
+.patch .name {
+  font-weight: var(--weight-strong);
 }
 
-.patch-summary {
-  color: var(--text-muted);
-  font-size: 0.9375rem;
-}
-
+.patch .sum,
 .patch details {
   grid-column: 2;
 }
 
+.patch .sum {
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+
 .patch summary {
-  font-size: 0.875rem;
+  font-family: var(--font-code);
+  font-size: var(--fs-xs);
+  color: var(--accent);
   cursor: pointer;
 }
 
-.patch pre,
-.cleanup pre {
+.patch pre {
+  margin: var(--space-2) 0 0;
+  padding: var(--space-3);
   overflow-x: auto;
-  margin: 8px 0 0;
-  padding: 8px;
   border-radius: var(--radius);
   background: var(--surface-2);
+  font-size: 0.8125rem;
 }
 
-.incident > .button,
-.guess > .button {
-  justify-self: start;
+.attack {
+  margin-top: var(--space-4);
 }
 
+/* ---------- Solved and clean-up ---------- */
 .actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
 }
 
-.go-deeper,
+.why {
+  margin-top: var(--space-4);
+  max-width: 44em;
+}
+
 .cleanup {
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid var(--border);
+  margin-top: var(--space-6);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--line-strong);
 }
 
 .cleanup h3 {
-  margin-top: 0;
+  font-size: var(--fs-xl);
+  font-weight: var(--weight-strong);
 }
 
-.cleanup-result {
-  display: grid;
-  gap: 8px;
-  margin-top: 12px;
+.cleanup p {
+  margin-top: var(--space-3);
+  max-width: 44em;
 }
 
 .verdict-good {
   color: var(--safe);
-  font-weight: 600;
+  font-weight: var(--weight-strong);
 }
 
 .verdict-bad {
   color: var(--lost);
-  font-weight: 600;
+  font-weight: var(--weight-strong);
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .line {
-    transition: background-color var(--dur-fast) ease-out;
-  }
+.cleanup .books {
+  margin-top: var(--space-4);
+  max-width: 28rem;
 }
 
-.board {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--gap);
+.go-deeper {
+  margin-top: var(--space-6);
 }
 
-.outcome {
-  display: grid;
-  gap: 8px;
-}
-
-.code-panel-note {
-  display: none;
-  margin: 0;
-  padding: 6px 12px 0;
-  color: var(--text-muted);
-  font-size: 0.8125rem;
-}
-
-/* Phones: the result sits above the code, request B shows only its current line. */
-@media (max-width: 759px) {
-  .outcome {
-    order: -1;
-  }
-
-  .code .frame {
+/* ---------- Phones ---------- */
+@media (max-width: 1023px) {
+  .books h3 span {
     display: none;
   }
 
-  .code-panel-compact .code-panel-note {
-    display: block;
+  .books.lost h3 {
+    padding-right: 0;
   }
 
-  .code-panel-compact .line:not(.current) {
+  .stamp-lost {
+    top: calc(-1 * var(--space-3)); /* the stamp overlaps the card's top edge on phones */
+  }
+
+  .pause::after {
     display: none;
   }
-}
 
-/* Briefing card: the situation, the steps, the time it takes. */
-.briefing {
-  display: grid;
-  gap: 8px;
-  padding: 20px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
-}
-
-.briefing p {
-  margin: 0;
-}
-
-.briefing-kicker {
-  color: var(--text-muted);
-  font-size: 0.8125rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.briefing-situation {
-  font-size: 1.25rem;
-  font-weight: 700;
-}
-
-.briefing-steps {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 20px;
-  margin: 8px 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.briefing-duration {
-  color: var(--text-muted);
-}
-
-.step-number {
-  display: inline-grid;
-  place-items: center;
-  width: 1.5em;
-  height: 1.5em;
-  border: 1px solid currentColor;
-  border-radius: 999px;
-  font-size: 0.8125rem;
-  font-weight: 700;
-}
-
-.briefing-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 16px;
-  margin-top: 8px;
-}
-
-/* Step strip: where you are in the incident. */
-.step-strip {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 20px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  color: var(--text-muted);
-  font-size: 0.875rem;
-}
-
-.step-strip .step-current {
-  color: var(--text);
-  font-weight: 700;
-}
-
-.step-strip .step-done::after {
-  content: " ✓";
-  color: var(--safe);
-}
-
-.stage {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--gap);
-}
-
-.stage > .button {
-  justify-self: start;
-}
-
-/* First-move hint: shown until the first tap; pulses three times at most. */
-.request-with-hint {
-  display: grid;
-  gap: 8px;
-  min-width: 0;
-}
-
-.first-move-hint {
-  justify-self: start;
-  margin: 0;
-  padding: 6px 12px;
-  border-radius: var(--radius);
-  background: var(--warn-bg);
-  color: var(--warn-text);
-  font-weight: 600;
-}
-
-.code-panel-hinting .line.step .line-pick {
-  position: relative;
-}
-
-.code-panel-hinting .line.step .line-pick::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: var(--warn-bg);
-  opacity: 0;
-  pointer-events: none;
-}
-
-/* Only opacity moves, three times at most, and not at all with reduced motion. */
-@media (prefers-reduced-motion: no-preference) {
-  .code-panel-hinting .line.step .line-pick::after {
-    animation: hint-pulse 1.2s ease-out 3;
+  .pause::before {
+    flex: 0 0 1rem;
   }
 
-  @keyframes hint-pulse {
-    50% {
-      opacity: 0.8;
-    }
+  .brief-top .time {
+    margin-left: 0;
+  }
+
+  .rail {
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+  }
+
+  .brief-actions .nb-link,
+  .next .nb-link {
+    width: 100%;
+    text-align: center;
   }
 }

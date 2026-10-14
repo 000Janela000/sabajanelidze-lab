@@ -23,7 +23,7 @@ export function Count(props: {
   }
 
   return (
-    <section class="stage">
+    <>
       <p class="goal">{COUNT.question(props.runs)}</p>
       <div class="guess-row">
         <label>
@@ -37,18 +37,36 @@ export function Count(props: {
             onInput={(event) => setGuess((event.target as HTMLInputElement).value)}
           />
         </label>
-        <button type="button" class="button primary" disabled={running} onClick={run}>
+        <button type="button" class="nb-btn" disabled={running} onClick={run}>
           {COUNT.run(props.runs)}
         </button>
       </div>
       {summary ? (
         <>
-          <RunGrid outcomes={summary.outcomes} caption={COUNT.result(summary.losing, summary.runs, guess)} />
-          <button type="button" class="button primary" onClick={props.onNext}>
-            {COUNT.next}
-          </button>
+          <RunGrid
+            outcomes={summary.outcomes}
+            texts={{
+              of: COUNT.of(summary.runs),
+              loseMoney: COUNT.loseMoney,
+              ...(guess ? { extra: COUNT.yourGuess(guess) } : {}),
+              legendSafe: COUNT.legendSafe,
+              legendLost: COUNT.legendLost,
+              figure: COUNT.figure,
+              caption: (
+                <>
+                  <strong>{COUNT.figureTitle}</strong> {COUNT.figureText(summary.runs)}
+                </>
+              ),
+              summary: COUNT.result(summary.losing, summary.runs, guess),
+            }}
+          />
+          <div class="next">
+            <button type="button" class="nb-btn" onClick={props.onNext}>
+              {COUNT.next}
+            </button>
+          </div>
         </>
       ) : null}
-    </section>
+    </>
   )
 }

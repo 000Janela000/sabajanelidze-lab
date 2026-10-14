@@ -9,42 +9,51 @@ interface Props {
 const { title, source } = Astro.props
 ---
 
-<figure class="code-block">
-  <figcaption>
-    <span>{title}</span>
-    <a href={source.url}>{source.file}, lines {source.startLine}–{source.endLine}</a>
+<figure class="cb">
+  <figcaption class="cb-head">
+    <strong>{title}</strong>
+    <a href={source.url}>{source.file}:{source.startLine}–{source.endLine}</a>
   </figcaption>
   <pre><code>{source.code}</code></pre>
 </figure>
 
 <style>
-  .code-block {
-    margin: 0;
-    min-width: 0;
-    border: 1px solid var(--border);
+  .cb {
+    min-width: 0; /* the code scrolls inside its column instead of widening the page */
+    margin: var(--space-4) 0 0;
+    border: 1px solid var(--line);
     border-radius: var(--radius);
     background: var(--surface);
-    overflow: hidden;
   }
-  figcaption {
+  :global(.side) .cb {
+    margin-top: 0;
+  }
+  .cb-head {
     display: flex;
     flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 4px 12px;
-    padding: 8px 12px;
-    border-bottom: 1px solid var(--border);
+    align-items: baseline;
+    gap: var(--space-2) var(--space-3);
+    padding: var(--space-2) var(--space-3);
+    border-bottom: 1px solid var(--line);
     background: var(--surface-2);
-    font-size: 0.8125rem;
+    font-family: var(--font-code);
+    font-size: var(--fs-xs);
   }
-  figcaption span {
-    font-weight: 700;
+  .cb-head strong {
+    font-weight: var(--weight-strong);
+    color: var(--fg);
+  }
+  .cb-head a {
+    margin-left: auto;
+    color: var(--accent);
+    overflow-wrap: anywhere;
   }
   pre {
     margin: 0;
-    padding: 12px;
-    white-space: pre-wrap;
-    overflow-wrap: anywhere;
+    padding: var(--space-3);
+    overflow-x: auto;
     font-size: 0.8125rem;
-    line-height: 1.5;
+    line-height: 1.55;
+    color: var(--fg);
   }
 </style>

@@ -3,15 +3,18 @@
  */
 
 export const LAYOUT = {
-  testMode: 'TEST MODE',
-  testModeNote: 'no real money · fake data only',
-  brand: 'On call',
-  brandSub: '· one day at a tiny crypto exchange',
+  skip: 'Skip to content',
+  name: 'Saba Janelidze',
+  lab: '/ lab',
+  navLabel: 'Main',
+  shift: 'The shift',
+  testMode: 'TEST MODE · no real money · fake data only',
+  book: 'Book a call',
   shiftLabel: 'The shift',
   soon: 'soon',
   footerBefore: 'Built at home by',
   footerName: 'Saba Janelidze',
-  footerAfter: '. New code written for this lab; no employer code, documents or data. Every amount is fake.',
+  footerAfter: '. New code written for this lab, no employer code · test mode, fake money.',
 }
 
 export const STATION_NAME: Record<string, string> = {
@@ -26,11 +29,15 @@ export const HOME = {
   title: 'On call: one day at a tiny crypto exchange',
   description:
     'You are the on-call engineer at Tiny Exchange for one day. Each incident is a puzzle on real code: reproduce how the money was lost, pick the fix that survives every way the code can run, then clean up. Test mode, fake money.',
+  margin: 'on call',
+  marginSub: 'one day · five incidents',
   kicker: 'On call · one day at a tiny crypto exchange',
   heading: 'A customer was paid 160 from a balance of 100.',
   lead: "You're the on-call engineer at Tiny Exchange today. Find out how it happened, fix it, and prove the fix holds, on the real code.",
   start: 'Take incident 1',
   startNote: 'about 2 minutes · no sign-up',
+  howMargin: 'how',
+  howMarginSub: 'about 2 min each',
   howHeading: 'How each incident works',
   how: [
     { step: 'Reproduce', text: 'make the bug happen again, by choosing where things get slow.' },
@@ -39,6 +46,8 @@ export const HOME = {
   ],
   noCode:
     'You never write code. You read a few short lines, each with a plain label, and make choices. Every choice runs the real code, the same files the proof cards link to, with their tests.',
+  dayMargin: 'the day',
+  dayMarginSub: '09:30 – 17:30',
   dayHeading: 'The day',
   incident: (number: number, time: string, name: string) => `Incident ${number} · ${time} · ${name}`,
   take: 'Take this incident',

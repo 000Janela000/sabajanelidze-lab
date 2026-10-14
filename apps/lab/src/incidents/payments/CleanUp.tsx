@@ -59,7 +59,7 @@ export function CleanUp() {
   if (!open) {
     return (
       <div class="go-deeper">
-        <button type="button" class="button" onClick={() => setOpen(true)}>
+        <button type="button" class="btn-2" onClick={() => setOpen(true)}>
           {CLEAN_UP.open}
         </button>
       </div>
@@ -75,7 +75,8 @@ export function CleanUp() {
           <button
             key={choice}
             type="button"
-            class={`button${result?.choice === choice ? ' primary' : ''}`}
+            class="btn-2"
+            aria-pressed={result?.choice === choice}
             onClick={() => play(choice)}
           >
             {CLEAN_UP.choices[choice]}
@@ -83,7 +84,7 @@ export function CleanUp() {
         ))}
       </div>
       {result ? (
-        <div class="cleanup-result" aria-live="polite">
+        <div aria-live="polite">
           <p class={result.good ? 'verdict-good' : 'verdict-bad'}>
             <span aria-hidden="true">{result.good ? '✓ ' : '✗ '}</span>
             {result.text}

@@ -1,0 +1,173 @@
+/* Design tokens: the shared visual contract of sabajanelidze.com.
+   Version 1 (2026-10-15). Human guide: docs/design-tokens.md.
+
+   Plain CSS custom properties, no build step and no Tailwind needed, so another site
+   (for example the lab at lab.sabajanelidze.com) can copy this one file as it is.
+
+   Two themes from one design:
+   - "Paper" (light): the engineering notebook. Grid paper, navy ink, one blue accent.
+   - "Blueprint" (dark): the same notebook as a blueprint. Near-black, blue grid lines, one blue accent.
+   Which theme shows:
+   1. <html data-theme="paper"> or <html data-theme="blueprint"> (the visitor's choice), else
+   2. the visitor's system setting (prefers-color-scheme), else Paper.
+   This works without JavaScript; JavaScript only sets data-theme when the visitor picks one. */
+
+:root {
+  /* ---------- Fonts ---------- */
+  --font-body:
+    "Inter", "Inter Fallback", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --font-ka: "Noto Sans Georgian", "Inter", "Inter Fallback", ui-sans-serif, system-ui, sans-serif;
+  --font-code:
+    ui-monospace, "SF Mono", "Cascadia Mono", "Segoe UI Mono", Consolas, "Liberation Mono", monospace;
+  --weight-regular: 400;
+  --weight-strong: 600; /* the only two weights the site loads */
+
+  /* ---------- Type scale (fluid: grows with the screen, never smaller than the first value) ---------- */
+  --fs-xs: 0.75rem; /* 12 px: figure captions, mono labels, sources */
+  --fs-sm: 0.875rem; /* 14 px: meta lines, notes, tags */
+  --fs-base: 1rem; /* 16 px: body text in cards */
+  --fs-md: 1.0625rem; /* 17 px: body text in sections */
+  --fs-lg: clamp(1.125rem, 0.4vw + 1.02rem, 1.25rem); /* lead lines, card titles */
+  --fs-xl: clamp(1.25rem, 0.9vw + 1rem, 1.5rem); /* the hero pitch, big card titles */
+  --fs-2xl: clamp(1.5rem, 1.4vw + 1.1rem, 2rem); /* sub-headings (h3 in a feature) */
+  --fs-3xl: clamp(2rem, 2.6vw + 1.25rem, 3.25rem); /* section headings (h2) */
+  --fs-4xl: clamp(2.75rem, 4.4vw + 1rem, 4.5rem); /* the name in the hero (h1), 44 to 72 px */
+  --lh-tight: 1.02; /* h1 */
+  --lh-heading: 1.12; /* h2, h3 */
+  --lh-snug: 1.4; /* short UI text */
+  --lh-body: 1.6; /* paragraphs */
+  --tracking-display: -0.035em; /* h1 only (English only: Georgian never gets letter-spacing) */
+  --tracking-heading: -0.022em; /* h2, h3 */
+
+  /* ---------- Spacing (4 px base) ---------- */
+  --space-1: 0.25rem; /* 4 */
+  --space-2: 0.5rem; /* 8 */
+  --space-3: 0.75rem; /* 12 */
+  --space-4: 1rem; /* 16 */
+  --space-5: 1.5rem; /* 24 */
+  --space-6: 2rem; /* 32 */
+  --space-7: 3rem; /* 48 */
+  --space-8: 4rem; /* 64 */
+  --space-9: 6rem; /* 96 */
+  --section-space: clamp(4.5rem, 7vw + 1rem, 8.5rem); /* the gap between two home-page sections */
+  --content-max: 1180px; /* the widest the content gets */
+  --gutter: clamp(20px, 4vw, 40px); /* left and right page margin */
+  --margin-col: 136px; /* the notebook margin with the section number (desktop) */
+  --header-h: 60px;
+  --grid-cell: 24px; /* one square of the paper / blueprint grid */
+  --grid-major: 120px; /* a stronger line every 5 squares */
+
+  /* ---------- Radii (the notebook is square; only pills are round) ---------- */
+  --radius-tag: 2px; /* tags, small boxes (not --radius-sm: that name belongs to Tailwind) */
+  --radius: 3px; /* buttons, cards, figures */
+  --radius-pill: 999px; /* small round controls, for example "Pause background" */
+
+  /* ---------- Motion (AGENTS.md "Motion rules") ---------- */
+  --dur-instant: 100ms; /* a press */
+  --dur-fast: 150ms; /* hover, colour */
+  --dur-base: 250ms; /* menus, reveals */
+  --dur-page: 300ms; /* page changes; one step of an explainer */
+  --dur-reveal: 400ms; /* the theme switch's circular reveal (the longest allowed) */
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1); /* things that appear */
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1); /* things that move from A to B */
+  --step-hold: 1500ms; /* explainers: how long one step stays lit while playing */
+
+  /* ---------- Colours: Paper (light, the default) ---------- */
+  --bg: #f5f3ec; /* page: warm grid paper */
+  --surface: #fbfaf6; /* cards, figures */
+  --surface-2: #efece3; /* insets: commands, inputs */
+  --fg: #1b2130; /* text and ink lines (navy) */
+  --muted: #525968; /* secondary text (6.3:1 on --bg) */
+  --faint: #8a8e98; /* decorative only, never for text */
+  --line: #d9d4c6; /* hairlines between rows */
+  --line-strong: #1b2130; /* rules that structure the page (ink) */
+  --accent: #2342b8; /* the one accent: blue ink (7.4:1). Links, numbers, "pass" marks */
+  --accent-strong: #2342b8; /* filled accent surfaces */
+  --accent-fg: #ffffff; /* text on --accent-strong */
+  --accent-soft: rgba(35, 66, 184, 0.08); /* highlight panels */
+  --danger: #b0321a; /* red pen: only for failures (the "✗" in fig. 1, "build fails") */
+  --danger-soft: rgba(176, 50, 26, 0.08);
+  --btn-bg: #1b2130; /* main button */
+  --btn-fg: #ffffff;
+  --btn-shadow: #2342b8; /* the offset "print" shadow of the main button */
+  --grid-minor: rgba(27, 33, 48, 0.045);
+  --grid-major-color: rgba(27, 33, 48, 0.075);
+  --hero-glow: 0; /* 0 = no blueprint glow behind the hero */
+  --hero-glow-color: transparent; /* the glow's colour (static part; the WebGL part uses the same blue) */
+  --ring: var(--faint); /* empty states of diagram nodes */
+  --theme-color: #f5f3ec; /* the browser bar colour on phones */
+  color-scheme: light;
+}
+
+/* ---------- Colours: Blueprint (dark) ---------- */
+/* Two copies of the same block: one for "the visitor picked Blueprint", one for
+   "the visitor picked nothing and the system is dark". Keep them identical. */
+:root[data-theme="blueprint"] {
+  --bg: #0a0b0e;
+  --surface: #101217;
+  --surface-2: #161922;
+  --fg: #f2f3f5;
+  --muted: #959cab; /* 7.1:1 on --bg */
+  --faint: #5c6270;
+  --line: #232835;
+  --line-strong: #3c4a70; /* blueprint ink */
+  --accent: #5b86f7; /* 5.8:1 on --bg */
+  --accent-strong: #2f5fe0;
+  --accent-fg: #ffffff;
+  --accent-soft: rgba(91, 134, 247, 0.12);
+  --danger: #ff8270;
+  --danger-soft: rgba(255, 130, 112, 0.1);
+  --btn-bg: #2f5fe0;
+  --btn-fg: #ffffff;
+  --btn-shadow: #3c4a70;
+  --grid-minor: rgba(91, 134, 247, 0.065);
+  --grid-major-color: rgba(91, 134, 247, 0.12);
+  --hero-glow: 1;
+  --hero-glow-color: rgba(42, 82, 200, 0.16);
+  --ring: var(--faint);
+  --theme-color: #0a0b0e;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --bg: #0a0b0e;
+    --surface: #101217;
+    --surface-2: #161922;
+    --fg: #f2f3f5;
+    --muted: #959cab;
+    --faint: #5c6270;
+    --line: #232835;
+    --line-strong: #3c4a70;
+    --accent: #5b86f7;
+    --accent-strong: #2f5fe0;
+    --accent-fg: #ffffff;
+    --accent-soft: rgba(91, 134, 247, 0.12);
+    --danger: #ff8270;
+    --danger-soft: rgba(255, 130, 112, 0.1);
+    --btn-bg: #2f5fe0;
+    --btn-fg: #ffffff;
+    --btn-shadow: #3c4a70;
+    --grid-minor: rgba(91, 134, 247, 0.065);
+    --grid-major-color: rgba(91, 134, 247, 0.12);
+    --hero-glow: 1;
+    --hero-glow-color: rgba(42, 82, 200, 0.16);
+    --ring: var(--faint);
+    --theme-color: #0a0b0e;
+    color-scheme: dark;
+  }
+}
+
+/* The paper / blueprint grid. Put it on any element: class="grid-paper". */
+.grid-paper {
+  background-color: var(--bg);
+  background-image:
+    linear-gradient(var(--grid-major-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-major-color) 1px, transparent 1px),
+    linear-gradient(var(--grid-minor) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-minor) 1px, transparent 1px);
+  background-size:
+    var(--grid-major) var(--grid-major),
+    var(--grid-major) var(--grid-major),
+    var(--grid-cell) var(--grid-cell),
+    var(--grid-cell) var(--grid-cell);
+}
