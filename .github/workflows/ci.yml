@@ -42,5 +42,38 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: typecheck (astro check)
         run: pnpm --filter @lab/site run typecheck
-      - name: build (fails if a code excerpt marker is missing)
+      - name: build (fails if a code excerpt marker or a linked file is missing)
         run: pnpm --filter @lab/site run build
+      - name: install the test browser
+        run: pnpm exec playwright install --with-deps chromium
+      - name: browser tests (desktop, phone, reduced motion, accessibility, no-JavaScript text)
+        run: pnpm exec playwright test
+
+  postgres:
+    name: real database race (20 withdrawals at once)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: lab-test-only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      # A throwaway database that exists only inside this CI run.
+      DATABASE_URL: postgres://postgres:lab-test-only@localhost:5432/postgres
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: concurrency test on a real Postgres server
+        run: pnpm --filter @lab/core exec vitest run test/postgres.test.ts

@@ -1,5 +1,7 @@
 .incident {
   display: grid;
+  /* minmax(0, 1fr): a wide child (the result grid) must never widen the page on a phone. */
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--gap);
   margin-top: 24px;
 }
@@ -365,6 +367,7 @@
 
 .board {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--gap);
 }
 

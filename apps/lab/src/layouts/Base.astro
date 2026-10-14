@@ -29,10 +29,12 @@ const canonical = new URL(Astro.url.pathname, Astro.site)
     <meta name="theme-color" content="#121315" media="(prefers-color-scheme: dark)" />
   </head>
   <body>
-    <p class="test-mode" role="note"><strong>TEST MODE</strong> · no real money · fake data only</p>
-    <header class="site-header wrap">
-      <a class="brand" href="/">On call <span>· one day at a tiny crypto exchange</span></a>
-      <ShiftStrip current={station} />
+    <header>
+      <p class="test-mode" role="note"><strong>TEST MODE</strong> · no real money · fake data only</p>
+      <div class="site-header wrap">
+        <a class="brand" href="/">On call <span>· one day at a tiny crypto exchange</span></a>
+        <ShiftStrip current={station} />
+      </div>
     </header>
     <main class="wrap">
       <slot />

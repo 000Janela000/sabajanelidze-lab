@@ -18,6 +18,8 @@ import { buildChain, codeLines, excerpt, lineUrl } from '../../lib/source.ts'
 const WITHDRAW = 'packages/core/src/payments/withdraw.ts'
 const PATCHES = 'packages/core/src/payments/patches.ts'
 const RECONCILE = 'packages/core/src/payments/reconcile.ts'
+const POSTGRES = 'packages/core/src/payments/postgres.ts'
+const POSTGRES_TEST = 'packages/core/test/postgres.test.ts'
 const RACE_TEST = 'packages/core/test/race.test.ts'
 const PROPERTY_TEST = 'packages/core/test/properties.test.ts'
 const WITHDRAW_TEST = 'packages/core/test/withdraw.test.ts'
@@ -28,7 +30,8 @@ const checkTwice = excerpt(PATCHES, 'patch-check-twice')
 const lockRead = excerpt(PATCHES, 'patch-lock-read')
 const lockBoth = excerpt(PATCHES, 'patch-lock-read-and-save')
 const resolveUnknown = excerpt(WITHDRAW, 'resolve-unknown')
-const reconcile = excerpt(RECONCILE, 'reconcile-holds')
+const reconcile = excerpt(RECONCILE, 'reconcile')
+const postgresReserve = excerpt(POSTGRES, 'postgres-reserve')
 
 // Every number on this page is computed here, at build time, by running the same code the game runs.
 const OPENING = 10000
@@ -103,6 +106,7 @@ const v01Steps = codeLines(v01).filter((line) => line.step)
     <PaymentsIncident
       client:visible
       v01={codeLines(v01)}
+      runs={naive.runs}
       patches={patches}
       shareUrl={shareUrl}
       bookUrl={bookACall('payments')}
@@ -128,8 +132,8 @@ const v01Steps = codeLines(v01).filter((line) => line.step)
       <h2>The tests</h2>
       <ul class="tests">
         <li>
-          <a href={lineUrl(RACE_TEST, "describe('incident 1: every order")}>Every order, counted</a>: all{' '}
-          {naive.orders} orders of build v0.1 ({naive.losing} lose money), and every patch on this page. The numbers in
+          <a href={lineUrl(RACE_TEST, "describe('incident 1: every distinct run")}>Every order, counted</a>: all{' '}
+          {naive.runs} ways build v0.1 can run ({naive.losing} lose money), and every patch on this page. The numbers in
           the game are the numbers in this test.
         </li>
         <li>
@@ -150,21 +154,23 @@ const v01Steps = codeLines(v01).filter((line) => line.step)
 
       <h2>The trade-off</h2>
       <p>
-        A lock around both the read and the save also holds ({results.lockBoth.losing} of {results.lockBoth.possible}{' '}
-        possible orders lose money). The reserve is still the better step, for two reasons. It is one statement, so
+        A lock around both the read and the save also holds ({results.lockBoth.losing} of {results.lockBoth.runs}{' '}
+        ways to run lose money). The reserve is still the better step, for two reasons. It is one statement, so
         there is no lock to forget to release on an early return (look at the extra <code>unlock</code> the lock version
         needs). And money in flight gets its own state, "on hold", so a timeout or a refused payout can be settled or
         released later from the books.
       </p>
       <CodeBlock title="Lock around the read and the save (also safe)" source={lockBoth} />
-      <p>In Postgres, the reserve is one conditional update, with a constraint as a backstop:</p>
-      <pre class="sql"><code>{`UPDATE balances
-   SET available = available - $2,
-       held      = held + $2
- WHERE customer_id = $1
-   AND available >= $2;          -- 0 rows updated = not enough money
-
-ALTER TABLE balances ADD CHECK (available >= 0);`}</code></pre>
+      <p>
+        On a real database the reserve is one statement: a conditional update, and the hold row in the same statement.
+        The <code>CHECK (available &gt;= 0)</code> on the table is a backstop, not the fix.
+      </p>
+      <CodeBlock title="The reserve on Postgres" source={postgresReserve} />
+      <p>
+        <a href={lineUrl(POSTGRES_TEST, "describe.skipIf(!process.env.DATABASE_URL)")}>The real-database race</a>: in
+        CI, 20 withdrawals of 80 hit a real Postgres server at once, each waiting 20 ms after its read like a slow
+        network. Build v1 pays out exactly once. Build v0.1, on the same database, pays out more than once.
+      </p>
 
       <h2>The clean-up code</h2>
       <div class="side-by-side">
@@ -213,24 +219,25 @@ ALTER TABLE balances ADD CHECK (available >= 0);`}</code></pre>
 
       <h3>2. Count</h3>
       <p>
-        There are {naive.orders} possible orders of the 8 steps. {naive.losing} of them ({pct(naive.losing, naive.orders)})
-        lose money. Build v0.1 is only safe when the two requests don't overlap.
+        The two requests can run in {naive.runs} different ways (different orders of their steps). {naive.losing} of
+        them ({pct(naive.losing, naive.runs)}) lose money: build v0.1 loses whenever both requests read the balance before
+        either one saves.
       </p>
 
       <h3>3. Fix</h3>
       <ul>
         <li>
           <strong>Check the balance twice:</strong> still loses in {results.checkTwice.losing} of{' '}
-          {results.checkTwice.possible} orders ({pct(results.checkTwice.losing, results.checkTwice.possible)}). The gap
+          {results.checkTwice.runs} ways to run ({pct(results.checkTwice.losing, results.checkTwice.runs)}). The gap
           moves; it doesn't close.
         </li>
         <li>
-          <strong>Lock only the read:</strong> still loses in {results.lockRead.losing} of {results.lockRead.possible}{' '}
-          possible orders ({pct(results.lockRead.losing, results.lockRead.possible)}). The lock is released before the
+          <strong>Lock only the read:</strong> still loses in {results.lockRead.losing} of {results.lockRead.runs}{' '}
+          ways to run ({pct(results.lockRead.losing, results.lockRead.runs)}). The lock is released before the
           save.
         </li>
         <li>
-          <strong>Reserve, then settle:</strong> loses in {results.reserve.losing} of {results.reserve.possible} orders.
+          <strong>Reserve, then settle:</strong> loses in {results.reserve.losing} of {results.reserve.runs} ways to run.
           This is build v1.
         </li>
       </ul>
@@ -239,8 +246,9 @@ ALTER TABLE balances ADD CHECK (available >= 0);`}</code></pre>
       <p>
         With build v1 live, a payout of 80 times out at the bank. The money stays on hold and the payout is marked
         "unknown". Sending the payout again pays twice if the bank had already paid. Asking the bank about this payout
-        settles or releases the hold at once. Tonight's reconciliation compares every open hold with the bank's own
-        statement, and is the safety net under the faster answer.
+        settles the hold at once if the bank paid; "not found" is not final, so the money stays on hold. Tonight's
+        reconciliation checks every open hold with the bank, and every payout on the bank's statement against our own
+        records, so it also catches a payout our books can't explain.
       </p>
     </section>
   </article>

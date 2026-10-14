@@ -29,8 +29,26 @@ export function commit(): string {
   return headCommit
 }
 
+const warned = new Set<string>()
+
+/** True when `file` is part of the commit the links point at (not only in the working tree). */
+function inCommit(file: string): boolean {
+  try {
+    execFileSync('git', ['cat-file', '-e', `${commit()}:${file}`], { cwd: repoRoot, stdio: 'ignore' })
+    return true
+  } catch {
+    return false
+  }
+}
+
 export function fileUrl(file: string, startLine?: number, endLine?: number): string {
   if (!existsSync(resolve(repoRoot, file))) throw new Error(`Linked file does not exist: ${file}`)
+  if (!inCommit(file)) {
+    const message = `${file} is not in commit ${commit().slice(0, 7)}, so its link would be broken`
+    if (process.env.CI) throw new Error(message)
+    if (!warned.has(file)) console.warn(`[links] ${message} (commit it before publishing)`)
+    warned.add(file)
+  }
   const lines = startLine ? `#L${startLine}${endLine ? `-L${endLine}` : ''}` : ''
   return `${REPO_URL}/blob/${commit()}/${file}${lines}`
 }

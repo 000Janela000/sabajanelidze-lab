@@ -4,7 +4,7 @@ import {
   MemoryPaymentsStore,
   type MoneyPicture,
   moneyPicture,
-  reconcileHolds,
+  reconcile,
   resolveUnknownPayout,
   withdraw,
 } from '@lab/core'
@@ -54,8 +54,13 @@ export function CleanUp() {
       text = `The bank says payout-1 was ${outcome}. The hold is settled, nothing was paid twice, and the customer sees "paid" a moment later.`
       good = true
     } else {
-      const lines = await reconcileHolds(store, bank)
-      text = `Tonight's job found ${lines.map((line) => line.payoutId).join(', ')} on the bank's statement and settled it. Nothing lost; the customer saw "pending" until then. This is the safety net under the faster answer.`
+      const lines = await reconcile(store, bank)
+      text = `Tonight's job found ${lines
+        .filter((line) => line.action === 'settled')
+        .map((line) => line.payoutId)
+        .join(
+          ', ',
+        )} on the bank's statement and settled it. Nothing lost; the customer saw "pending" until then. This is the safety net under the faster answer.`
       good = true
     }
     setResult({ choice, picture: moneyPicture(store, bank, CUSTOMER, OPENING), text, good })

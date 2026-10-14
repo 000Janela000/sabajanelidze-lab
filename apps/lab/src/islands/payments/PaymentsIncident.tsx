@@ -1,6 +1,7 @@
 import {
   type AllOrdersSummary,
   allOrders,
+  formatCents,
   type MoneyPicture,
   moneyPicture,
   pauseAfter,
@@ -39,6 +40,8 @@ export interface PatchOption {
 
 interface Props {
   readonly v01: readonly CodeLine[]
+  /** How many distinct ways build v0.1 can run, computed from the code at build time. */
+  readonly runs: number
   readonly patches: readonly PatchOption[]
   readonly shareUrl: string
   readonly bookUrl: string
@@ -152,7 +155,7 @@ export function PaymentsIncident(props: Props) {
     const picture = moneyPicture(race.store, race.bank, '42', OPENING)
     if (picture.lost !== 0) {
       setAnnouncement(
-        `Reproduced. With request A slow after line ${afterLine}, the bank paid out 160.00 and the balance still shows 20.00. The exchange is 80.00 short.`,
+        `Reproduced. With request A slow after line ${afterLine}, the bank paid out ${formatCents(picture.paidOut)} and the balance still shows ${formatCents(picture.available)}. The exchange is ${formatCents(Math.abs(picture.lost))} short.`,
       )
     } else {
       setAnnouncement(`No money lost with request A slow after line ${afterLine}. Try another line.`)
@@ -195,6 +198,7 @@ export function PaymentsIncident(props: Props) {
     if (proof instanceof HTMLDetailsElement) {
       proof.open = true
       proof.scrollIntoView({ block: 'start' })
+      proof.querySelector('summary')?.focus()
     }
   }
 
@@ -203,7 +207,7 @@ export function PaymentsIncident(props: Props) {
     ? [
         'On call · Incident 1: the bank paid out twice',
         `Reproduced the race on try ${tries}`,
-        `Guessed ${guess || '?'} · ${summary.losing} of ${summary.possible} orders lose money`,
+        `Guessed ${guess || '?'} · ${summary.losing} of ${summary.runs} ways to run lose money`,
         `Fixed with "reserve, then settle" after ${patchTries} ${patchTries === 1 ? 'try' : 'tries'}`,
         grid(summary),
         props.shareUrl,
@@ -270,8 +274,8 @@ export function PaymentsIncident(props: Props) {
       {stage === 'guess' ? (
         <section class="guess">
           <p>
-            Each request has 4 lines, so there are <strong>70</strong> possible orders of the 8 steps. How
-            many of them lose money?
+            The two requests can run in <strong>{props.runs}</strong> different ways (different orders of
+            their steps). How many of them lose money?
           </p>
           <div class="guess-row">
             <label>
@@ -280,20 +284,20 @@ export function PaymentsIncident(props: Props) {
                 type="number"
                 inputMode="numeric"
                 min={0}
-                max={70}
+                max={props.runs}
                 value={guess}
                 onInput={(event) => setGuess((event.target as HTMLInputElement).value)}
               />
             </label>
             <button type="button" class="button primary" disabled={running} onClick={runAllOrders}>
-              Run all 70 orders
+              Run all {props.runs}
             </button>
           </div>
           {summary ? (
             <>
               <OrderGrid
                 outcomes={summary.outcomes}
-                label={`${summary.losing} of ${summary.possible} orders lose money${guess ? ` (your guess: ${guess})` : ''}. Build v0.1 is only safe when the two requests don't overlap.`}
+                label={`${summary.losing} of ${summary.runs} ways to run lose money${guess ? ` (your guess: ${guess})` : ''}. Build v0.1 loses money whenever both requests read the balance before either one saves.`}
               />
               <button type="button" class="button primary" onClick={() => goTo('fix')}>
                 Next: fix it
@@ -344,8 +348,8 @@ export function PaymentsIncident(props: Props) {
           {patchResult && patchResult.summary.losing > 0 ? (
             <div class="patch-result" aria-live="polite">
               <OrderGrid
-                outcomes={patchResult.summary.outcomes.filter((outcome) => outcome.possible)}
-                label={`Still loses money in ${patchResult.summary.losing} of ${patchResult.summary.possible} possible orders${patchResult.losingLine ? `, for example when A gets slow after line ${patchResult.losingLine}` : ''}.`}
+                outcomes={patchResult.summary.outcomes}
+                label={`Still loses money in ${patchResult.summary.losing} of ${patchResult.summary.runs} ways to run${patchResult.losingLine ? `, for example when A gets slow after line ${patchResult.losingLine}` : ''}.`}
               />
               <p>The gap between reading and saving is still open. Try another patch.</p>
             </div>
@@ -356,11 +360,11 @@ export function PaymentsIncident(props: Props) {
       {stage === 'solved' && patchResult && summary ? (
         <section class="solved">
           <h2 ref={stageHeading} tabIndex={-1}>
-            Fixed: it holds in all {patchResult.summary.possible} orders
+            Fixed: it holds in all {patchResult.summary.runs} ways to run
           </h2>
           <OrderGrid
             outcomes={patchResult.summary.outcomes}
-            label={`"Reserve, then settle" loses money in 0 of ${patchResult.summary.possible} orders.`}
+            label={`"Reserve, then settle" loses money in 0 of ${patchResult.summary.runs} ways to run.`}
           />
           <p>
             The check and the move are now <strong>one atomic step</strong>: "move 80 from available to on
@@ -390,7 +394,7 @@ export function PaymentsIncident(props: Props) {
   )
 }
 
-/** The 70 orders as 7 rows of emoji squares, for the shared result. */
+/** Every run as one emoji square, 10 per row, for the shared result. */
 function grid(summary: AllOrdersSummary): string {
   const cells = summary.outcomes.map((outcome) => (outcome.picture.lost !== 0 ? '🟥' : '🟩'))
   const rows: string[] = []

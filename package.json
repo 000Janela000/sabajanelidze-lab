@@ -12,10 +12,13 @@
     "check:fast": "pnpm --filter @lab/core run typecheck && pnpm --filter @lab/core run test && biome check .",
     "format": "biome format --write .",
     "dev": "pnpm --filter @lab/site run dev",
-    "build": "pnpm --filter @lab/site run build"
+    "build": "pnpm --filter @lab/site run build",
+    "test:e2e": "playwright test"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
     "@biomejs/biome": "2.5.15",
+    "@playwright/test": "1.64.0",
     "typescript": "6.0.3"
   }
 }

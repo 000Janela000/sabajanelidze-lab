@@ -123,7 +123,7 @@ INCIDENT #1 · 13:04 · Customer #42
 ─────────────────────────────────────────────────────────
 1 REPRODUCE  Make it happen again.
              Tap the line where request A gets slow.
-             Guess first: how many of the 70 orders lose money?
+             Guess first: of the 54 ways the two can run, how many lose money?
 2 FIX        Pick a patch:  ( ) check the balance twice
                             ( ) lock only the read
                             ( ) reserve, then settle
@@ -188,17 +188,17 @@ Each incident's card shows, in this order:
 **Step 1 — Reproduce.** Two copies of this request run at once (A and B). The visitor taps **the line after which request A gets slow** (a network lag); B then runs to the end, then A finishes.
 - Only **one** of the 4 pause points loses money: after line 2. A has read 100; B reads 100 too, saves 20 and pays 80; A saves 20 and pays 80. Paid out 160, balance 20.
 - Pausing after line 1, 3 or 4 is safe. So random tapping usually fails, and the visitor has to think about *where* the gap is.
-- **Guess, then reveal:** "How many of the 70 possible orders of these 8 steps lose money?" Then the machine runs them all: **36 of 70 lose** (computed with a script for this document; the game computes it live).
+- **Guess, then reveal:** "The two requests can run in 54 different ways. How many lose money?" Then the machine runs them all: **36 of 54 lose** (the game computes it live from the code; `packages/core/test/race.test.ts` pins the number).
 
 **Step 2 — Fix.** Three patches:
 
 | Patch | What it does | Result (all orders) |
 |---|---|---|
-| "Check the balance twice" | read and check again just before saving | still loses in **120 of 252** orders (48%): the gap moves, it doesn't close |
-| "Lock only the read" | a lock around reading the balance | still loses in **100 of 224** possible orders (45%): the lock is released before the save |
+| "Check the balance twice" | read and check again just before saving | still loses in **120 of 182** ways to run: the gap moves, it doesn't close |
+| "Lock only the read" | a lock around reading the balance | still loses in **100 of 180** ways to run: the lock is released before the save |
 | **"Reserve, then settle"** (Saba's) | one atomic step: "move 80 from available to on hold, only if 80 is available"; then pay; then settle (or release the hold if the bank refuses) | **0%** |
 
-(Numbers from the real code, checked by `packages/core/test/race.test.ts`; the game computes them live.) **The trade-off line:** a lock around both the read and the save is also safe (0 of 74 possible orders lose). The reserve still wins: it is one statement, so there is no lock to forget to release on an early return, and money in flight gets its own state ("on hold"), so a timeout or a refused payout can be settled or released later from the books. In Postgres it is `UPDATE balances SET available = available - 80, held = held + 80 WHERE id = $1 AND available >= 80`, plus a `CHECK (available >= 0)` as a backstop.
+(Numbers from the real code, checked by `packages/core/test/race.test.ts`; the game computes them live.) **The trade-off line:** a lock around both the read and the save is also safe (0 of 50 ways to run lose). The reserve still wins: it is one statement, so there is no lock to forget to release on an early return, and money in flight gets its own state ("on hold"), so a timeout or a refused payout can be settled or released later from the books. In Postgres it is `UPDATE balances SET available = available - 80, held = held + 80 WHERE id = $1 AND available >= 80`, plus a `CHECK (available >= 0)` as a backstop.
 
 **Step 3 — Clean up (Go deeper).** "Your fix is live. Now the bank times out on a payout. Did it pay or not?"
 - **Retry at once** → if the first call did pay, the customer is paid twice. ✗
@@ -389,7 +389,7 @@ lab.sabajanelidze.com  (one Cloudflare Worker; static pages are free and unlimit
 - **Unit tests** (Vitest) for every rule and defence.
 - **Property-based tests** (fast-check: the computer invents thousands of cases): the ledger always sums to zero; no balance below zero with defences on; no payout beyond the crediting policy, and a reorg deeper than the policy is reported as an accepted risk, not hidden; each provider event is applied once, in version order.
 - **Defence switches:** each defence is a named flag in the core. CI runs each defence's test with its flag off and expects a failure. The same flags drive "build v0.1" in the game and the "defences off" switch in the sandbox. No extra tooling.
-- **Every order:** the incident grids (70 orders and so on) also run as tests, with the numbers in this document as expected values.
+- **Every order:** the incident grids (every distinct run) also run as tests, with the numbers in this document as expected values.
 - **A real database test:** CI starts a Postgres container, implements the `store` port with the reserve statement from 7.1, fires 20 concurrent withdrawals, and checks that nothing goes below zero and nothing is paid twice. This is the test the payments card links to.
 - **End-to-end** (Playwright): each incident on phone and desktop, normal and reduced motion, keyboard only. **Accessibility** (axe). **Bot view:** full text without JavaScript. **JavaScript budget** per page and Lighthouse on a mobile profile.
 - **Code excerpts** are cut from the real files at build time between markers; the build fails if a marker is missing.
@@ -461,7 +461,7 @@ Sound stays off.
 
 ### 12.4 Accessibility and the text version
 - Every action is a real button; focus moves to what changed.
-- The event log is a polite live region; the grid announces **only its summary** ("36 of 70 orders lost money"), not 70 updates.
+- The event log is a polite live region; the grid announces **only its summary** ("36 of 54 ways to run lose money"), not 54 updates.
 - Colour is never the only signal: red **and** an icon **and** the word "lost".
 - **Text version:** each incident page is a real article in the HTML (ticket, steps, the losing order, the patches and their results, the clean-up choices, code links). One script file per incident feeds both the game and the article.
 
@@ -540,6 +540,6 @@ After each incident: desktop and phone screenshots, a reduced-motion check, a 10
 - Incidents cited by the reviewers: [Kraken, June 2024: deposits credited "before asset deposits fully cleared", nearly $3M](https://www.theblock.co/post/300888/kraken-discloses-bug-exploited-for-nearly-3-million) (checked); Revolut's 2022 payment flaw, about $20M ([Help Net Security](https://www.helpnetsecurity.com/2023/07/10/flaw-in-revolut-payment-systems-exploited-to-steal-20-million/), via the CTO review, not re-checked).
 - Agent security: the "Design Patterns for Securing LLM Agents" paper ([arXiv 2506.08837](https://arxiv.org/abs/2506.08837v3)) via the AI engineer's review, not re-checked.
 - The "Utopia / UTO" specimen (ICAO Doc 9303 examples) via secondary sources ([mrz-parser](https://docs.rs/crate/mrz-parser/0.3.1), [PyPI mrz](https://pypi.org/project/mrz)); tests will use the official Part 4 examples.
-- **Race numbers** (from the real code in `packages/core`, pinned by `packages/core/test/race.test.ts`): v1's naive code 68 of 70 orders lose (an earlier script); build v0.1 36 of 70; "check twice" 120 of 252; "lock only the read" 100 of 224 possible; "lock around read and save" 0 of 74 possible; "reserve, then settle" 0 of 70. Pause points: build v0.1 loses only after line 2.
+- **Race numbers** (from the real code in `packages/core`, pinned by `packages/core/test/race.test.ts`; counted as distinct runs, after a Codex review found that counting padded schedules counted some runs twice): build v0.1 36 of 54; "check twice" 120 of 182; "lock only the read" 100 of 180; "lock around read and save" 0 of 50; "reserve, then settle" 0 of 24. Pause points: build v0.1 loses only after line 2.
 
 **Not verified yet:** Alchemy WebSockets on the free plan (not needed); the exact faucet amount after the first live test; Sepolia's end date (none announced).
