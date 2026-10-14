@@ -84,7 +84,7 @@ export function Fix(props: {
         ))}
       </fieldset>
       <div class="attack">
-        <button type="button" class="nb-btn" disabled={!choice || running} onClick={attack}>
+        <button type="button" class="btn" disabled={!choice || running} onClick={attack}>
           {FIX.attack}
         </button>
       </div>
@@ -97,7 +97,6 @@ export function Fix(props: {
               loseMoney: COUNT.loseMoney,
               legendSafe: COUNT.legendSafe,
               legendLost: COUNT.legendLost,
-              figure: FIX.figure,
               caption: (
                 <>
                   <strong>

@@ -10,12 +10,13 @@ export interface RunGridTexts {
   readonly extra?: string
   readonly legendSafe: (count: number) => string
   readonly legendLost: (count: number) => string
-  /** The figure number, for example "fig. 2". */
-  readonly figure: string
   readonly caption: ComponentChildren
   /** The whole result as one sentence, for screen readers. */
   readonly summary: string
 }
+
+/** The whole grid fills in this long, however many runs there are (well under the 5-second rule). */
+const FILL_MS = 1500
 
 /** Every run as one square: solid blue safe, hatched red lost. Cells fade in one by one (not with reduced motion). */
 export function RunGrid(props: { outcomes: readonly RaceOutcome[]; texts: RunGridTexts }) {
@@ -34,7 +35,7 @@ export function RunGrid(props: { outcomes: readonly RaceOutcome[]; texts: RunGri
           <span
             key={index}
             class={`cell ${outcome.picture.lost !== 0 ? 'cell-lost' : 'cell-safe'}`}
-            style={{ '--i': index }}
+            style={{ '--d': `${Math.round((index * FILL_MS) / outcomes.length)}ms` }}
           />
         ))}
       </div>
@@ -46,9 +47,7 @@ export function RunGrid(props: { outcomes: readonly RaceOutcome[]; texts: RunGri
           <span class="cell cell-lost" /> {texts.legendLost(losing)}
         </li>
       </ul>
-      <figcaption class="nb-cap">
-        <span class="nb-cap-num">{texts.figure}</span> — {texts.caption}
-      </figcaption>
+      <figcaption class="cap">{texts.caption}</figcaption>
     </figure>
   )
 }

@@ -1,16 +1,17 @@
 /* Design tokens: the shared visual contract of sabajanelidze.com.
-   Version 1 (2026-10-15). Human guide: docs/design-tokens.md.
+   Version 2 (2026-10-15, Phase 1c "Calm"). Human guide and change list: docs/design-tokens.md.
 
    Plain CSS custom properties, no build step and no Tailwind needed, so another site
    (for example the lab at lab.sabajanelidze.com) can copy this one file as it is.
 
-   Two themes from one design:
-   - "Paper" (light): the engineering notebook. Grid paper, navy ink, one blue accent.
-   - "Blueprint" (dark): the same notebook as a blueprint. Near-black, blue grid lines, one blue accent.
+   Two themes from one design, both calm: no grid, no glow, no gradients.
+   - Light (the default): navy text on warm off-white, one calm blue accent.
+   - Dark: a calm, low-saturation slate, light text, the same calm blue made lighter.
    Which theme shows:
-   1. <html data-theme="paper"> or <html data-theme="blueprint"> (the visitor's choice), else
-   2. the visitor's system setting (prefers-color-scheme), else Paper.
-   This works without JavaScript; JavaScript only sets data-theme when the visitor picks one. */
+   1. <html data-theme="light"> or <html data-theme="dark"> (the visitor picked one in the footer switch), else
+   2. the visitor's system setting (prefers-color-scheme), else light.
+   This works without JavaScript; JavaScript only sets data-theme when the visitor picks one.
+   The version 1 names still work: data-theme="paper" = light, data-theme="blueprint" = dark. */
 
 :root {
   /* ---------- Fonts ---------- */
@@ -18,26 +19,25 @@
     "Inter", "Inter Fallback", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
   --font-ka: "Noto Sans Georgian", "Inter", "Inter Fallback", ui-sans-serif, system-ui, sans-serif;
   --font-code:
-    ui-monospace, "SF Mono", "Cascadia Mono", "Segoe UI Mono", Consolas, "Liberation Mono", monospace;
+    ui-monospace, "SF Mono", "Cascadia Mono", "Segoe UI Mono", Consolas, "Liberation Mono", monospace; /* only real commands and code */
   --weight-regular: 400;
   --weight-strong: 600; /* the only two weights the site loads */
 
   /* ---------- Type scale (fluid: grows with the screen, never smaller than the first value) ---------- */
-  --fs-xs: 0.75rem; /* 12 px: figure captions, mono labels, sources */
-  --fs-sm: 0.875rem; /* 14 px: meta lines, notes, tags */
-  --fs-base: 1rem; /* 16 px: body text in cards */
-  --fs-md: 1.0625rem; /* 17 px: body text in sections */
-  --fs-lg: clamp(1.125rem, 0.4vw + 1.02rem, 1.25rem); /* lead lines, card titles */
-  --fs-xl: clamp(1.25rem, 0.9vw + 1rem, 1.5rem); /* the hero pitch, big card titles */
-  --fs-2xl: clamp(1.5rem, 1.4vw + 1.1rem, 2rem); /* sub-headings (h3 in a feature) */
-  --fs-3xl: clamp(2rem, 2.6vw + 1.25rem, 3.25rem); /* section headings (h2) */
-  --fs-4xl: clamp(2.75rem, 4.4vw + 1rem, 4.5rem); /* the name in the hero (h1), 44 to 72 px */
-  --lh-tight: 1.02; /* h1 */
-  --lh-heading: 1.12; /* h2, h3 */
+  --fs-xs: 0.8125rem; /* 13 px: tags only. Never for sources, dates or captions */
+  --fs-sm: 0.9375rem; /* 15 px: sources, dates, meta lines, notes, footer */
+  --fs-base: 1.0625rem; /* 17 px: body text */
+  --fs-md: clamp(1.0625rem, 0.25vw + 1rem, 1.1875rem); /* 17 to 19 px: section intros, lead paragraphs */
+  --fs-lg: clamp(1.125rem, 0.4vw + 1.02rem, 1.3125rem); /* 18 to 21 px: card titles, outcomes */
+  --fs-xl: clamp(1.5rem, 1.1vw + 1.15rem, 2rem); /* 24 to 32 px: the numbers row, big card titles */
+  --fs-2xl: clamp(1.75rem, 1.4vw + 1.3rem, 2.5rem); /* 28 to 40 px: section headings (h2) */
+  --fs-hero: clamp(2rem, 2.3vw + 1.45rem, 3.25rem); /* 32 to 52 px: the pitch (h1) */
+  --lh-tight: 1.12; /* h1 */
+  --lh-heading: 1.18; /* h2, h3 */
   --lh-snug: 1.4; /* short UI text */
-  --lh-body: 1.6; /* paragraphs */
-  --tracking-display: -0.035em; /* h1 only (English only: Georgian never gets letter-spacing) */
-  --tracking-heading: -0.022em; /* h2, h3 */
+  --lh-body: 1.62; /* paragraphs */
+  --tracking-display: -0.026em; /* h1 only (English only: Georgian never gets letter-spacing) */
+  --tracking-heading: -0.018em; /* h2, h3 */
 
   /* ---------- Spacing (4 px base) ---------- */
   --space-1: 0.25rem; /* 4 */
@@ -49,125 +49,104 @@
   --space-7: 3rem; /* 48 */
   --space-8: 4rem; /* 64 */
   --space-9: 6rem; /* 96 */
-  --section-space: clamp(4.5rem, 7vw + 1rem, 8.5rem); /* the gap between two home-page sections */
-  --content-max: 1180px; /* the widest the content gets */
+  --section-space: clamp(3.5rem, 4vw + 2rem, 6.5rem); /* the gap between two home-page sections */
+  --content-max: 1120px; /* the widest the content gets */
   --gutter: clamp(20px, 4vw, 40px); /* left and right page margin */
-  --margin-col: 136px; /* the notebook margin with the section number (desktop) */
   --header-h: 60px;
-  --grid-cell: 24px; /* one square of the paper / blueprint grid */
-  --grid-major: 120px; /* a stronger line every 5 squares */
 
-  /* ---------- Radii (the notebook is square; only pills are round) ---------- */
-  --radius-tag: 2px; /* tags, small boxes (not --radius-sm: that name belongs to Tailwind) */
-  --radius: 3px; /* buttons, cards, figures */
-  --radius-pill: 999px; /* small round controls, for example "Pause background" */
+  /* ---------- Radii (soft, never round except pills) ---------- */
+  --radius-tag: 4px; /* tags, small boxes (not --radius-sm: that name belongs to Tailwind) */
+  --radius: 8px; /* buttons, inputs */
+  --radius-card: 12px; /* cards, images */
+  --radius-pill: 999px; /* small round controls */
 
   /* ---------- Motion (AGENTS.md "Motion rules") ---------- */
   --dur-instant: 100ms; /* a press */
   --dur-fast: 150ms; /* hover, colour */
   --dur-base: 250ms; /* menus, reveals */
-  --dur-page: 300ms; /* page changes; one step of an explainer */
-  --dur-reveal: 400ms; /* the theme switch's circular reveal (the longest allowed) */
+  --dur-page: 300ms; /* page changes */
   --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1); /* things that appear */
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1); /* things that move from A to B */
-  --step-hold: 1500ms; /* explainers: how long one step stays lit while playing */
 
-  /* ---------- Colours: Paper (light, the default) ---------- */
-  --bg: #f5f3ec; /* page: warm grid paper */
-  --surface: #fbfaf6; /* cards, figures */
-  --surface-2: #efece3; /* insets: commands, inputs */
-  --fg: #1b2130; /* text and ink lines (navy) */
-  --muted: #525968; /* secondary text (6.3:1 on --bg) */
-  --faint: #8a8e98; /* decorative only, never for text */
-  --line: #d9d4c6; /* hairlines between rows */
-  --line-strong: #1b2130; /* rules that structure the page (ink) */
-  --accent: #2342b8; /* the one accent: blue ink (7.4:1). Links, numbers, "pass" marks */
-  --accent-strong: #2342b8; /* filled accent surfaces */
-  --accent-fg: #ffffff; /* text on --accent-strong */
-  --accent-soft: rgba(35, 66, 184, 0.08); /* highlight panels */
-  --danger: #b0321a; /* red pen: only for failures (the "✗" in fig. 1, "build fails") */
-  --danger-soft: rgba(176, 50, 26, 0.08);
-  --btn-bg: #1b2130; /* main button */
+  /* ---------- Colours: light (the default) ----------
+     Contrast on --bg (WCAG 2.2, checked by private/design/phase1c/contrast-audit.md):
+     --fg 14.4:1, --muted 7.1:1, --accent 7.3:1, --line-strong 3.3:1 (non-text), --faint 2.9:1 (decoration only). */
+  --bg: #f7f5f0; /* page: warm off-white */
+  --surface: #fdfcf9; /* cards */
+  --surface-2: #efebe2; /* insets: code, pressed controls */
+  --fg: #18233a; /* text (navy) */
+  --muted: #4a5366; /* secondary text: sources, dates, meta lines */
+  --faint: #8b909b; /* decoration only, never for text */
+  --line: #e2ddd2; /* hairlines between rows and around cards (decoration: no contrast needed, never behind text) */
+  --line-strong: #80848e; /* lines that carry meaning: control borders, diagram lines (3:1 or more) */
+  --accent: #2b4aa6; /* the one accent: calm blue. Links, the focus ring, diagram marks */
+  --accent-hover: #1f3a8a; /* a link under the pointer */
+  --accent-fg: #ffffff; /* text on a filled accent surface */
+  --accent-soft: rgba(43, 74, 166, 0.07); /* soft highlight panels */
+  --danger: #a8321c; /* only for failures (case-study diagrams), never a second accent */
+  --danger-soft: rgba(168, 50, 28, 0.07);
+  --btn-bg: #18233a; /* main button: navy */
+  --btn-bg-hover: #2b4aa6;
   --btn-fg: #ffffff;
-  --btn-shadow: #2342b8; /* the offset "print" shadow of the main button */
-  --grid-minor: rgba(27, 33, 48, 0.045);
-  --grid-major-color: rgba(27, 33, 48, 0.075);
-  --hero-glow: 0; /* 0 = no blueprint glow behind the hero */
-  --hero-glow-color: transparent; /* the glow's colour (static part; the WebGL part uses the same blue) */
-  --ring: var(--faint); /* empty states of diagram nodes */
-  --theme-color: #f5f3ec; /* the browser bar colour on phones */
+  --btn-border: #18233a; /* the main button's edge (3:1 or more against --bg) */
+  --focus: #2b4aa6; /* the focus ring */
+  --ring: var(--faint); /* empty states of diagram nodes (parked explainers) */
+  --theme-color: #f7f5f0; /* the browser bar colour on phones */
   color-scheme: light;
 }
 
-/* ---------- Colours: Blueprint (dark) ---------- */
-/* Two copies of the same block: one for "the visitor picked Blueprint", one for
-   "the visitor picked nothing and the system is dark". Keep them identical. */
+/* ---------- Colours: dark ----------
+   Two copies of the same block: one for "the visitor picked dark", one for
+   "the visitor picked nothing and the system is dark". Keep them identical.
+   Contrast on --bg: --fg 14.5:1, --muted 8.2:1, --accent 7.9:1, --line-strong 3.8:1 (non-text). */
+:root[data-theme="dark"],
 :root[data-theme="blueprint"] {
-  --bg: #0a0b0e;
-  --surface: #101217;
-  --surface-2: #161922;
-  --fg: #f2f3f5;
-  --muted: #959cab; /* 7.1:1 on --bg */
-  --faint: #5c6270;
-  --line: #232835;
-  --line-strong: #3c4a70; /* blueprint ink */
-  --accent: #5b86f7; /* 5.8:1 on --bg */
-  --accent-strong: #2f5fe0;
-  --accent-fg: #ffffff;
-  --accent-soft: rgba(91, 134, 247, 0.12);
-  --danger: #ff8270;
-  --danger-soft: rgba(255, 130, 112, 0.1);
-  --btn-bg: #2f5fe0;
+  --bg: #15181d;
+  --surface: #1b1f26;
+  --surface-2: #232832;
+  --fg: #e6e8ec;
+  --muted: #a9b0bc;
+  --faint: #5d6470;
+  --line: #2b313b;
+  --line-strong: #6c7482;
+  --accent: #93ade6;
+  --accent-hover: #b4c8f0;
+  --accent-fg: #121722;
+  --accent-soft: rgba(147, 173, 230, 0.1);
+  --danger: #ef8f7c;
+  --danger-soft: rgba(239, 143, 124, 0.1);
+  --btn-bg: #36528f;
+  --btn-bg-hover: #4562a3;
   --btn-fg: #ffffff;
-  --btn-shadow: #3c4a70;
-  --grid-minor: rgba(91, 134, 247, 0.065);
-  --grid-major-color: rgba(91, 134, 247, 0.12);
-  --hero-glow: 1;
-  --hero-glow-color: rgba(42, 82, 200, 0.16);
+  --btn-border: #6a88c8;
+  --focus: #93ade6;
   --ring: var(--faint);
-  --theme-color: #0a0b0e;
+  --theme-color: #15181d;
   color-scheme: dark;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
-    --bg: #0a0b0e;
-    --surface: #101217;
-    --surface-2: #161922;
-    --fg: #f2f3f5;
-    --muted: #959cab;
-    --faint: #5c6270;
-    --line: #232835;
-    --line-strong: #3c4a70;
-    --accent: #5b86f7;
-    --accent-strong: #2f5fe0;
-    --accent-fg: #ffffff;
-    --accent-soft: rgba(91, 134, 247, 0.12);
-    --danger: #ff8270;
-    --danger-soft: rgba(255, 130, 112, 0.1);
-    --btn-bg: #2f5fe0;
+    --bg: #15181d;
+    --surface: #1b1f26;
+    --surface-2: #232832;
+    --fg: #e6e8ec;
+    --muted: #a9b0bc;
+    --faint: #5d6470;
+    --line: #2b313b;
+    --line-strong: #6c7482;
+    --accent: #93ade6;
+    --accent-hover: #b4c8f0;
+    --accent-fg: #121722;
+    --accent-soft: rgba(147, 173, 230, 0.1);
+    --danger: #ef8f7c;
+    --danger-soft: rgba(239, 143, 124, 0.1);
+    --btn-bg: #36528f;
+    --btn-bg-hover: #4562a3;
     --btn-fg: #ffffff;
-    --btn-shadow: #3c4a70;
-    --grid-minor: rgba(91, 134, 247, 0.065);
-    --grid-major-color: rgba(91, 134, 247, 0.12);
-    --hero-glow: 1;
-    --hero-glow-color: rgba(42, 82, 200, 0.16);
+    --btn-border: #6a88c8;
+    --focus: #93ade6;
     --ring: var(--faint);
-    --theme-color: #0a0b0e;
+    --theme-color: #15181d;
     color-scheme: dark;
   }
-}
-
-/* The paper / blueprint grid. Put it on any element: class="grid-paper". */
-.grid-paper {
-  background-color: var(--bg);
-  background-image:
-    linear-gradient(var(--grid-major-color) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid-major-color) 1px, transparent 1px),
-    linear-gradient(var(--grid-minor) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid-minor) 1px, transparent 1px);
-  background-size:
-    var(--grid-major) var(--grid-major),
-    var(--grid-major) var(--grid-major),
-    var(--grid-cell) var(--grid-cell),
-    var(--grid-cell) var(--grid-cell);
 }

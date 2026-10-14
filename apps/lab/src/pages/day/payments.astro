@@ -6,47 +6,99 @@ import TextVersion from '../../incidents/payments/TextVersion.astro'
 import { PAGE } from '../../incidents/payments/texts.ts'
 import Base from '../../layouts/Base.astro'
 import { bookACall } from '../../lib/links.ts'
+import { FRAME, TEST_MODE } from '../../site-texts.ts'
 
 const data = await paymentsBuildData()
 const shareUrl = 'https://lab.sabajanelidze.com/day/payments'
 ---
 
 <Base title={PAGE.title} description={PAGE.description} station="payments">
-  <section class="sec">
-    <div class="sec-in">
-      <p class="margin">{PAGE.margin}<small>{PAGE.marginSub}</small></p>
-      <div>
-        <p class="kicker">{PAGE.ticketNumber} <span>{PAGE.ticketMeta}</span></p>
-        <h1 class="h1">{PAGE.heading}</h1>
-        <blockquote class="ticket">
-          <p>“{PAGE.ticket}”</p>
-          <footer>{PAGE.ticketFrom}</footer>
-        </blockquote>
-      </div>
+  <section class="hero">
+    <div class="hero-text">
+      <p class="meta">{PAGE.meta} · {TEST_MODE}</p>
+      <p class="frame">{FRAME}</p>
+      <h1 class="h1">{PAGE.heading}</h1>
+      <blockquote class="ticket">
+        <p>“{PAGE.ticket}”</p>
+        <footer>{PAGE.ticketFrom}</footer>
+      </blockquote>
+      <p class="hero-actions">
+        <a class="btn find" href="#play">{PAGE.findTheBug}</a>
+        <a class="link" href="#proof">{PAGE.readCode} →</a>
+      </p>
+    </div>
+    <div class="hero-game" id="play">
+      <PaymentsIncident
+        client:load
+        v01={data.v01Lines}
+        runs={data.runs.naive.runs}
+        patches={data.patches}
+        shareUrl={shareUrl}
+        bookUrl={bookACall('payments')}
+        proofId="proof"
+      />
     </div>
   </section>
 
-  <PaymentsIncident
-    client:visible
-    v01={data.v01Lines}
-    runs={data.runs.naive.runs}
-    patches={data.patches}
-    shareUrl={shareUrl}
-    bookUrl={bookACall('payments')}
-    proofId="proof"
-  />
-
-  <section class="sec">
-    <div class="sec-in">
-      <p class="margin">{PAGE.proofMargin}<small>{PAGE.proofMarginSub}</small></p>
-      <ProofCard id="proof" data={data} />
-    </div>
+  <section class="section">
+    <ProofCard id="proof" data={data} />
   </section>
 
-  <section class="sec" aria-labelledby="text-version">
-    <div class="sec-in">
-      <p class="margin">{PAGE.textMargin}<small>{PAGE.textMarginSub}</small></p>
+  <section class="section">
+    <details class="text-fold">
+      <summary>{PAGE.textFold}</summary>
       <TextVersion data={data} />
-    </div>
+    </details>
   </section>
 </Base>
+
+<style>
+  .hero {
+    display: grid;
+    gap: var(--space-6);
+    padding-top: var(--space-6);
+  }
+  .hero-text {
+    display: grid;
+    align-content: start;
+    gap: var(--space-4);
+  }
+  .hero-text .h1 {
+    margin-top: var(--space-2);
+  }
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3) var(--space-5);
+    margin-top: var(--space-2);
+  }
+  .hero-game {
+    min-width: 0;
+    scroll-margin-top: calc(var(--header-h) + var(--space-3));
+  }
+  @media (min-width: 1024px) {
+    .hero {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      align-items: start;
+      gap: var(--space-7);
+    }
+    .hero-text .h1 {
+      font-size: clamp(2rem, 2vw + 1.2rem, 2.75rem);
+    }
+    /* On desktop the console is right there: the button only moves focus into it. */
+    .find {
+      display: none;
+    }
+  }
+  .text-fold {
+    border-top: 1px solid var(--line);
+    padding-top: var(--space-5);
+  }
+  .text-fold summary {
+    min-height: 44px;
+    font-size: var(--fs-lg);
+    font-weight: var(--weight-strong);
+    cursor: pointer;
+  }
+</style>

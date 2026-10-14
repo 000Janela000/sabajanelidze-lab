@@ -15,7 +15,7 @@ const { code, runs, tests, chain } = data
 ---
 
 <details id={id} class="proof">
-  <summary><span class="mark">{PROOF.mark}</span> {PROOF.summary}</summary>
+  <summary>{PROOF.summary}</summary>
   <div class="proof-body">
     <h2>{PROOF.whatHappenedHeading}</h2>
     <p>{PROOF.whatHappened}</p>
@@ -35,17 +35,17 @@ const { code, runs, tests, chain } = data
     <h2>{PROOF.testsHeading}</h2>
     <ul class="tests">
       <li>
-        <a class="nb-link" href={tests.everyRun}>{PROOF.tests.everyRun}</a>{
+        <a class="link" href={tests.everyRun}>{PROOF.tests.everyRun}</a>{
           PROOF.tests.everyRunText(runs.naive.runs, runs.naive.losing)
         }
       </li>
-      <li><a class="nb-link" href={tests.randomSchedules}>{PROOF.tests.randomSchedules}</a>{PROOF.tests.randomSchedulesText}</li>
+      <li><a class="link" href={tests.randomSchedules}>{PROOF.tests.randomSchedules}</a>{PROOF.tests.randomSchedulesText}</li>
       <li>
-        <a class="nb-link" href={tests.defenceCheck}>{PROOF.tests.defenceCheck}</a>{PROOF.tests.defenceCheckText}
-        <span class="nb-stamp">{PROOF.tests.defenceBadge}</span>
+        <a class="link" href={tests.defenceCheck}>{PROOF.tests.defenceCheck}</a>{PROOF.tests.defenceCheckText}
+        <span class="badge">{PROOF.tests.defenceBadge}</span>
       </li>
-      <li><a class="nb-link" href={tests.unknownOutcome}>{PROOF.tests.unknownOutcome}</a>{PROOF.tests.unknownOutcomeText}</li>
-      <li><a class="nb-link" href={tests.goRace}>{PROOF.tests.goRace}</a>{PROOF.tests.goRaceText}</li>
+      <li><a class="link" href={tests.unknownOutcome}>{PROOF.tests.unknownOutcome}</a>{PROOF.tests.unknownOutcomeText}</li>
+      <li><a class="link" href={tests.goRace}>{PROOF.tests.goRace}</a>{PROOF.tests.goRaceText}</li>
     </ul>
 
     <h2>{PROOF.tradeOffHeading}</h2>
@@ -61,7 +61,7 @@ const { code, runs, tests, chain } = data
         { lang: 'go', name: PROOF.langs.GO, source: code.goReserve },
       ]}
     />
-    <p class="spaced"><a class="nb-link" href={tests.realDatabase}>{PROOF.realDatabase}</a>{PROOF.realDatabaseText}</p>
+    <p class="spaced"><a class="link" href={tests.realDatabase}>{PROOF.realDatabase}</a>{PROOF.realDatabaseText}</p>
     <p class="spaced">{PROOF.deadlock}</p>
     <CodeBlock title={PROOF.lockOrderTitle} source={code.postgresLockOrder} />
 
@@ -74,11 +74,11 @@ const { code, runs, tests, chain } = data
     <h2>{PROOF.chainHeading}</h2>
     <p class="chain">
       {PROOF.chain(chain.commits, chain.agentCommits, chain.checksRun, chain.refusals)}
-      <a class="nb-link" href={chain.lastCommitUrl}>{chain.lastCommit}</a>. {PROOF.approval}
+      <a class="link" href={chain.lastCommitUrl}>{chain.lastCommit}</a>. {PROOF.approval}
     </p>
 
     <p class="book">
-      {PROOF.book} <a class="nb-btn" href={bookACall('payments')}>{PROOF.bookButton}</a>
+      {PROOF.book} <a class="btn" href={bookACall('payments')}>{PROOF.bookButton}</a>
     </p>
   </div>
 </details>
@@ -86,7 +86,7 @@ const { code, runs, tests, chain } = data
 <style>
   .proof {
     border: 1px solid var(--line);
-    border-radius: var(--radius);
+    border-radius: var(--radius-card);
     background: var(--surface);
   }
   .proof summary {
@@ -103,12 +103,17 @@ const { code, runs, tests, chain } = data
   .proof summary::-webkit-details-marker {
     display: none;
   }
-  .mark {
-    white-space: nowrap;
-    font-family: var(--font-code);
-    font-size: var(--fs-sm);
+  /* A plus sign says the card opens; a minus sign that it closes. */
+  .proof summary::after {
+    content: "+";
+    margin-left: auto;
+    font-size: var(--fs-xl);
     font-weight: var(--weight-regular);
+    line-height: 1;
     color: var(--accent);
+  }
+  .proof[open] summary::after {
+    content: "−";
   }
   .proof[open] summary {
     border-bottom: 1px solid var(--line-strong);

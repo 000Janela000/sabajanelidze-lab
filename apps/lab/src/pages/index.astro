@@ -1,77 +1,74 @@
 ---
 import Base from '../layouts/Base.astro'
 import { STATIONS } from '../lib/stations.ts'
-import { HOME, STATION_NAME } from '../site-texts.ts'
+import { FRAME, HOME, STATION_NAME, TEST_MODE } from '../site-texts.ts'
+
+const ready = STATIONS.filter((station) => station.ready).length
 ---
 
 <Base title={HOME.title} description={HOME.description} station="home">
-  <section class="sec">
-    <div class="sec-in">
-      <p class="margin">{HOME.margin}<small>{HOME.marginSub}</small></p>
-      <div>
-        <p class="kicker">{HOME.kicker}</p>
-        <h1 class="h1">{HOME.heading}</h1>
-        <p class="lead">{HOME.lead}</p>
-        <p class="start">
-          <a class="nb-btn" href="/day/payments">{HOME.start}</a>
-          <span class="start-note nb-mono">{HOME.startNote}</span>
-        </p>
-      </div>
-    </div>
+  <section class="intro">
+    <p class="meta">{HOME.meta(ready, STATIONS.length)} · {TEST_MODE}</p>
+    <p class="frame">{FRAME}</p>
+    <h1 class="h1">{HOME.heading}</h1>
+    <p class="lead">{HOME.lead}</p>
+    <p class="start">
+      <a class="btn" href="/day/payments">{HOME.start}</a>
+      <span class="meta">{HOME.startNote}</span>
+    </p>
   </section>
 
-  <section class="sec" aria-labelledby="how-heading">
-    <div class="sec-in">
-      <p class="margin">{HOME.howMargin}<small>{HOME.howMarginSub}</small></p>
-      <div>
-        <h2 id="how-heading" class="h2">{HOME.howHeading}</h2>
-        <ol class="how">
-          {
-            HOME.how.map((item, index) => (
-              <li>
-                <span class="num">{index + 1}</span>
-                <span>
-                  <b>{item.step}:</b> {item.text}
-                </span>
-              </li>
-            ))
-          }
-        </ol>
-        <p class="no-code">{HOME.noCode}</p>
-      </div>
-    </div>
+  <section class="section" aria-labelledby="how-heading">
+    <h2 id="how-heading" class="h2">{HOME.howHeading}</h2>
+    <ol class="how">
+      {
+        HOME.how.map((item, index) => (
+          <li>
+            <span class="num">{index + 1}</span>
+            <span>
+              <b>{item.step}:</b> {item.text}
+            </span>
+          </li>
+        ))
+      }
+    </ol>
+    <p class="no-code">{HOME.noCode}</p>
   </section>
 
-  <section class="sec" aria-labelledby="day-heading">
-    <div class="sec-in">
-      <p class="margin">{HOME.dayMargin}<small>{HOME.dayMarginSub}</small></p>
-      <div>
-        <h2 id="day-heading" class="h2">{HOME.dayHeading}</h2>
-        <ol class="incidents">
-          {
-            STATIONS.map((station, index) => (
-              <li class:list={['card', { soon: !station.ready }]}>
-                <p class="meta nb-mono">{HOME.incident(index + 1, station.time, STATION_NAME[station.slug] ?? station.slug)}</p>
-                <p class="card-ticket">{HOME.tickets[station.slug]}</p>
-                {station.ready ? (
-                  <a class="nb-btn" href={`/day/${station.slug}`}>
-                    {HOME.take}
-                  </a>
-                ) : (
-                  <span class="nb-stamp">{HOME.comingSoon}</span>
-                )}
-              </li>
-            ))
-          }
-        </ol>
-      </div>
-    </div>
+  <section class="section" aria-labelledby="day-heading">
+    <h2 id="day-heading" class="h2">{HOME.dayHeading}</h2>
+    <ol class="incidents">
+      {
+        STATIONS.map((station, index) => (
+          <li class:list={['card', { soon: !station.ready }]}>
+            <p class="meta">
+              {HOME.incident(index + 1, STATIONS.length, STATION_NAME[station.slug] ?? station.slug)}
+            </p>
+            <p class="card-ticket">{HOME.tickets[station.slug]}</p>
+            {station.ready ? (
+              <a class="btn" href={`/day/${station.slug}`}>
+                {HOME.take}
+              </a>
+            ) : (
+              <span class="badge">{HOME.notBuilt}</span>
+            )}
+          </li>
+        ))
+      }
+    </ol>
   </section>
 </Base>
 
 <style>
+  .intro {
+    display: grid;
+    gap: var(--space-4);
+    padding-top: var(--space-7);
+  }
+  .intro .h1 {
+    margin-top: var(--space-3);
+  }
   .lead {
-    margin-top: var(--space-4);
     max-width: 40em;
     font-size: var(--fs-lg);
     line-height: 1.5;
@@ -81,23 +78,13 @@ import { HOME, STATION_NAME } from '../site-texts.ts'
     flex-wrap: wrap;
     align-items: center;
     gap: var(--space-4);
-    margin-top: var(--space-5);
-  }
-  .start-note {
-    font-size: var(--fs-xs);
-    color: var(--muted);
-  }
-  .h2 {
-    font-size: var(--fs-2xl);
-    font-weight: var(--weight-strong);
-    line-height: var(--lh-heading);
-    letter-spacing: var(--tracking-heading);
+    margin-top: var(--space-2);
   }
   .how {
     display: grid;
     gap: var(--space-3);
     max-width: 44em;
-    margin: var(--space-4) 0 0;
+    margin: var(--space-5) 0 0;
     padding: 0;
     list-style: none;
   }
@@ -110,13 +97,12 @@ import { HOME, STATION_NAME } from '../site-texts.ts'
     flex: 0 0 auto;
     display: inline-grid;
     place-items: center;
-    width: 22px;
-    height: 22px;
+    width: 1.6rem;
+    height: 1.6rem;
     border: 1px solid var(--line-strong);
-    border-radius: var(--radius-tag);
-    font-family: var(--font-code);
-    font-size: var(--fs-xs);
-    transform: translateY(0.2rem);
+    border-radius: var(--radius-pill);
+    font-size: var(--fs-sm);
+    transform: translateY(0.15rem);
   }
   .no-code {
     max-width: 44em;
@@ -126,7 +112,7 @@ import { HOME, STATION_NAME } from '../site-texts.ts'
   .incidents {
     display: grid;
     gap: var(--space-4);
-    margin: var(--space-4) 0 0;
+    margin: var(--space-5) 0 0;
     padding: 0;
     list-style: none;
   }
@@ -142,15 +128,11 @@ import { HOME, STATION_NAME } from '../site-texts.ts'
     gap: var(--space-3);
     padding: var(--space-5);
     border: 1px solid var(--line);
-    border-radius: var(--radius);
+    border-radius: var(--radius-card);
     background: var(--surface);
   }
   .card.soon {
-    background: var(--surface-2);
-  }
-  .meta {
-    font-size: var(--fs-xs);
-    color: var(--muted);
+    background: transparent;
   }
   .card-ticket {
     font-size: var(--fs-md);

@@ -19,6 +19,14 @@ export const STEP_TEXT: Record<Step, string> = {
   ASK_BANK: 'ask the bank what happened',
 }
 
+/** One word per step, for the race figure on small screens. */
+export const STEP_SHORT: Partial<Record<Step, string>> = {
+  LOAD_CUSTOMER: 'load',
+  READ_BALANCE: 'read',
+  SAVE_BALANCE: 'save',
+  PAY_OUT: 'pay',
+}
+
 export const REQUEST_STATE_TEXT: Record<RequestState, string> = {
   READY: 'ready',
   RUNNING: 'running',
@@ -51,58 +59,54 @@ export const MONEY_TEXT = {
 export const PAGE = {
   title: 'Incident 1: the bank paid out twice · On call',
   description:
-    'A puzzle on real code: find how two withdrawals of 80 from a balance of 100 make the bank pay out 160, then pick the fix that survives every way they can run. Test mode, fake money.',
-  margin: 'incident 1',
-  marginSub: '09:30 · payments',
-  ticketNumber: 'ticket #1041',
-  ticketMeta: '· 09:30 · Customer #42',
+    'A working demo by Saba Janelidze on real code: find how two withdrawals of 80 from a balance of 100 make the bank pay out 160, then pick the fix that survives every way they can run. Test mode, fake money.',
+  meta: 'Incident 1 of 5 · Payments · about 2 minutes',
   heading: 'The bank paid out twice',
   ticket:
     'I had 100. I tapped Withdraw 80 twice by accident. The bank paid me 160, and my balance still shows 20.',
-  ticketFrom: 'Customer #42 · via support chat',
-  proofMargin: 'proof',
-  proofMarginSub: 'code · tests · build',
-  textMargin: 'text',
-  textMarginSub: 'no JavaScript needed',
+  ticketFrom: 'Customer #42 · support chat · a made-up ticket',
+  findTheBug: 'Find the bug',
+  readCode: 'Read the code and tests',
+  textFold: 'Full text version (contains the answers)',
 }
 
-export const BRIEFING = {
-  margin: 'your shift',
-  stamp: 'YOUR SHIFT · INCIDENT 1',
-  duration: 'about 2 min',
-  situation:
-    'Two withdrawals of 80 ran at the same moment on a balance of 100. Find how the bank ended up paying 160, then pick the fix that survives every way they can run.',
-  steps: [
-    { name: 'Reproduce', rest: 'the loss' },
-    { name: 'Count', rest: 'how often it happens' },
-    { name: 'Fix', rest: 'it; the machine attacks your fix' },
-  ],
-  start: 'Start',
-  skip: 'Skip to the code →',
+/** The console: the dark panel where the game runs. */
+export const CONSOLE = {
+  label: 'The console',
+  title: 'build v0.1 · withdraw 80 · real code',
+  timing: 'simulated timing',
+  steps: ['Reproduce', 'Count', 'Fix'],
+  progressLabel: 'Steps of this incident',
+  pause: 'Pause',
+  resume: 'Resume',
 }
-
-export const STEPS_STRIP_LABEL = 'Steps of this incident'
 
 export const REPRODUCE = {
   heading: 'Reproduce it',
-  goal: 'Two copies of this withdrawal of 80 run at the same moment. Tap the line after which request A gets slow (a network lag). Then B runs, then A finishes. Find where the slowness makes the bank pay out 160.',
-  hintLabel: 'Hint:',
-  hintFirst: 'tap a numbered line. Request A gets slow right after it.',
-  hintAfterSafe: (line: number) =>
-    `no money lost after line ${line}. Where is the gap between reading and saving?`,
+  goal: 'Two withdrawals of 80 run at once on a balance of 100. Tap a step on lane A: A gets slow right after it, B runs past, then A finishes.',
+  demoLead: 'Watch one run first.',
+  demoDone:
+    'That one was fine: A got slow after step 1, then read 20 and was refused. Now find the step where it makes the bank pay twice.',
+  hintAfterSafe: (step: number) =>
+    `No money lost after step ${step}. Where is the gap between reading the balance and saving it?`,
+  lane: (name: string) => `Request ${name}`,
+  laneFigure: 'Two requests racing through the same four steps',
+  pickLabel: (step: number, label: string) => `Make request A slow after step ${step}: ${label}`,
+  slowHere: 'slow here',
+  result: { PAID: 'paid 80', REFUSED: 'refused', UNKNOWN: 'unknown' } as Record<string, string>,
+  showCode: 'Show the code it runs',
   requestTitle: (name: string) => `Request ${name}`,
   tagA: 'build v0.1 · withdraw 80',
-  tagB: 'same code',
-  compactNote: 'Runs the same code. Here: where it is.',
   stepState: { DONE: 'done', NOW: 'now', TODO: '' },
   pause: 'A got slow here',
-  pickLabel: (name: string, line: number, step: string) =>
-    `Make request ${name} slow after line ${line}: ${step}`,
+  codePickLabel: (name: string, line: number, step: string) =>
+    `Make request ${name} slow after step ${line}: ${step}`,
+  compactNote: '',
   lostLead: (tries: number) => `Reproduced on try ${tries}.`,
   lost: (line: number, paidOut: number, available: number, short: number) =>
-    `With request A slow after line ${line}, the bank paid out ${formatCents(paidOut)} and the balance still shows ${formatCents(available)}. The exchange is ${formatCents(short)} short.`,
+    `With request A slow after step ${line}, the bank paid out ${formatCents(paidOut)} and the balance still shows ${formatCents(available)}. The exchange is ${formatCents(short)} short.`,
   safeLead: 'No money lost.',
-  safe: (line: number) => `With request A slow after line ${line}, both requests behaved. Try another line.`,
+  safe: (line: number) => `With request A slow after step ${line}, both requests behaved. Try another step.`,
   next: 'Next: how often does this happen? →',
   replay: 'Replay the losing order',
 }
@@ -110,7 +114,7 @@ export const REPRODUCE = {
 export const COUNT = {
   heading: 'How often does it happen?',
   receipt: (tries: number, line: number, paidOut: number, available: number, short: number) =>
-    `Reproduced on try ${tries}: A slow after line ${line} → bank paid ${formatCents(paidOut)} · balance ${formatCents(available)} · ${formatCents(short)} short`,
+    `Reproduced on try ${tries}: A slow after step ${line} → bank paid ${formatCents(paidOut)} · balance ${formatCents(available)} · ${formatCents(short)} short`,
   question: (runs: number) =>
     `The two requests can run in ${runs} different ways (different orders of their steps). How many of them lose money? Guess first, then let the machine run them all.`,
   guessLabel: 'Your guess',
@@ -120,7 +124,6 @@ export const COUNT = {
   yourGuess: (guess: string) => `· your guess: ${guess}`,
   legendSafe: (count: number) => `safe · ${count}`,
   legendLost: (count: number) => `lost money · ${count}`,
-  figure: 'fig. 2',
   figureTitle: 'Every way the two requests can run.',
   figureText: (runs: number) =>
     `Build v0.1 loses money whenever both requests read the balance before either one saves. Each square is one order of the eight steps; the machine ran all ${runs} and checked the books after each.`,
@@ -138,9 +141,8 @@ export const FIX = {
   showCode: 'show the code',
   attack: 'Attack this patch',
   stillLoses: (losing: number, runs: number, line: number | null) =>
-    `Still loses money in ${losing} of ${runs} ways to run${line ? `, for example when A gets slow after line ${line}` : ''}.`,
+    `Still loses money in ${losing} of ${runs} ways to run${line ? `, for example when A gets slow after step ${line}` : ''}.`,
   stillLosesWhy: 'The gap between reading and saving is still open. Try another patch.',
-  figure: 'fig. 3',
   patches: {
     CHECK_TWICE: {
       name: 'Check the balance twice',
@@ -157,7 +159,6 @@ export const FIX = {
 export const SOLVED = {
   heading: (runs: number) => `Fixed: it holds in all ${runs} ways to run`,
   grid: (runs: number) => `"Reserve, then settle" loses money in 0 of ${runs} ways to run.`,
-  figure: 'fig. 4',
   why: 'The check and the move are now one atomic step: "move 80 from available to on hold, only if 80 is there". A second request can never reserve money the first one already holds.',
   readCode: 'Read the code and the tests',
   book: 'Book a call',
@@ -196,7 +197,6 @@ export const CLEAN_UP = {
 }
 
 export const PROOF = {
-  mark: 'fig. P',
   summary: 'How it works: the code, the tests, and how it was built',
   whatHappenedHeading: 'What happened, and the fix',
   whatHappened:
@@ -254,7 +254,7 @@ export const TEXT_VERSION = {
   checkSuffix: ' and check it is at least 80',
   reproduceHeading: '1. Reproduce',
   reproduce: (places: number, losing: number[]) =>
-    `Pick the line after which request A gets slow; B then runs to the end, then A finishes. Only ${losing.length === 1 ? 'one' : losing.length} of the ${places} places loses money: after line ${losing.join(', ')}. A has read 100; B reads 100 too, saves 20 and pays 80; A saves 20 and pays 80.`,
+    `Pick the step after which request A gets slow; B then runs to the end, then A finishes. Only ${losing.length === 1 ? 'one' : losing.length} of the ${places} places loses money: after step ${losing.join(', ')}. A has read 100; B reads 100 too, saves 20 and pays 80; A saves 20 and pays 80.`,
   loss: (paidOut: number, available: number, short: number) =>
     ` The bank paid out ${formatCents(paidOut)}, the balance shows ${formatCents(available)}, and the exchange is ${formatCents(short)} short.`,
   countHeading: '2. Count',

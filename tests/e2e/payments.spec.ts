@@ -1,6 +1,13 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, type Page, test } from '@playwright/test'
 
+/** On phones the console sits below the ticket: "Find the bug" brings it into view, which starts the first run. */
+async function openTheConsole(page: Page) {
+  const find = page.getByRole('link', { name: 'Find the bug' })
+  if (await find.isVisible()) await find.click()
+  await expect(page.getByText(/^That one was fine/)).toBeVisible()
+}
+
 async function noSidewaysScroll(page: Page) {
   const widths = await page.evaluate(() => [
     document.documentElement.scrollWidth,
@@ -12,19 +19,20 @@ async function noSidewaysScroll(page: Page) {
 test('incident 1 plays from reproduce to clean-up on the real code', async ({ page }) => {
   await page.goto('/day/payments')
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('The bank paid out twice')
-  await expect(page.getByRole('note').first()).toContainText('TEST MODE')
+  await expect(
+    page.getByText(/Incident 1 of 5 · Payments · about 2 minutes · Test mode, fake money/),
+  ).toBeVisible()
+  await expect(page.getByText(/A working demo by Saba Janelidze/)).toBeVisible()
 
-  // The briefing card comes first: the situation, the steps, Start.
-  await expect(page.getByText('YOUR SHIFT · INCIDENT 1')).toBeVisible()
-  await page.getByRole('button', { name: 'Start' }).click()
-  await expect(page.getByText('tap a numbered line. Request A gets slow right after it.')).toBeVisible()
+  // On arrival one safe run plays by itself in the console, then it asks for the run that breaks.
+  await openTheConsole(page)
 
-  // A safe line first: no money lost.
-  await page.getByRole('button', { name: /Make request A slow after line 1/ }).click()
-  await expect(page.getByText(/With request A slow after line 1, both requests behaved/)).toBeVisible()
+  // A safe step first: no money lost.
+  await page.getByRole('button', { name: /Make request A slow after step 1/ }).click()
+  await expect(page.getByText(/No money lost after step 1/)).toBeVisible()
 
-  // The line that loses money: the books turn red and get stamped.
-  await page.getByRole('button', { name: /Make request A slow after line 2/ }).click()
+  // The step that loses money: the books turn red and get stamped.
+  await page.getByRole('button', { name: /Make request A slow after step 2/ }).click()
   await expect(page.getByText(/^Reproduced on try 2\./)).toBeVisible()
   await expect(page.getByRole('region', { name: 'The books' }).first()).toContainText('80.00')
   await expect(page.getByText('MONEY LOST')).toBeVisible()
@@ -99,9 +107,11 @@ for (const scheme of ['light', 'dark'] as const) {
   test(`coloured code reads at 4.5:1 or better (${scheme} theme)`, async ({ page }) => {
     await page.emulateMedia({ colorScheme: scheme })
     await page.goto('/day/payments')
-    await page.getByRole('button', { name: 'Start' }).click()
+    await openTheConsole(page)
     // The red "money lost" line and the highlighted line are the hardest backgrounds.
-    await page.getByRole('button', { name: /Make request A slow after line 2/ }).click()
+    await page.getByRole('button', { name: /Make request A slow after step 2/ }).click()
+    await expect(page.getByText('MONEY LOST')).toBeVisible()
+    await page.getByText('Show the code it runs').click()
     await page.locator('#proof summary').click()
     const contrast = async () =>
       (
@@ -131,7 +141,7 @@ test.describe('without JavaScript (bots, AI crawlers, screen readers before load
   test('the whole incident is readable as text', async ({ page }) => {
     await page.goto('/day/payments')
     const text = page.locator('.textv')
-    await expect(text).toContainText('Only one of the 4 places loses money: after line 2')
+    await expect(text).toContainText('Only one of the 4 places loses money: after step 2')
     await expect(text).toContainText('36 of them (67%) lose money')
     await expect(text).toContainText('still loses in 120 of 182 ways to run (66%)')
     await expect(text).toContainText('loses in 0 of 24 ways to run')
@@ -143,12 +153,24 @@ test('the home page opens with the situation and leads to incident 1', async ({ 
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(
     'A customer was paid 160 from a balance of 100.',
   )
-  await page.getByRole('link', { name: 'Take incident 1' }).click()
+  await page.getByRole('link', { name: 'Play incident 1' }).click()
   await expect(page).toHaveURL(/\/day\/payments$/)
 })
 
-test('"Skip to the code" goes straight to the proof card', async ({ page }) => {
+test('"Read the code and tests" goes straight to the proof card', async ({ page }) => {
   await page.goto('/day/payments')
-  await page.getByRole('link', { name: 'Skip to the code' }).click()
+  await page.getByRole('link', { name: /Read the code and tests/ }).click()
   await expect(page).toHaveURL(/#proof$/)
+})
+
+test('the theme switch in the footer picks Light, Dark or Auto, and remembers it', async ({ page }) => {
+  await page.goto('/')
+  const theme = page.getByRole('group', { name: 'Theme:' })
+  await theme.getByRole('button', { name: 'Dark' }).click()
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
+  await page.reload()
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
+  await expect(theme.getByRole('button', { name: 'Dark' })).toHaveAttribute('aria-pressed', 'true')
+  await theme.getByRole('button', { name: 'Auto' }).click()
+  await expect(page.locator('html')).not.toHaveAttribute('data-theme', /.+/)
 })

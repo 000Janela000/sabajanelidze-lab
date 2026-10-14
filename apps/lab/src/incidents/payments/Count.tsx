@@ -37,7 +37,7 @@ export function Count(props: {
             onInput={(event) => setGuess((event.target as HTMLInputElement).value)}
           />
         </label>
-        <button type="button" class="nb-btn" disabled={running} onClick={run}>
+        <button type="button" class="btn" disabled={running} onClick={run}>
           {COUNT.run(props.runs)}
         </button>
       </div>
@@ -51,7 +51,6 @@ export function Count(props: {
               ...(guess ? { extra: COUNT.yourGuess(guess) } : {}),
               legendSafe: COUNT.legendSafe,
               legendLost: COUNT.legendLost,
-              figure: COUNT.figure,
               caption: (
                 <>
                   <strong>{COUNT.figureTitle}</strong> {COUNT.figureText(summary.runs)}
@@ -61,7 +60,7 @@ export function Count(props: {
             }}
           />
           <div class="next">
-            <button type="button" class="nb-btn" onClick={props.onNext}>
+            <button type="button" class="btn" onClick={props.onNext}>
               {COUNT.next}
             </button>
           </div>

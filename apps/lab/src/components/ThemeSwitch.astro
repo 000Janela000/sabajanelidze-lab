@@ -1,0 +1,116 @@
+---
+/*
+ * The theme switch in the footer, the same as the portfolio's: "Theme: Light · Dark · Auto", three real
+ * buttons with aria-pressed.
+ * - Auto (the default) follows the visitor's system setting; Light and Dark are remembered in localStorage
+ *   (key "theme", values "light" / "dark", shared with the portfolio). If storage is blocked, the choice
+ *   lasts for this page.
+ * - Hidden without JavaScript (it could not work); the page then follows the system setting.
+ * - Switches instantly: no animation.
+ */
+interface Props {
+  texts: { label: string; light: string; dark: string; auto: string }
+}
+
+const { texts } = Astro.props
+---
+
+<div class="ts" role="group" aria-labelledby="ts-label" data-theme-switch>
+  <span id="ts-label" class="ts-label">{texts.label}</span>
+  <span class="ts-opts">
+    <button type="button" class="ts-btn" data-set="light" aria-pressed="false">{texts.light}</button>
+    <button type="button" class="ts-btn" data-set="dark" aria-pressed="false">{texts.dark}</button>
+    <button type="button" class="ts-btn" data-set="auto" aria-pressed="true">{texts.auto}</button>
+  </span>
+</div>
+
+<style>
+  .ts {
+    display: none;
+    align-items: center;
+    gap: var(--space-3);
+  }
+  :global(html.js) .ts {
+    display: inline-flex;
+  }
+  .ts-label {
+    color: var(--muted);
+  }
+  .ts-opts {
+    display: inline-flex;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .ts-btn {
+    min-height: 44px;
+    min-width: 3.5rem;
+    padding: 0 0.85rem;
+    border: 0;
+    background: transparent;
+    color: var(--fg);
+    font: inherit;
+    font-size: var(--fs-sm);
+    cursor: pointer;
+  }
+  .ts-btn + .ts-btn {
+    border-left: 1px solid var(--line-strong);
+  }
+  .ts-btn:hover {
+    background: var(--surface-2);
+  }
+  .ts-btn[aria-pressed='true'] {
+    background: var(--fg);
+    color: var(--bg);
+    font-weight: var(--weight-strong);
+  }
+  .ts-btn:focus-visible {
+    outline-offset: -4px;
+    outline-color: var(--focus);
+  }
+  .ts-btn[aria-pressed='true']:focus-visible {
+    outline-color: var(--bg);
+  }
+</style>
+
+<script>
+  type Choice = 'light' | 'dark' | 'auto'
+  const root = document.documentElement
+  const dark = window.matchMedia('(prefers-color-scheme: dark)')
+  const COLOR = { light: '#f7f5f0', dark: '#15181d' }
+  const buttons = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-theme-switch] [data-set]'))
+
+  const choice = (): Choice => {
+    const theme = root.getAttribute('data-theme')
+    if (theme === 'light' || theme === 'paper') return 'light'
+    if (theme === 'dark' || theme === 'blueprint') return 'dark'
+    return 'auto'
+  }
+
+  function sync() {
+    const current = choice()
+    for (const button of buttons) button.setAttribute('aria-pressed', String(button.dataset.set === current))
+    const shown = current === 'auto' ? (dark.matches ? 'dark' : 'light') : current
+    for (const meta of document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')) {
+      // "Auto": give the two media-specific tags back their own colours.
+      const own = meta.media.includes('dark') ? COLOR.dark : COLOR.light
+      meta.setAttribute('content', current === 'auto' ? own : COLOR[shown])
+    }
+  }
+
+  function apply(next: Choice) {
+    if (next === 'auto') root.removeAttribute('data-theme')
+    else root.setAttribute('data-theme', next)
+    try {
+      if (next === 'auto') localStorage.removeItem('theme')
+      else localStorage.setItem('theme', next)
+    } catch {
+      // Storage blocked: the choice lasts for this page only.
+    }
+    sync()
+  }
+
+  for (const button of buttons) button.addEventListener('click', () => apply(button.dataset.set as Choice))
+  dark.addEventListener('change', sync)
+  sync()
+</script>

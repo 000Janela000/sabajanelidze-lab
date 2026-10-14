@@ -22,8 +22,20 @@ const PLAIN = { light: '#000000', dark: '#d4d4d4' }
  * the result.
  */
 const BACKGROUNDS = {
-  light: ['#f5f3ec', '#fbfaf6', '#efece3', '#eaebf1', '#f5eae4'],
-  dark: ['#0a0b0e', '#101217', '#161922', '#192032', '#281d20'],
+  light: ['#f7f5f0', '#fdfcf9', '#efebe2', '#eef0f3', '#f7eeea'],
+  // The page's dark theme, then the console (always dark): --bg, --surface, --surface-2, the two soft tints.
+  dark: [
+    '#15181d',
+    '#1b1f26',
+    '#232832',
+    '#272d39',
+    '#302a2f',
+    '#0f1216',
+    '#151920',
+    '#1c212a',
+    '#242b38',
+    '#2f272b',
+  ],
 }
 const MIN_CONTRAST = 4.5
 

@@ -1,8 +1,7 @@
 ---
 import '../styles/global.css'
 import Fonts from '../components/Fonts.astro'
-import ShiftStrip from '../components/ShiftStrip.astro'
-import ThemeToggle from '../components/ThemeToggle.astro'
+import ThemeSwitch from '../components/ThemeSwitch.astro'
 import { bookACall, portfolio } from '../lib/links.ts'
 import { LAYOUT } from '../site-texts.ts'
 
@@ -15,9 +14,10 @@ interface Props {
 const { title, description, station } = Astro.props
 const canonical = new URL(Astro.url.pathname, Astro.site)
 
-// Applies a saved Paper/Blueprint choice before the first paint, the same as the portfolio (key "theme").
-// If storage is blocked, the system setting decides, as it does without JavaScript.
-const themeBoot = `(function(){var d=document.documentElement;d.classList.add("js");try{var t=localStorage.getItem("theme");if(t==="paper"||t==="blueprint"){d.setAttribute("data-theme",t);var c=t==="paper"?"#f5f3ec":"#0a0b0e";document.querySelectorAll('meta[name="theme-color"]').forEach(function(m){m.setAttribute("content",c)})}}catch(e){}})();`
+// Applies a saved Light/Dark choice before the first paint, the same as the portfolio (key "theme"; the old
+// values "paper" and "blueprint" are read as light and dark). If storage is blocked, the system setting decides,
+// as it does without JavaScript.
+const themeBoot = `(function(){var d=document.documentElement;d.classList.add("js");try{var t=localStorage.getItem("theme");if(t==="paper")t="light";if(t==="blueprint")t="dark";if(t==="light"||t==="dark"){d.setAttribute("data-theme",t);var c=t==="light"?"#f7f5f0":"#15181d";document.querySelectorAll('meta[name="theme-color"]').forEach(function(m){m.setAttribute("content",c)})}}catch(e){}})();`
 ---
 
 <!doctype html>
@@ -32,35 +32,32 @@ const themeBoot = `(function(){var d=document.documentElement;d.classList.add("j
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
-    <meta name="theme-color" content="#f5f3ec" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#0a0b0e" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f7f5f0" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#15181d" media="(prefers-color-scheme: dark)" />
     <Fonts />
     <script is:inline set:html={themeBoot} />
   </head>
-  <body class="grid-paper">
+  <body>
     <a class="skip-link" href="#main">{LAYOUT.skip}</a>
     <header class="site-head">
-      <div class="nb-wrap site-head-in">
-        <a class="brand" href="/"><strong>{LAYOUT.name}</strong> <span class="nb-mono">{LAYOUT.lab}</span></a>
-        <nav class="site-nav" aria-label={LAYOUT.navLabel}>
-          <a href="/" aria-current={station === 'home' ? 'page' : undefined}>{LAYOUT.shift}</a>
-        </nav>
-        <div class="site-tools">
-          <span class="testmode nb-mono" role="note">{LAYOUT.testMode}</span>
-          <a class="nb-btn nb-btn--sm" href={bookACall(station)}>{LAYOUT.book}</a>
-          <ThemeToggle />
-        </div>
+      <div class="wrap site-head-in">
+        <a class="brand" href="/">{LAYOUT.name} <span>· {LAYOUT.lab}</span></a>
+        <a class="btn btn--sm head-book" href={bookACall(station)}>{LAYOUT.book}</a>
       </div>
     </header>
-    <nav class="nb-wrap strip-row" aria-label={LAYOUT.shiftLabel}>
-      <ShiftStrip current={station} />
-      <span class="testmode nb-mono" role="note">{LAYOUT.testMode}</span>
-    </nav>
-    <main id="main" class="nb-wrap">
+    <main id="main" class="wrap">
       <slot />
-      <p class="foot">
-        {LAYOUT.footerBefore} <a class="nb-link" href={portfolio(station)}>{LAYOUT.footerName}</a>{LAYOUT.footerAfter}
-      </p>
     </main>
+    <footer class="site-foot">
+      <div class="wrap site-foot-in">
+        <div>
+          <p>
+            {LAYOUT.footerBefore} <a class="link" href={portfolio(station)}>{LAYOUT.footerName}</a>{LAYOUT.footerAfter}
+          </p>
+          <p>{LAYOUT.footerTestMode}</p>
+        </div>
+        <ThemeSwitch texts={LAYOUT.theme} />
+      </div>
+    </footer>
   </body>
 </html>

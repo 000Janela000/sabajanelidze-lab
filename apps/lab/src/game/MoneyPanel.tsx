@@ -13,7 +13,10 @@ export interface MoneyPanelTexts {
   readonly none: string
 }
 
-/** "The books": our ledger next to the bank's own record. When money is lost, the card turns red and gets stamped. */
+/**
+ * "The books": our ledger next to the bank's own record. A number that changes fades in (it is keyed by its value).
+ * When money is lost, the panel turns red and gets stamped.
+ */
 export function MoneyPanel(props: { picture: MoneyPicture; final: boolean; texts: MoneyPanelTexts }) {
   const { picture, final, texts } = props
   const lost = picture.lost !== 0
@@ -31,24 +34,30 @@ export function MoneyPanel(props: { picture: MoneyPicture; final: boolean; texts
       <dl>
         <div class="r">
           <dt>{texts.had}</dt>
-          <dd>{formatCents(picture.deposited)}</dd>
+          <dd class="tnum">{formatCents(picture.deposited)}</dd>
         </div>
         <div class="r">
           <dt>{texts.balance}</dt>
-          <dd>{formatCents(picture.available)}</dd>
+          <dd class="tnum" key={`a${picture.available}`}>
+            {formatCents(picture.available)}
+          </dd>
         </div>
         <div class="r">
           <dt>{texts.held}</dt>
-          <dd>{formatCents(picture.held)}</dd>
+          <dd class="tnum" key={`h${picture.held}`}>
+            {formatCents(picture.held)}
+          </dd>
         </div>
         <div class="r">
           <dt>{texts.paidOut}</dt>
-          <dd>{formatCents(picture.paidOut)}</dd>
+          <dd class="tnum" key={`p${picture.paidOut}`}>
+            {formatCents(picture.paidOut)}
+          </dd>
         </div>
         {final ? (
           <div class="r verdict">
             <dt>{lost ? texts.short : texts.lost}</dt>
-            <dd>
+            <dd class="tnum">
               <span aria-hidden="true">{lost ? '✗ ' : '✓ '}</span>
               {lost ? formatCents(Math.abs(picture.lost)) : texts.none}
             </dd>

@@ -44,14 +44,13 @@ export function Solved(props: {
           loseMoney: COUNT.loseMoney,
           legendSafe: COUNT.legendSafe,
           legendLost: COUNT.legendLost,
-          figure: SOLVED.figure,
           caption: <strong>{SOLVED.grid(props.fixed.runs)}</strong>,
           summary: SOLVED.grid(props.fixed.runs),
         }}
       />
       <p class="why">{SOLVED.why}</p>
       <div class="actions">
-        <button type="button" class="nb-btn" onClick={openProof}>
+        <button type="button" class="btn" onClick={openProof}>
           {SOLVED.readCode}
         </button>
         <a class="btn-2" href={props.bookUrl}>

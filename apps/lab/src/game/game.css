@@ -1,149 +1,151 @@
 /*
- * The game layer: briefing card, step rail, code panels, the books, result grid, patches, proof card.
- * Designed by the designer agent on 2026-10-15 (mockups in private/design/), approved by Saba.
- * Element → token mapping: cards --surface + 1px --line; insets --surface-2; the current line --accent-soft with
- * an --accent bar; the line where A got slow and lost --lost bar + --lost-soft; safe = --safe (blue), lost = --lost
- * (red, hatched); the books turn --lost and get a "MONEY LOST" stamp. Colours switch, they never animate.
+ * The game layer, inside the dark console (decision 0001): the progress line, the race figure, the books, the code,
+ * the result grid, the patches, the solved screen.
+ * Colours come from the console's scoped tokens (styles/global.css). Blue = safe, red = lost (hatched as well, so it
+ * reads without telling colours apart). Motion: transform and opacity only, 100–300 ms; reduced motion shows final
+ * states. Every motion here explains something: a request moving to its next step, a number that changed, a new step.
  */
 
-/* ---------- Briefing card ---------- */
-.brief {
-  padding: var(--space-5);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--surface);
-  max-width: 62em;
-}
-
-.brief-top {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  flex-wrap: wrap;
-}
-
-.brief-top .time {
-  margin-left: auto;
-  font-family: var(--font-code);
-  font-size: var(--fs-xs);
-  color: var(--muted);
-}
-
-.brief-lead {
-  margin-top: var(--space-4);
-  font-size: var(--fs-lg);
-  line-height: 1.5;
-  max-width: 36em;
-}
-
-.brief-task {
-  margin-top: var(--space-2);
-  color: var(--muted);
-}
-
-.brief-steps {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3) var(--space-5);
-  margin: var(--space-4) 0 0;
-  padding: 0;
-  list-style: none;
-  font-size: var(--fs-sm);
-  color: var(--muted);
-}
-
-.brief-steps li {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 0.5rem;
-}
-
-.brief-steps .num {
-  flex: 0 0 auto;
-  transform: translateY(0.25rem);
-}
-
-.brief-steps b {
-  font-weight: var(--weight-regular);
-  color: var(--fg);
-}
-
-.num {
-  display: inline-grid;
-  place-items: center;
-  width: 22px;
-  height: 22px;
+/* ---------- The console frame ---------- */
+.console {
   border: 1px solid var(--line-strong);
-  border-radius: var(--radius-tag);
-  font-family: var(--font-code);
-  font-size: var(--fs-xs);
-  color: var(--fg);
+  border-radius: var(--radius-card);
+  overflow: hidden;
 }
 
-.brief-actions {
+.console-bar {
   display: flex;
-  align-items: center;
   flex-wrap: wrap;
-  gap: var(--space-4) var(--space-5);
-  margin-top: var(--space-5);
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
 }
 
-/* ---------- The step rail (in the notebook margin on desktop) ---------- */
-.rail {
-  margin: 0 0 var(--space-5);
+.progress {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  margin: 0;
   padding: 0;
   list-style: none;
-  display: flex;
-  gap: var(--space-4);
-  font-family: var(--font-code);
   font-size: var(--fs-sm);
   color: var(--muted);
 }
 
-.rail li {
-  display: flex;
-  gap: 0.5rem;
-  align-items: baseline;
+.progress li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
   white-space: nowrap;
 }
 
-.rail .n {
+.progress .mark {
+  display: inline-grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  line-height: 1;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-pill);
   font-size: var(--fs-xs);
 }
 
-.rail .now {
+.progress .now {
+  color: var(--fg);
+  font-weight: var(--weight-strong);
+}
+
+.progress .now .mark {
+  border-color: var(--accent);
   color: var(--accent);
 }
 
-.rail .now .n::after {
-  content: " ▸";
+.progress .done .mark {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-fg);
 }
 
-.rail .done .n::after {
-  content: " ✓";
+.console-pause.btn-2 {
+  margin-left: auto;
+  min-height: 40px;
+  padding: 0 0.85rem;
+  font-size: var(--fs-sm);
 }
 
-.rail .later .label {
-  opacity: 0.75;
+.console-body {
+  padding: var(--space-4) var(--space-4) var(--space-5);
 }
 
-@media (min-width: 1024px) {
-  .rail {
-    position: sticky;
-    top: calc(var(--header-h) + var(--space-5));
-    align-self: start;
-    flex-direction: column;
-    gap: 0.35rem;
-    margin: 0;
+/* What is real and what is simulated, under everything the console shows. */
+.console-foot {
+  padding: var(--space-2) var(--space-4);
+  border-top: 1px solid var(--line);
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+
+@media (min-width: 640px) {
+  .console-body {
+    padding-inline: var(--space-5);
   }
 }
 
-/* ---------- Step heading, goal, hint ---------- */
+/* A new step fades in and rises a little: we moved forward. */
+@media (prefers-reduced-motion: no-preference) {
+  .stage {
+    animation: stage-in var(--dur-base) var(--ease-out) both;
+  }
+
+  @keyframes stage-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage {
+    animation: fade-in var(--dur-fast) linear both;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ---------- Receipts: what earlier steps found ---------- */
+.receipts {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-5);
+  padding: 0;
+  list-style: none;
+}
+
+.receipt {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  font-size: var(--fs-sm);
+  color: var(--fg);
+}
+
+/* ---------- Step heading, goal, result sentence ---------- */
 .step-h {
-  font-size: var(--fs-2xl);
+  font-size: var(--fs-xl);
   font-weight: var(--weight-strong);
   line-height: var(--lh-heading);
   letter-spacing: var(--tracking-heading);
+  scroll-margin-top: calc(var(--header-h) + var(--space-8));
 }
 
 .step-h:focus {
@@ -152,46 +154,406 @@
 
 .step-h .ok {
   margin-right: 0.35em;
-  font-family: var(--font-code);
   color: var(--safe);
 }
 
 .goal {
-  margin-top: var(--space-3);
+  margin-top: var(--space-2);
   max-width: 44em;
-  font-size: var(--fs-md);
-}
-
-.hint {
-  margin-top: var(--space-3);
-  font-family: var(--font-code);
-  font-size: var(--fs-xs);
   color: var(--muted);
 }
 
-.hint b {
-  font-weight: var(--weight-regular);
-  color: var(--accent);
+.announce {
+  min-height: 3.2em;
+  margin-top: var(--space-3);
+  max-width: 44em;
 }
 
-/* ---------- The board: two code panels and the books ---------- */
-.board {
-  display: grid;
-  gap: var(--space-5);
+.announce b {
+  font-weight: var(--weight-strong);
+}
+
+.x {
+  color: var(--lost);
+}
+
+.ok {
+  color: var(--safe);
+}
+
+.next {
   margin-top: var(--space-5);
-  align-items: start;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3) var(--space-5);
+  align-items: center;
 }
 
-@media (min-width: 1024px) {
-  .board {
-    grid-template-columns: minmax(0, 1.4fr) minmax(300px, 1fr);
+/* ---------- The race figure ---------- */
+.race {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.race-head,
+.lane {
+  display: grid;
+  grid-template-columns: 1.75rem minmax(0, 1fr);
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.race-cols {
+  display: grid;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  font-size: var(--fs-sm);
+  line-height: 1.3;
+  color: var(--muted);
+  text-align: center;
+}
+
+.race-cols b {
+  font-weight: var(--weight-regular);
+  color: var(--fg);
+}
+
+.race-cols .long {
+  display: none;
+}
+
+@media (min-width: 1280px) {
+  .race-cols .long {
+    display: inline;
+  }
+
+  .race-cols .short {
+    display: none;
   }
 }
 
-.col {
+.lane-name {
+  justify-self: center;
+  font-weight: var(--weight-strong);
+}
+
+.lane-a .lane-name {
+  color: var(--accent);
+}
+
+.track {
+  position: relative;
   display: grid;
-  gap: var(--space-5);
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  padding: var(--space-2) 0;
+}
+
+/* The line the steps sit on. */
+.rail {
+  position: absolute;
+  top: calc(var(--space-2) + 21px);
+  left: calc(100% / var(--cols) / 2);
+  right: calc(100% / var(--cols) / 2);
+  border-top: 2px solid var(--line);
+}
+
+.node {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 0.15rem;
   min-width: 0;
+}
+
+/* Each step: a 44 px tap target with a 28 px circle inside. */
+.track .dot {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-size: var(--fs-sm);
+}
+
+.track .dot > span {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 2px solid var(--line-strong);
+  border-radius: var(--radius-pill);
+  background: var(--bg);
+}
+
+.track button.dot {
+  cursor: pointer;
+}
+
+.track button.dot:hover > span,
+.track button.dot[aria-pressed="true"] > span {
+  border-color: var(--accent);
+  color: var(--fg);
+}
+
+.node.ran .dot > span {
+  border-color: var(--fg);
+  background: var(--fg);
+  color: var(--bg);
+}
+
+.lane-a .node.ran .dot > span {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-fg);
+}
+
+.val {
+  min-height: 1.4em;
+  font-size: var(--fs-sm);
+  color: var(--fg);
+  white-space: nowrap;
+}
+
+.node.end {
+  align-content: center;
+  min-height: 44px;
+}
+
+.res {
+  font-size: var(--fs-sm);
+  font-weight: var(--weight-strong);
+  white-space: nowrap;
+}
+
+/* A step value appears when its step ran. */
+@media (prefers-reduced-motion: no-preference) {
+  .val:not(:empty),
+  .res:not(:empty) {
+    animation: fade-in var(--dur-fast) linear both;
+  }
+}
+
+/* The request itself: a ring that moves to the step it is about to run. One column per step. */
+.runner {
+  position: absolute;
+  top: var(--space-2);
+  left: 0;
+  display: grid;
+  justify-items: center;
+  width: calc(100% / var(--cols));
+  height: 44px;
+  pointer-events: none;
+  transform: translateX(calc(var(--pos) * 100%));
+}
+
+.runner-dot {
+  width: 40px;
+  height: 40px;
+  margin-top: 2px;
+  border: 2px solid var(--fg);
+  border-radius: var(--radius-pill);
+}
+
+.lane-a .runner-dot {
+  border-color: var(--accent);
+}
+
+/* A finished request: its ring fades out and its result stays. */
+.lane.is-done .runner {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .runner {
+    transition:
+      transform var(--dur-base) var(--ease-in-out),
+      opacity var(--dur-fast) linear;
+  }
+}
+
+/* A request that got slow: its ring turns dashed. */
+.lane.is-slow .runner-dot {
+  border-style: dashed;
+}
+
+/* The two payouts of a run that lost money. */
+.lane.is-lost .res {
+  color: var(--lost);
+}
+
+/* Where A got slow: a dashed line between two steps, with a short note under it, in a strip kept free for it. */
+.lane-a .track {
+  padding-bottom: 1.6rem;
+}
+
+.slow-mark {
+  position: absolute;
+  top: var(--space-1);
+  bottom: 1.5rem;
+  left: calc(var(--after) * 100% / var(--cols));
+  border-left: 2px dashed var(--accent);
+  pointer-events: none;
+}
+
+.slow-mark span {
+  position: absolute;
+  top: calc(100% + 0.2rem);
+  left: 0;
+  padding: 0 0.3rem;
+  transform: translateX(-50%);
+  background: var(--bg);
+  font-size: var(--fs-xs);
+  line-height: 1.2;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+/* The first-move hint: lane A's steps glow three times, not at all with reduced motion. */
+.race-hinting.race-pickable .lane-a .dot > span {
+  box-shadow: 0 0 0 4px var(--accent-soft);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .race-hinting.race-pickable .lane-a .dot > span {
+    animation: hint-glow 1.2s var(--ease-in-out) 3;
+  }
+
+  @keyframes hint-glow {
+    50% {
+      box-shadow: 0 0 0 8px var(--accent-soft);
+    }
+  }
+}
+
+/* ---------- The books (our ledger vs the bank) ---------- */
+.books {
+  position: relative;
+  margin-top: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.books h3 {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding-right: 8rem; /* room for the stamp */
+  font-size: var(--fs-base);
+  font-weight: var(--weight-strong);
+}
+
+.books h3 span {
+  font-size: var(--fs-sm);
+  font-weight: var(--weight-regular);
+  color: var(--muted);
+}
+
+.books dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(5.5rem, 1fr));
+  gap: var(--space-2) var(--space-3);
+  margin: var(--space-3) 0 0;
+}
+
+.books .r {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.books dt {
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+
+.books dd {
+  margin: 0;
+  font-size: var(--fs-lg);
+  font-weight: var(--weight-strong);
+}
+
+/* A number that changed fades in where it stands. */
+@media (prefers-reduced-motion: no-preference) {
+  .books dd {
+    animation: fade-in var(--dur-fast) linear both;
+  }
+}
+
+.books.lost {
+  border-color: var(--lost);
+}
+
+.books.lost .verdict dd,
+.books.lost .verdict dt {
+  color: var(--lost);
+}
+
+.books.safe .verdict dd {
+  color: var(--safe);
+}
+
+.stamp-lost {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-4);
+  /* Room enough that the tilted border never runs through the letters' box. */
+  padding: 0.55rem 0.75rem;
+  line-height: 1.1;
+  border: 2px solid var(--lost);
+  border-radius: var(--radius-tag);
+  color: var(--lost);
+  font-size: var(--fs-sm);
+  font-weight: var(--weight-strong);
+  letter-spacing: 0.08em;
+  transform: rotate(-2deg);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .stamp-lost {
+    animation: stamp var(--dur-fast) var(--ease-out) both;
+  }
+
+  @keyframes stamp {
+    from {
+      opacity: 0;
+      transform: rotate(-2deg) scale(1.15);
+    }
+
+    to {
+      opacity: 1;
+      transform: rotate(-2deg) scale(1);
+    }
+  }
+}
+
+/* ---------- "Show the code it runs" ---------- */
+.code-view {
+  margin-top: var(--space-5);
+  border-top: 1px solid var(--line);
+  padding-top: var(--space-3);
+}
+
+.code-view > summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.code-view .req {
+  margin-top: var(--space-2);
 }
 
 .req {
@@ -205,7 +567,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-1) var(--space-3);
-  padding: var(--space-3) var(--space-4);
+  padding: var(--space-2) var(--space-4);
   border-bottom: 1px solid var(--line);
 }
 
@@ -215,17 +577,15 @@
 }
 
 .req-head .tag {
-  font-family: var(--font-code);
-  font-size: var(--fs-xs);
+  font-size: var(--fs-sm);
   color: var(--muted);
 }
 
 .chip {
   margin-left: auto;
   padding: 0.05rem 0.5rem;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-strong);
   border-radius: var(--radius-tag);
-  font-family: var(--font-code);
   font-size: var(--fs-xs);
   color: var(--muted);
   white-space: nowrap;
@@ -243,7 +603,6 @@
 }
 
 .chip-unknown {
-  border-color: var(--line-strong);
   color: var(--fg);
 }
 
@@ -269,14 +628,15 @@
   background: none;
   text-align: left;
   font-family: var(--font-code);
-  font-size: var(--fs-sm);
+  font-size: 0.875rem;
   line-height: 1.5;
   color: var(--fg);
 }
 
 .row .n {
   justify-self: end;
-  font-size: var(--fs-xs);
+  font-family: var(--font-body);
+  font-size: var(--fs-sm);
   color: var(--accent);
 }
 
@@ -288,25 +648,8 @@
 .row .label {
   grid-column: 2;
   font-family: var(--font-body);
-  font-size: var(--fs-xs);
+  font-size: var(--fs-sm);
   line-height: 1.4;
-  color: var(--muted);
-}
-
-@media (min-width: 1280px) {
-  .row {
-    grid-template-columns: 2.25rem minmax(0, 1fr) auto;
-  }
-
-  .row .label {
-    grid-column: 3;
-    justify-self: end;
-    padding-left: var(--space-3);
-    white-space: nowrap;
-  }
-}
-
-.frame .row code {
   color: var(--muted);
 }
 
@@ -329,14 +672,12 @@ button.row:hover {
   background: var(--lost-soft);
 }
 
-/* The line after which A got slow: a dashed "pause" rule with a short note. */
 .pause {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   margin: 0.15rem var(--space-4) 0.25rem 2.5rem;
-  font-family: var(--font-code);
-  font-size: var(--fs-xs);
+  font-size: var(--fs-sm);
   color: var(--accent);
 }
 
@@ -344,7 +685,7 @@ button.row:hover {
 .pause::after {
   content: "";
   flex: 1;
-  border-top: 1px dashed currentColor;
+  border-top: 2px dashed currentColor;
 }
 
 .pause::after {
@@ -353,222 +694,6 @@ button.row:hover {
 
 .line.lost .pause {
   color: var(--lost);
-}
-
-/* The first-move hint: the tappable lines glow three times (opacity only), not at all with reduced motion. */
-.req-hinting button.row::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: var(--accent-soft);
-  opacity: 0;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .req-hinting button.row::after {
-    animation: hint-glow 1.2s var(--ease-in-out) 3;
-  }
-
-  @keyframes hint-glow {
-    50% {
-      opacity: 1;
-    }
-  }
-}
-
-/* Request B, compact: the same code, only the step labels and where it is. */
-.req-compact .note {
-  padding: var(--space-2) var(--space-4) 0;
-  font-size: var(--fs-xs);
-  color: var(--muted);
-}
-
-.req-compact .row {
-  grid-template-columns: 2.25rem minmax(0, 1fr) auto;
-  font-family: var(--font-body);
-  font-size: var(--fs-sm);
-  padding-top: 0.2rem;
-  padding-bottom: 0.2rem;
-}
-
-.req-compact .row .n {
-  font-family: var(--font-code);
-}
-
-.req-compact .row .state {
-  margin-left: auto;
-  font-family: var(--font-code);
-  font-size: var(--fs-xs);
-  color: var(--muted);
-}
-
-/* ---------- The books (our ledger vs the bank) ---------- */
-.books {
-  position: relative;
-  padding: var(--space-4);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--surface);
-}
-
-.books h3 {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  font-size: var(--fs-base);
-  font-weight: var(--weight-strong);
-}
-
-.books h3 span {
-  font-family: var(--font-code);
-  font-size: var(--fs-xs);
-  font-weight: var(--weight-regular);
-  color: var(--muted);
-}
-
-.books dl {
-  margin: var(--space-3) 0 0;
-}
-
-.books .r {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-3);
-  padding: 0.3rem 0;
-  border-top: 1px solid var(--line);
-}
-
-.books dt {
-  font-size: var(--fs-sm);
-  color: var(--muted);
-}
-
-.books dd {
-  margin: 0;
-  font-family: var(--font-code);
-  font-size: var(--fs-base);
-  font-variant-numeric: tabular-nums;
-}
-
-.books .verdict {
-  margin-top: var(--space-2);
-  padding: 0.45rem var(--space-2);
-  border-top: 1px solid var(--line-strong);
-}
-
-.books .verdict dt {
-  color: var(--fg);
-}
-
-.books .verdict dd {
-  font-weight: var(--weight-strong);
-}
-
-.books.lost {
-  border-color: var(--lost);
-}
-
-.books.lost h3 {
-  padding-right: 7.5rem; /* room for the stamp */
-}
-
-.books.lost .verdict {
-  margin-inline: calc(-1 * var(--space-2));
-  background: var(--lost-soft);
-  border-top-color: var(--lost);
-}
-
-.books.lost .verdict dd,
-.books.lost .verdict dt {
-  color: var(--lost);
-}
-
-.books.safe .verdict dd {
-  color: var(--safe);
-}
-
-.stamp-lost {
-  position: absolute;
-  top: var(--space-3);
-  right: var(--space-4);
-  padding: 0.15rem 0.5rem;
-  border: 2px solid var(--lost);
-  border-radius: var(--radius-tag);
-  color: var(--lost);
-  font-family: var(--font-code);
-  font-size: var(--fs-xs);
-  font-weight: var(--weight-strong);
-  letter-spacing: 0.08em;
-  transform: rotate(-4deg);
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .stamp-lost {
-    animation: stamp var(--dur-fast) var(--ease-out) both;
-  }
-
-  @keyframes stamp {
-    from {
-      opacity: 0;
-      transform: rotate(-4deg) scale(1.15);
-    }
-
-    to {
-      opacity: 1;
-      transform: rotate(-4deg) scale(1);
-    }
-  }
-}
-
-.announce {
-  min-height: 1.5em;
-  margin-top: var(--space-4);
-  max-width: 44em;
-  font-size: var(--fs-md);
-}
-
-.announce b {
-  font-weight: var(--weight-strong);
-}
-
-.announce .x,
-.receipt .x {
-  color: var(--lost);
-  font-family: var(--font-code);
-}
-
-.announce .ok {
-  color: var(--safe);
-  font-family: var(--font-code);
-}
-
-.next {
-  margin-top: var(--space-5);
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-4);
-  align-items: center;
-}
-
-/* ---------- Receipt of a finished step, shown above the next one ---------- */
-.receipt {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2) var(--space-4);
-  margin-bottom: var(--space-5);
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--surface-2);
-  font-size: var(--fs-sm);
-  color: var(--muted);
-}
-
-.receipt .nb-mono {
-  color: var(--fg);
 }
 
 /* ---------- The guess and the result grid ---------- */
@@ -595,13 +720,13 @@ button.row:hover {
   border-radius: var(--radius);
   background: var(--surface-2);
   color: var(--fg);
-  font-family: var(--font-code);
   font-size: var(--fs-lg);
+  font-variant-numeric: tabular-nums;
 }
 
 .runs-fig {
   margin: var(--space-5) 0 0;
-  padding: var(--space-5);
+  padding: var(--space-4);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface);
@@ -611,7 +736,7 @@ button.row:hover {
   display: flex;
   align-items: baseline;
   flex-wrap: wrap;
-  gap: var(--space-2) var(--space-4);
+  gap: var(--space-2) var(--space-3);
   margin-bottom: var(--space-4);
 }
 
@@ -621,9 +746,10 @@ button.row:hover {
 }
 
 .runs-head .big {
-  font-family: var(--font-code);
   font-size: var(--fs-2xl);
+  font-weight: var(--weight-strong);
   line-height: 1;
+  font-variant-numeric: tabular-nums;
   color: var(--lost);
 }
 
@@ -632,7 +758,6 @@ button.row:hover {
 }
 
 .runs-head .of {
-  font-family: var(--font-code);
   font-size: var(--fs-sm);
   color: var(--muted);
 }
@@ -647,27 +772,28 @@ button.row:hover {
 .cell {
   width: var(--run-cell);
   height: var(--run-cell);
+  border-radius: 2px;
 }
 
 .cell-safe {
   background: var(--safe);
 }
 
-/* Stripes as well as colour, so lost runs read without telling colours apart. */
 .cell-lost {
   background-color: var(--lost);
-  background-image: repeating-linear-gradient(135deg, transparent 0 3px, rgba(255, 255, 255, 0.55) 3px 5px);
+  background-image: repeating-linear-gradient(135deg, transparent 0 3px, rgba(0, 0, 0, 0.45) 3px 5px);
 }
 
 .cell-blocked {
   border: 1px solid var(--blocked);
 }
 
+/* The grid fills in 1.5 s in total, however many runs there are. */
 @media (prefers-reduced-motion: no-preference) {
   .runs .cell {
     opacity: 0;
     animation: cell-in var(--dur-instant) linear forwards;
-    animation-delay: calc(var(--i, 0) * 25ms);
+    animation-delay: var(--d, 0ms);
   }
 
   @keyframes cell-in {
@@ -684,8 +810,7 @@ button.row:hover {
   margin: var(--space-4) 0 0;
   padding: 0;
   list-style: none;
-  font-family: var(--font-code);
-  font-size: var(--fs-xs);
+  font-size: var(--fs-sm);
   color: var(--muted);
 }
 
@@ -740,21 +865,21 @@ button.row:hover {
 }
 
 .patch:has(input:focus-visible) {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--focus);
   outline-offset: 2px;
 }
 
 .patch.chosen {
-  border-color: var(--line-strong);
-  box-shadow: inset 0 0 0 1px var(--line-strong);
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
 }
 
 .patch .dot {
   width: 18px;
   height: 18px;
-  margin-top: 0.2rem;
-  border: 1px solid var(--line-strong);
-  border-radius: var(--radius-tag);
+  margin-top: 0.25rem;
+  border: 2px solid var(--line-strong);
+  border-radius: var(--radius-pill);
 }
 
 .patch.chosen .dot {
@@ -778,9 +903,10 @@ button.row:hover {
 }
 
 .patch summary {
-  font-family: var(--font-code);
-  font-size: var(--fs-xs);
+  font-size: var(--fs-sm);
   color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
   cursor: pointer;
 }
 
@@ -793,6 +919,7 @@ button.row:hover {
   border-radius: var(--radius);
   background: var(--surface-2);
   font-size: 0.8125rem;
+  tab-size: 2;
 }
 
 .attack {
@@ -819,7 +946,7 @@ button.row:hover {
 }
 
 .cleanup h3 {
-  font-size: var(--fs-xl);
+  font-size: var(--fs-lg);
   font-weight: var(--weight-strong);
 }
 
@@ -840,7 +967,7 @@ button.row:hover {
 
 .cleanup .books {
   margin-top: var(--space-4);
-  max-width: 28rem;
+  max-width: 32rem;
 }
 
 .go-deeper {
@@ -848,17 +975,16 @@ button.row:hover {
 }
 
 /* ---------- Phones ---------- */
-@media (max-width: 1023px) {
-  .books h3 span {
-    display: none;
-  }
-
-  .books.lost h3 {
+@media (max-width: 639px) {
+  .books h3 {
     padding-right: 0;
   }
 
+  /* On phones the stamp sits in the flow, above the panel's heading, so it covers no text. */
   .stamp-lost {
-    top: calc(-1 * var(--space-3)); /* the stamp overlaps the card's top edge on phones */
+    position: static;
+    display: inline-block;
+    margin: var(--space-1) 0 var(--space-3);
   }
 
   .pause::after {
@@ -869,17 +995,14 @@ button.row:hover {
     flex: 0 0 1rem;
   }
 
-  .brief-top .time {
-    margin-left: 0;
+  /* Long button labels wrap instead of running past the console's edge. */
+  .console .btn {
+    width: 100%;
+    white-space: normal;
+    text-align: center;
   }
 
-  .rail {
-    flex-wrap: wrap;
-    gap: var(--space-2) var(--space-4);
-  }
-
-  .brief-actions .nb-link,
-  .next .nb-link {
+  .next .link {
     width: 100%;
     text-align: center;
   }

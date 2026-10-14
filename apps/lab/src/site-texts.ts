@@ -1,21 +1,25 @@
 /*
- * The site's own words (layout, the shift, the home page). Each incident keeps its words in its own texts file.
+ * The site's own words (layout, the home page). Each incident keeps its words in its own texts file.
+ * Drafts: Saba approves every public sentence before launch (publish gate).
  */
 
 export const LAYOUT = {
   skip: 'Skip to content',
   name: 'Saba Janelidze',
-  lab: '/ lab',
-  navLabel: 'Main',
-  shift: 'The shift',
-  testMode: 'TEST MODE · no real money · fake data only',
+  lab: 'lab',
   book: 'Book a call',
-  shiftLabel: 'The shift',
-  soon: 'soon',
   footerBefore: 'Built at home by',
   footerName: 'Saba Janelidze',
-  footerAfter: '. New code written for this lab, no employer code · test mode, fake money.',
+  footerAfter: '. New code written for this lab, no employer code.',
+  footerTestMode: 'Test mode: fake money and made-up customers. Nothing here moves real money.',
+  theme: { label: 'Theme:', light: 'Light', dark: 'Dark', auto: 'Auto' },
 }
+
+/** Who made the lab and what it is: the first sentence on every page. */
+export const FRAME =
+  "A working demo by Saba Janelidze, Principal Engineer: payment and ledger systems for fintech and crypto teams. You're the on-call engineer. No code to write: you tap."
+
+export const TEST_MODE = 'Test mode, fake money'
 
 export const STATION_NAME: Record<string, string> = {
   payments: 'Payments',
@@ -28,30 +32,27 @@ export const STATION_NAME: Record<string, string> = {
 export const HOME = {
   title: 'On call: one day at a tiny crypto exchange',
   description:
-    'You are the on-call engineer at Tiny Exchange for one day. Each incident is a puzzle on real code: reproduce how the money was lost, pick the fix that survives every way the code can run, then clean up. Test mode, fake money.',
-  margin: 'on call',
-  marginSub: 'one day · five incidents',
-  kicker: 'On call · one day at a tiny crypto exchange',
+    'A working demo by Saba Janelidze. You are the on-call engineer at a made-up crypto exchange. Each incident is a 2-minute puzzle on real code: reproduce how the money was lost, count how often it happens, pick the fix that survives every way the code can run. Test mode, fake money.',
+  meta: (ready: number, total: number) => `${ready} of ${total} incidents ready · about 2 minutes each`,
   heading: 'A customer was paid 160 from a balance of 100.',
-  lead: "You're the on-call engineer at Tiny Exchange today. Find out how it happened, fix it, and prove the fix holds, on the real code.",
-  start: 'Take incident 1',
+  lead: "You're on call at Tiny Exchange, a made-up crypto exchange. Find out how it happened, then pick the fix that holds in every way the code can run. Every result comes from the real code.",
+  start: 'Play incident 1',
   startNote: 'about 2 minutes · no sign-up',
-  howMargin: 'how',
-  howMarginSub: 'about 2 min each',
   howHeading: 'How each incident works',
   how: [
-    { step: 'Reproduce', text: 'make the bug happen again, by choosing where things get slow.' },
-    { step: 'Count', text: 'see how often it happens, across every way the code can run.' },
-    { step: 'Fix', text: 'pick the patch that survives all of them. Wrong patches fail in front of you.' },
+    { step: 'Reproduce', text: 'pick the step where one request gets slow, and watch two requests race.' },
+    { step: 'Count', text: 'guess, then see how many of all the possible orders lose money.' },
+    {
+      step: 'Fix',
+      text: 'pick a patch. The machine tries it in every order; wrong patches fail in front of you.',
+    },
   ],
   noCode:
-    'You never write code. You read a few short lines, each with a plain label, and make choices. Every choice runs the real code, the same files the proof cards link to, with their tests.',
-  dayMargin: 'the day',
-  dayMarginSub: '09:30 – 17:30',
+    'You never write code. You tap steps with plain labels. Every tap runs the real code, the same files the "How it works" card links to, with their tests.',
   dayHeading: 'The day',
-  incident: (number: number, time: string, name: string) => `Incident ${number} · ${time} · ${name}`,
-  take: 'Take this incident',
-  comingSoon: 'Coming soon',
+  incident: (number: number, total: number, name: string) => `Incident ${number} of ${total} · ${name}`,
+  take: 'Play this incident',
+  notBuilt: 'Not built yet',
   tickets: {
     payments: '"I tapped Withdraw 80 twice. The bank paid me 160 and my balance still shows 20."',
     kyc: '"I was approved yesterday. This morning my status says pending again."',
