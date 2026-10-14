@@ -2,8 +2,8 @@
 
 export const PORTFOLIO_URL = 'https://www.sabajanelidze.com'
 
-// The portfolio session owns the booking page. Confirm this path with it before launch.
-export const BOOK_A_CALL_PATH = '/work-with-me'
+// The portfolio's single booking page: it records `from` and forwards to the calendar (portfolio NOTICE, 2026-10-15).
+export const BOOK_A_CALL_PATH = '/book'
 
 export const REPO_URL = 'https://github.com/000Janela000/sabajanelidze-lab'
 
