@@ -15,7 +15,7 @@ const { title, source } = Astro.props
     <a href={source.url}>{source.file}:{source.startLine}–{source.endLine}</a>
   </figcaption>
   <!-- Focusable, so a keyboard can scroll long lines sideways. -->
-  <pre tabindex="0"><code>{source.code}</code></pre>
+  <pre tabindex="0"><code set:html={source.html} /></pre>
 </figure>
 
 <style>

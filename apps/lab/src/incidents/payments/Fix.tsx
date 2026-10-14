@@ -7,7 +7,9 @@ import {
   withdrawCheckTwice,
   withdrawLockRead,
 } from '@lab/core'
+import { Fragment } from 'preact'
 import { useState } from 'preact/hooks'
+import { CodeText } from '../../game/CodeText.tsx'
 import { RunGrid } from '../../game/RunGrid.tsx'
 import { AMOUNT, OPENING, type PatchId, type PatchOption } from './setup.ts'
 import { COUNT, FIX } from './texts.ts'
@@ -68,7 +70,14 @@ export function Fix(props: {
             <details>
               <summary>{FIX.showCode}</summary>
               <pre>
-                <code>{patch.lines.map((line) => line.text).join('\n')}</code>
+                <code>
+                  {patch.lines.map((line, index) => (
+                    <Fragment key={index}>
+                      {index > 0 ? '\n' : null}
+                      <CodeText tokens={line.tokens} />
+                    </Fragment>
+                  ))}
+                </code>
               </pre>
             </details>
           </label>

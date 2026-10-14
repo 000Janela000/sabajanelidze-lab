@@ -1,5 +1,6 @@
 import type { Step } from '@lab/core'
 import type { CodeLine } from '../lib/code-line.ts'
+import { CodeText } from './CodeText.tsx'
 import { REQUEST_STATE, type RequestState } from './request-state.ts'
 
 export const LINE_STATE = { DONE: 'DONE', NOW: 'NOW', TODO: 'TODO' } as const
@@ -98,7 +99,9 @@ export function CodePanel(props: CodePanelProps) {
               <span class="n" aria-hidden="true">
                 {number ?? ''}
               </span>
-              <code>{line.text.trimEnd()}</code>
+              <code>
+                <CodeText tokens={line.tokens} />
+              </code>
               {label ? <span class="label">{label}</span> : null}
             </>
           )

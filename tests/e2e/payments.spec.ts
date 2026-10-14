@@ -95,6 +95,28 @@ test('the proof card shows the fix in TypeScript or Go, by click or by keyboard'
   await noSidewaysScroll(page)
 })
 
+for (const scheme of ['light', 'dark'] as const) {
+  test(`coloured code reads at 4.5:1 or better (${scheme} theme)`, async ({ page }) => {
+    await page.emulateMedia({ colorScheme: scheme })
+    await page.goto('/day/payments')
+    await page.getByRole('button', { name: 'Start' }).click()
+    // The red "money lost" line and the highlighted line are the hardest backgrounds.
+    await page.getByRole('button', { name: /Make request A slow after line 2/ }).click()
+    await page.locator('#proof summary').click()
+    const contrast = async () =>
+      (
+        await new AxeBuilder({ page }).include('code').withRules(['color-contrast']).analyze()
+      ).violations.flatMap((violation) => violation.nodes.map((node) => node.target.join(' ')))
+    expect(await contrast()).toEqual([])
+    await page
+      .getByRole('tablist', { name: 'Code language' })
+      .first()
+      .getByRole('tab', { name: 'Go' })
+      .click()
+    expect(await contrast()).toEqual([])
+  })
+}
+
 test.describe('without JavaScript (bots, AI crawlers, screen readers before load)', () => {
   test.use({ javaScriptEnabled: false })
 

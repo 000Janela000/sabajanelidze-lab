@@ -6,7 +6,8 @@ import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { STEP_FOR_METHOD } from '@lab/core'
-import type { CodeLine } from './code-line.ts'
+import type { CodeLine, CodeToken } from './code-line.ts'
+import { highlight, langOf, toHtml } from './highlight.ts'
 import { REPO_URL } from './links.ts'
 
 export type { CodeLine }
@@ -18,6 +19,10 @@ export interface Excerpt {
   readonly startLine: number
   readonly endLine: number
   readonly code: string
+  /** The code coloured like a code editor, one entry per line. */
+  readonly lines: readonly (readonly CodeToken[])[]
+  /** The same, as HTML for build-time pages. */
+  readonly html: string
   readonly url: string
 }
 
@@ -63,11 +68,15 @@ export function excerpt(file: string, region: string): Excerpt {
   let last = end - 1
   while (first < last && lines[first]?.trim() === '') first++
   while (last > first && lines[last]?.trim() === '') last--
+  const code = lines.slice(first, last + 1).join('\n')
+  const coloured = highlight(code, langOf(file))
   return {
     file,
     startLine: first + 1,
     endLine: last + 1,
-    code: lines.slice(first, last + 1).join('\n'),
+    code,
+    lines: coloured,
+    html: toHtml(coloured),
     url: fileUrl(file, first + 1, last + 1),
   }
 }
@@ -78,16 +87,17 @@ const PORT_CALL = /await (?:store|bank)\.(\w+)\(/
 export function codeLines(source: Excerpt): CodeLine[] {
   return source.code
     .split('\n')
-    .filter((line) => {
-      const trimmed = line.trim()
+    .map((text, index) => ({ text, tokens: source.lines[index] ?? [] }))
+    .filter(({ text }) => {
+      const trimmed = text.trim()
       return (
         trimmed !== '' && !trimmed.startsWith('/**') && !trimmed.startsWith('*') && !trimmed.startsWith('//')
       )
     })
-    .map((text) => {
+    .map(({ text, tokens }) => {
       const method = PORT_CALL.exec(text)?.[1]
       const step = method ? (STEP_FOR_METHOD[method] ?? null) : null
-      return { text, step }
+      return { text, tokens, step }
     })
 }
 
