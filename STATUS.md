@@ -24,7 +24,7 @@
 4. A few facts only Saba knows (not blocking): listed in `private/game-design-notes.md`.
 
 ## Next steps
-- Now: Saba's feedback on the new look and the shared race figure (home page). Then the lab's next moments (open problem 1), then incident 2's screens.
+- Now: Saba's feedback on the new look and the shared race figure (home page). Tokens v3 are ready (`../SabaJanelidze/src/styles/tokens.css`, `docs/design-tokens.md`, branch `rebuild`, read only): Newsreader 500 headings (font file and licence in its `src/assets/fonts/`), small monospace for sources, dates and money figures, the accent's three jobs; the lab follows them next. Then the lab's next moments (open problem 1), then incident 2's screens.
 - Incident 2, KYC: **core done** (`packages/core/src/kyc`, commit `55955bf`); next the screens, the proof card (TypeScript + Go), the Postgres version.
 - Contrast: rerun `private/tools/contrast-audit.mjs` (a copy of the portfolio's pixel audit, pointed at the lab's packages; a page path ending in `?lost` plays the losing run first) after any visual change: `MSYS_NO_PATHCONV=1 node private/tools/contrast-audit.mjs http://127.0.0.1:4391 out.json / /day/payments "/day/payments?lost"`.
 - Small, later: the 4 Biome `noDescendingSpecificity` warnings in `game.css`; maybe add the Go checks to the pre-commit hook; a new clip for the new design.
@@ -35,7 +35,7 @@
 - **Public-safety rule:** the repo becomes public at launch with its full history, so every commit must be public-safe. Employer details, strategy and personal notes stay in `private/`.
 
 ## Waiting on someone outside
-- Portfolio session: tokens v3 (Newsreader headings, mono for money figures, accent jobs) in a NOTICE when its Phase 1e lands; the lab then follows. It vendors `packages/race-figure/dist/*` at a pinned commit (DONE race-figure#3 sent with 837f081).
+- Saba: the order of launch. The portfolio (now with `<race-figure>` 1.0.0 vendored from 837f081 in its hero) links to lab.sabajanelidze.com, so the lab must be live before or at the portfolio's switch-over (NOTICE race-figure#4). The Worker and the subdomain need Saba's OK.
 
 ## Log (newest first)
 - **2026-10-15:** **Shared race figure** (`837f081`, REQUEST race-figure#1 from the portfolio session, Saba chose it first): `packages/race-figure`, a framework-free `<race-figure>` element. It replays the 54 runs recorded from the real build v0.1 (`scripts/record.ts`); a test checks the shipped data equals a fresh recording and the core's own count (54 / 36 lose / 18 not); CI regenerates, rebuilds and fails on any difference (byte-identical on Linux). It plays once when half visible (about 4 s), has Pause/Play and pauses in a hidden tab, "Run another order", no-JS end state in the HTML, reduced motion still. Steps are rows (full labels), A and B are columns. 2.8 KB gzip (JS), 1.7 KB (CSS). On the lab's home page in the dark console. Browser tests: 64 passed twice over; pixel audit 0 failures in 12 runs. Also: the first step no longer fades in on arrival (a scan caught text mid-fade; motion on arrival explained nothing). Portfolio: Saba chose "Calm, with one live proof" there (this figure, Newsreader headings, tokens v3 coming).

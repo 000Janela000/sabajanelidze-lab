@@ -55,7 +55,7 @@ It reads the design tokens of the page around it, so it follows light and dark. 
 | `--rf-radius` | `var(--radius-card)` |
 | `--rf-row` (height of one step) | `2.6rem` (`2.3rem` under 30 rem wide) |
 
-Size: at most 28 rem (448 px) wide on desktop, about 330 px tall; full width on phones.
+Size, as measured in the portfolio's hero (2026-10-15): 413 × 438 px on desktop, 335 × 419 px on a 390 px phone. At most 28 rem (448 px) wide; full width on phones.
 
 ## Develop
 
