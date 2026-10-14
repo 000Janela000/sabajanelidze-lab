@@ -438,7 +438,9 @@ lab.sabajanelidze.com  (one Cloudflare Worker; static pages are free and unlimit
 ## 12. Art direction, motion, phones and accessibility
 
 ### 12.1 Look: A, "exchange back office" (chosen)
-A calm, precise operations console: the incident ticket, code lines with plain labels, a ledger panel, an event log, the result grid. Small flat avatars for customers. Colours, fonts and timings come from the portfolio's design tokens once they exist.
+A calm, precise operations console: the incident ticket, code lines with plain labels, a ledger panel, an event log, the result grid. Small flat avatars for customers. Colours, fonts and timings come from the portfolio's design tokens.
+
+**Made concrete on 2026-10-15** (`decisions/0001-calm-page-dark-console.md`): the page uses the portfolio's calm tokens (version 2) unchanged; the game sits in a **dark console** in both themes; the **race figure** (requests A and B moving through the same steps, the books changing with them) is the first thing on the screen and plays one safe run on arrival. The first screen says who made the lab and what it is, and the action is on it.
 
 **The minimum "game feel"** (so it doesn't ship as a dashboard) [RV, designer]:
 1. a **money counter** that moves on every step;
