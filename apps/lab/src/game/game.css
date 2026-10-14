@@ -465,8 +465,10 @@
   margin: var(--space-3) 0 0;
 }
 
+/* Labels may wrap to two lines; the numbers still line up along the bottom. */
 .books .r {
   display: grid;
+  grid-template-rows: 1fr auto;
   gap: 0.1rem;
 }
 
