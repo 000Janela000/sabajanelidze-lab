@@ -1,72 +1,118 @@
 ---
 import Base from '../layouts/Base.astro'
 import { STATIONS } from '../lib/stations.ts'
-
-const tickets: Record<string, string> = {
-  payments: '"I tapped Withdraw 80 twice. The bank paid me 160 and my balance still shows 20."',
-  kyc: '"I was approved yesterday. This morning my status says pending again."',
-  deposits: '"We paid out 1.0 that never arrived."',
-  ai: '"Your support assistant told me to send coins to an address to release my deposit."',
-  books: 'Your incident reports for the day, and do the books still balance?',
-}
+import { HOME, STATION_NAME } from '../site-texts.ts'
 ---
 
-<Base
-  title="On call: one day at a tiny crypto exchange"
-  description="You are the on-call engineer at Tiny Exchange for one day. Each incident is a puzzle on real code: reproduce how the money was lost, pick the fix that survives every order of events, then clean up. Test mode, fake money."
-  station="home"
->
-  <section class="intro">
-    <h1>On call: one day at a tiny crypto exchange</h1>
-    <p class="lead">
-      You are the on-call engineer at Tiny Exchange today. Incidents come in. For each one you <strong
-        >reproduce</strong
-      > how the money was lost, <strong>fix</strong> it by picking the patch that survives every order of events, and{' '}
-      <strong>clean up</strong> what the fix alone can't.
-    </p>
-    <p>
-      You never write code. You read a few lines, each with a plain label, and make choices. Every choice runs the real
-      code, the same files the proof cards link to, with their tests.
+<Base title={HOME.title} description={HOME.description} station="home">
+  <section class="hero">
+    <p class="kicker">{HOME.kicker}</p>
+    <h1>{HOME.heading}</h1>
+    <p class="lead">{HOME.lead}</p>
+    <p class="start">
+      <a class="button primary" href="/day/payments">{HOME.start}</a>
+      <span class="start-note">{HOME.startNote}</span>
     </p>
   </section>
 
-  <ol class="incidents">
-    {
-      STATIONS.map((station, index) => (
-        <li class:list={['incident-card', { soon: !station.ready }]}>
-          <p class="meta">
-            Incident {index + 1} · {station.time} · {station.name}
-          </p>
-          <p class="ticket">{tickets[station.slug]}</p>
-          {station.ready ? (
-            <a class="button primary" href={`/day/${station.slug}`}>
-              Take this incident
-            </a>
-          ) : (
-            <p class="soon-label">Coming soon</p>
-          )}
-        </li>
-      ))
-    }
-  </ol>
+  <section class="how" aria-labelledby="how-heading">
+    <h2 id="how-heading">{HOME.howHeading}</h2>
+    <ol class="how-steps">
+      {
+        HOME.how.map((item, index) => (
+          <li>
+            <span class="how-number">{index + 1}</span>
+            <strong>{item.step}:</strong> {item.text}
+          </li>
+        ))
+      }
+    </ol>
+    <p class="no-code">{HOME.noCode}</p>
+  </section>
+
+  <section aria-labelledby="day-heading">
+    <h2 id="day-heading">{HOME.dayHeading}</h2>
+    <ol class="incidents">
+      {
+        STATIONS.map((station, index) => (
+          <li class:list={['incident-card', { soon: !station.ready }]}>
+            <p class="meta">{HOME.incident(index + 1, station.time, STATION_NAME[station.slug] ?? station.slug)}</p>
+            <p class="ticket">{HOME.tickets[station.slug]}</p>
+            {station.ready ? (
+              <a class="button primary" href={`/day/${station.slug}`}>
+                {HOME.take}
+              </a>
+            ) : (
+              <p class="soon-label">{HOME.comingSoon}</p>
+            )}
+          </li>
+        ))
+      }
+    </ol>
+  </section>
 </Base>
 
 <style>
-  .intro {
+  .hero {
     max-width: 68ch;
+    padding: 32px 0 8px;
+  }
+  .kicker {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.875rem;
   }
   h1 {
-    margin: 24px 0 12px;
-    font-size: clamp(1.75rem, 4vw, 2.5rem);
-    line-height: 1.15;
+    margin: 8px 0 12px;
+    font-size: clamp(1.875rem, 5vw, 3rem);
+    line-height: 1.1;
   }
   .lead {
+    margin: 0;
     font-size: 1.125rem;
+  }
+  .start {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-top: 20px;
+  }
+  .start-note {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+  }
+  h2 {
+    margin-top: 40px;
+    font-size: 1.25rem;
+  }
+  .how-steps {
+    display: grid;
+    gap: 8px;
+    max-width: 68ch;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .how-number {
+    display: inline-grid;
+    place-items: center;
+    width: 1.5em;
+    height: 1.5em;
+    margin-right: 6px;
+    border: 1px solid currentColor;
+    border-radius: 999px;
+    font-size: 0.8125rem;
+    font-weight: 700;
+  }
+  .no-code {
+    max-width: 68ch;
+    color: var(--text-muted);
   }
   .incidents {
     display: grid;
     gap: var(--gap);
-    margin: 32px 0 0;
+    margin: 0;
     padding: 0;
     list-style: none;
   }

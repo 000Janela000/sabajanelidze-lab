@@ -1,6 +1,5 @@
-import type { Cents } from '../money.ts'
-
-export type PayoutStatus = 'held' | 'paid' | 'released'
+import type { Cents } from '../money/cents.ts'
+import type { BankAnswer, BankStatus, PayoutStatus, ReserveResult } from './codes.ts'
 
 /** Our own lasting record of a payout, keyed by its ID. It is what makes a repeated request safe. */
 export interface PayoutRecord {
@@ -9,8 +8,6 @@ export interface PayoutRecord {
   readonly amount: Cents
   readonly status: PayoutStatus
 }
-
-export type ReserveResult = 'reserved' | 'not enough money' | 'duplicate'
 
 /**
  * The only ways the withdrawal code touches the world. Each method is one `await`,
@@ -35,10 +32,6 @@ export interface PaymentsStore {
   lock(customerId: string): Promise<void>
   unlock(customerId: string): Promise<void>
 }
-
-export type BankAnswer = { readonly status: 'paid' } | { readonly status: 'refused' }
-/** `not_found` is not final: the bank may still be processing the payout. */
-export type BankStatus = 'paid' | 'refused' | 'not_found'
 
 /** The bank did not answer in time. The payout may or may not have happened. */
 export class BankTimeout extends Error {

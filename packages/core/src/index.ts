@@ -1,45 +1,47 @@
-export { type Entry, Ledger, type Transaction } from './ledger.ts'
-export { type Cents, cents, formatCents } from './money.ts'
-export { type BankFault, FakeBank, MemoryPaymentsStore } from './payments/memory.ts'
-export { withdrawCheckTwice, withdrawLockRead, withdrawLockReadAndSave } from './payments/patches.ts'
+/*
+ * The lab's core. Folders: money/ (cents, ledger), payments/ (codes, ports, the real withdrawal, clean-up;
+ * adapters/ for the stores and the fake bank; teaching/ for the naive code and wrong patches the game shows),
+ * simulation/ (running real code one step at a time).
+ */
+export { type Cents, cents, formatCents } from './money/cents.ts'
+export { type Entry, Ledger, type Transaction } from './money/ledger.ts'
+export { type BankPayout, FakeBank } from './payments/adapters/fake-bank.ts'
+export { MemoryPaymentsStore } from './payments/adapters/memory-store.ts'
+export { POSTGRES_SCHEMA, PostgresPaymentsStore, type Sql } from './payments/adapters/postgres-store.ts'
+export { type ReconcileLine, reconcile, resolveUnknownPayout } from './payments/clean-up.ts'
+export * from './payments/codes.ts'
+export { ALL_DEFENCES, type PaymentDefences, withdrawWith } from './payments/defences.ts'
+export { type MoneyPicture, moneyPicture } from './payments/money-picture.ts'
 export {
   type Bank,
-  type BankAnswer,
-  type BankStatus,
   BankTimeout,
   isValidAmount,
   type PaymentPorts,
   type PaymentsStore,
   type PayoutRecord,
-  type PayoutStatus,
-  type ReserveResult,
 } from './payments/ports.ts'
-export { POSTGRES_SCHEMA, PostgresPaymentsStore, type Sql } from './payments/postgres.ts'
-export { type MoneyPicture, moneyPicture, type ReconcileLine, reconcile } from './payments/reconcile.ts'
+export { withdrawV01 } from './payments/teaching/build-v01.ts'
+export { withdrawCheckTwice, withdrawLockRead, withdrawLockReadAndSave } from './payments/teaching/patches.ts'
 export {
-  ALL_DEFENCES,
-  type PaymentDefences,
-  resolveUnknownPayout,
+  PAID,
+  refused,
+  UNKNOWN,
   type Withdraw,
   type WithdrawRequest,
   type WithdrawResult,
   withdraw,
-  withdrawV01,
-  withdrawWith,
 } from './payments/withdraw.ts'
-export { gatedPaymentPorts, STEP_LABELS } from './sim/gated.ts'
+export { type AllRunsSummary, allRuns, pauseAfter, runSchedule } from './simulation/all-runs.ts'
+export { gatedPaymentPorts } from './simulation/gated-ports.ts'
 export {
-  type AllOrdersSummary,
-  allOrders,
   CUSTOMER_ID,
   interleavings,
-  pauseAfter,
   Race,
   type RaceOutcome,
   type RaceSetup,
   requestName,
   runOrder,
-  runSchedule,
   stepsAlone,
-} from './sim/race.ts'
-export { StepScheduler, type TraceLine } from './sim/scheduler.ts'
+} from './simulation/race.ts'
+export { StepScheduler, type TraceLine } from './simulation/scheduler.ts'
+export { STEP, STEP_FOR_METHOD, type Step } from './simulation/steps.ts'

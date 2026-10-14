@@ -1,0 +1,112 @@
+---
+import CodeBlock from '../../components/CodeBlock.astro'
+import { bookACall } from '../../lib/links.ts'
+import type { PaymentsBuildData } from './build-data.ts'
+import { PROOF } from './texts.ts'
+
+interface Props {
+  id: string
+  data: PaymentsBuildData
+}
+
+const { id, data } = Astro.props
+const { code, runs, tests, chain } = data
+---
+
+<details id={id} class="proof">
+  <summary>{PROOF.summary}</summary>
+
+  <h2>{PROOF.whatHappenedHeading}</h2>
+  <p>{PROOF.whatHappened}</p>
+  <div class="side-by-side">
+    <CodeBlock title={PROOF.v01Title} source={code.v01} />
+    <CodeBlock title={PROOF.v1Title} source={code.v1} />
+  </div>
+
+  <h2>{PROOF.testsHeading}</h2>
+  <ul class="tests">
+    <li><a href={tests.everyRun}>{PROOF.tests.everyRun}</a>{PROOF.tests.everyRunText(runs.naive.runs, runs.naive.losing)}</li>
+    <li><a href={tests.randomSchedules}>{PROOF.tests.randomSchedules}</a>{PROOF.tests.randomSchedulesText}</li>
+    <li>
+      <a href={tests.defenceCheck}>{PROOF.tests.defenceCheck}</a>{PROOF.tests.defenceCheckText}
+      <span class="badge">{PROOF.tests.defenceBadge}</span>
+    </li>
+    <li><a href={tests.unknownOutcome}>{PROOF.tests.unknownOutcome}</a>{PROOF.tests.unknownOutcomeText}</li>
+  </ul>
+
+  <h2>{PROOF.tradeOffHeading}</h2>
+  <p>{PROOF.tradeOff(runs.lockBoth.losing, runs.lockBoth.runs)}</p>
+  <CodeBlock title={PROOF.lockBothTitle} source={code.lockBoth} />
+  <p>{PROOF.postgresIntro}</p>
+  <CodeBlock title={PROOF.postgresTitle} source={code.postgresReserve} />
+  <p><a href={tests.realDatabase}>{PROOF.realDatabase}</a>{PROOF.realDatabaseText}</p>
+  <p>{PROOF.deadlock}</p>
+  <CodeBlock title={PROOF.lockOrderTitle} source={code.postgresLockOrder} />
+
+  <h2>{PROOF.cleanUpHeading}</h2>
+  <div class="side-by-side">
+    <CodeBlock title={PROOF.resolveTitle} source={code.resolveUnknown} />
+    <CodeBlock title={PROOF.reconcileTitle} source={code.reconcile} />
+  </div>
+
+  <h2>{PROOF.chainHeading}</h2>
+  <p class="chain">
+    {PROOF.chain(chain.commits, chain.agentCommits, chain.checksRun, chain.refusals)}
+    <a href={chain.lastCommitUrl}>{chain.lastCommit}</a>. {PROOF.approval}
+  </p>
+
+  <p class="book">
+    {PROOF.book} <a class="button primary" href={bookACall('payments')}>{PROOF.bookButton}</a>
+  </p>
+</details>
+
+<style>
+  .proof {
+    margin-top: 32px;
+    padding: 12px 16px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+  }
+  .proof summary {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .proof h2 {
+    margin: 24px 0 8px;
+    font-size: 1.125rem;
+  }
+  .side-by-side {
+    display: grid;
+    align-items: start;
+    gap: var(--gap);
+  }
+  @media (min-width: 900px) {
+    .side-by-side {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  .tests li {
+    margin-bottom: 6px;
+  }
+  .badge {
+    display: inline-block;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: var(--safe-bg);
+    color: var(--safe);
+    font-size: 0.8125rem;
+    font-weight: 600;
+  }
+  .book {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-top: 24px;
+    font-weight: 600;
+  }
+</style>

@@ -12,7 +12,12 @@ async function noSidewaysScroll(page: Page) {
 test('incident 1 plays from reproduce to clean-up on the real code', async ({ page }) => {
   await page.goto('/day/payments')
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('The bank paid out twice')
-  await expect(page.getByRole('note')).toContainText('TEST MODE')
+  await expect(page.getByRole('note').first()).toContainText('TEST MODE')
+
+  // The briefing card comes first: the situation, the steps, Start.
+  await expect(page.getByText('A customer was paid 160 from a balance of 100.')).toBeVisible()
+  await page.getByRole('button', { name: 'Start' }).click()
+  await expect(page.getByText('Tap a line: request A gets slow right after it.')).toBeVisible()
 
   // A safe line first: no money lost.
   await page.getByRole('button', { name: /Make request A slow after line 1/ }).click()
@@ -76,4 +81,19 @@ test.describe('without JavaScript (bots, AI crawlers, screen readers before load
     await expect(text).toContainText('still loses in 120 of 182 ways to run (66%)')
     await expect(text).toContainText('loses in 0 of 24 ways to run')
   })
+})
+
+test('the home page opens with the situation and leads to incident 1', async ({ page }) => {
+  await page.goto('/')
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+    'A customer was paid 160 from a balance of 100.',
+  )
+  await page.getByRole('link', { name: 'Take incident 1' }).click()
+  await expect(page).toHaveURL(/\/day\/payments$/)
+})
+
+test('"Skip to the code" goes straight to the proof card', async ({ page }) => {
+  await page.goto('/day/payments')
+  await page.getByRole('link', { name: 'Skip to the code' }).click()
+  await expect(page).toHaveURL(/#proof$/)
 })

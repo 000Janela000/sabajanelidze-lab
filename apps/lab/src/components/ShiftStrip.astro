@@ -1,5 +1,6 @@
 ---
 import { STATIONS } from '../lib/stations.ts'
+import { LAYOUT, STATION_NAME } from '../site-texts.ts'
 
 interface Props {
   current: string
@@ -8,18 +9,18 @@ interface Props {
 const { current } = Astro.props
 ---
 
-<nav aria-label="The shift">
+<nav aria-label={LAYOUT.shiftLabel}>
   <ol class="strip">
     {
       STATIONS.map((station) => (
         <li class:list={[{ current: station.slug === current, soon: !station.ready }]}>
           {station.ready ? (
             <a href={`/day/${station.slug}`} aria-current={station.slug === current ? 'page' : undefined}>
-              <span class="time">{station.time}</span> {station.name}
+              <span class="time">{station.time}</span> {STATION_NAME[station.slug] ?? station.slug}
             </a>
           ) : (
             <span>
-              <span class="time">{station.time}</span> {station.name} <em>soon</em>
+              <span class="time">{station.time}</span> {STATION_NAME[station.slug] ?? station.slug} <em>{LAYOUT.soon}</em>
             </span>
           )}
         </li>

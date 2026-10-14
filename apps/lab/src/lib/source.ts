@@ -5,7 +5,7 @@
 import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { STEP_LABELS } from '@lab/core'
+import { STEP_FOR_METHOD } from '@lab/core'
 import type { CodeLine } from './code-line.ts'
 import { REPO_URL } from './links.ts'
 
@@ -70,7 +70,7 @@ export function excerpt(file: string, region: string): Excerpt {
 
 const PORT_CALL = /await (?:store|bank)\.(\w+)\(/
 
-/** The excerpt as game lines: comments dropped, each port call tagged with its plain label. */
+/** The excerpt as game lines: comments dropped, each port call tagged with its step code. */
 export function codeLines(source: Excerpt): CodeLine[] {
   return source.code
     .split('\n')
@@ -82,7 +82,7 @@ export function codeLines(source: Excerpt): CodeLine[] {
     })
     .map((text) => {
       const method = PORT_CALL.exec(text)?.[1]
-      const step = method && method in STEP_LABELS ? STEP_LABELS[method as keyof typeof STEP_LABELS] : null
+      const step = method ? (STEP_FOR_METHOD[method] ?? null) : null
       return { text, step }
     })
 }

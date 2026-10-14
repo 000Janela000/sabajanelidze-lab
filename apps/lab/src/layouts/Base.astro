@@ -2,6 +2,7 @@
 import '../styles/global.css'
 import ShiftStrip from '../components/ShiftStrip.astro'
 import { portfolio } from '../lib/links.ts'
+import { LAYOUT } from '../site-texts.ts'
 
 interface Props {
   title: string
@@ -30,9 +31,9 @@ const canonical = new URL(Astro.url.pathname, Astro.site)
   </head>
   <body>
     <header>
-      <p class="test-mode" role="note"><strong>TEST MODE</strong> · no real money · fake data only</p>
+      <p class="test-mode" role="note"><strong>{LAYOUT.testMode}</strong> · {LAYOUT.testModeNote}</p>
       <div class="site-header wrap">
-        <a class="brand" href="/">On call <span>· one day at a tiny crypto exchange</span></a>
+        <a class="brand" href="/">{LAYOUT.brand} <span>{LAYOUT.brandSub}</span></a>
         <ShiftStrip current={station} />
       </div>
     </header>
@@ -41,8 +42,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site)
     </main>
     <footer class="site-footer wrap">
       <p>
-        Built at home by <a href={portfolio(station)}>Saba Janelidze</a>. New code written for this lab; no employer
-        code, documents or data. Every amount is fake.
+        {LAYOUT.footerBefore} <a href={portfolio(station)}>{LAYOUT.footerName}</a>{LAYOUT.footerAfter}
       </p>
     </footer>
   </body>

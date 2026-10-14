@@ -66,6 +66,9 @@ The code layout and architecture are planned in `docs/game-design.md` section 10
 ### Public text
 - Nothing public (game texts, images, posts) without the 3 checks in `../_shared/playbooks/publish-gate.md`.
 
+### Code
+- **Statuses, results and error codes are UPPER_CASE constants, never plain-text sentences** (Saba, 2026-10-15). Example: `reason: REFUSAL.INSUFFICIENT_FUNDS`, not `reason: 'not enough money'`. Code compares codes; the words people read live only in the site's texts files, so they can be changed or translated without touching logic.
+
 ### Git
 - **No commit and no push without Saba's OK.**
 - **Commits:** one line, `type(scope): summary` (types: `feature`, `bugfix`, `refactor`, `docs`, `chore`). No body, no trailers (`../_shared/standards/repo-conventions.md`).
