@@ -203,6 +203,8 @@ export const PROOF = {
     'Build v0.1 reads the balance, checks it, and later saves a new number. When two requests overlap, both can read 100 before either saves, so both pass the check and the bank pays twice. Build v1 makes the check and the move one atomic step: "move 80 from available to on hold, only if 80 is available". The second request finds only 20 available and is refused.',
   v01Title: 'Build v0.1 (naive)',
   v1Title: 'Build v1 (reserve, then settle)',
+  langLabel: 'Code language',
+  langs: { TS: 'TypeScript', GO: 'Go' },
   testsHeading: 'The tests',
   tests: {
     everyRun: 'Every run, counted',
@@ -217,6 +219,9 @@ export const PROOF = {
     unknownOutcome: 'The unknown outcome',
     unknownOutcomeText:
       ': a timeout keeps the money on hold; it is resolved by asking the bank, never by paying again.',
+    goRace: 'The Go version',
+    goRaceText:
+      ": the same fix in Go, with the same codes and the same SQL. Its tests send 20 withdrawals at once, in memory and on a real Postgres server, under Go's race detector (a tool that fails the test if two parts of the program touch the same memory at the same time without a lock). Build v1 pays out once; build v0.1 pays out more than once.",
   },
   tradeOffHeading: 'The trade-off',
   tradeOff: (losing: number, runs: number) =>

@@ -58,13 +58,17 @@ export function excerpt(file: string, region: string): Excerpt {
   const start = lines.findIndex((line) => line.trim() === `// #region ${region}`)
   const end = lines.findIndex((line) => line.trim() === `// #endregion ${region}`)
   if (start < 0 || end <= start) throw new Error(`Excerpt marker "${region}" is missing in ${file}`)
-  const body = lines.slice(start + 1, end)
+  // Blank lines next to the markers are not part of the excerpt (Go needs one after the start marker).
+  let first = start + 1
+  let last = end - 1
+  while (first < last && lines[first]?.trim() === '') first++
+  while (last > first && lines[last]?.trim() === '') last--
   return {
     file,
-    startLine: start + 2,
-    endLine: end,
-    code: body.join('\n'),
-    url: fileUrl(file, start + 2, end),
+    startLine: first + 1,
+    endLine: last + 1,
+    code: lines.slice(first, last + 1).join('\n'),
+    url: fileUrl(file, first + 1, last + 1),
   }
 }
 

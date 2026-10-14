@@ -1,5 +1,6 @@
 ---
 import CodeBlock from '../../components/CodeBlock.astro'
+import LangTabs from '../../components/LangTabs.astro'
 import { bookACall } from '../../lib/links.ts'
 import type { PaymentsBuildData } from './build-data.ts'
 import { PROOF } from './texts.ts'
@@ -20,7 +21,15 @@ const { code, runs, tests, chain } = data
     <p>{PROOF.whatHappened}</p>
     <div class="side">
       <CodeBlock title={PROOF.v01Title} source={code.v01} />
-      <CodeBlock title={PROOF.v1Title} source={code.v1} />
+      <LangTabs
+        id="v1"
+        title={PROOF.v1Title}
+        label={PROOF.langLabel}
+        tabs={[
+          { lang: 'ts', name: PROOF.langs.TS, source: code.v1 },
+          { lang: 'go', name: PROOF.langs.GO, source: code.goWithdraw },
+        ]}
+      />
     </div>
 
     <h2>{PROOF.testsHeading}</h2>
@@ -36,13 +45,22 @@ const { code, runs, tests, chain } = data
         <span class="nb-stamp">{PROOF.tests.defenceBadge}</span>
       </li>
       <li><a class="nb-link" href={tests.unknownOutcome}>{PROOF.tests.unknownOutcome}</a>{PROOF.tests.unknownOutcomeText}</li>
+      <li><a class="nb-link" href={tests.goRace}>{PROOF.tests.goRace}</a>{PROOF.tests.goRaceText}</li>
     </ul>
 
     <h2>{PROOF.tradeOffHeading}</h2>
     <p>{PROOF.tradeOff(runs.lockBoth.losing, runs.lockBoth.runs)}</p>
     <CodeBlock title={PROOF.lockBothTitle} source={code.lockBoth} />
     <p class="spaced">{PROOF.postgresIntro}</p>
-    <CodeBlock title={PROOF.postgresTitle} source={code.postgresReserve} />
+    <LangTabs
+      id="reserve"
+      title={PROOF.postgresTitle}
+      label={PROOF.langLabel}
+      tabs={[
+        { lang: 'ts', name: PROOF.langs.TS, source: code.postgresReserve },
+        { lang: 'go', name: PROOF.langs.GO, source: code.goReserve },
+      ]}
+    />
     <p class="spaced"><a class="nb-link" href={tests.realDatabase}>{PROOF.realDatabase}</a>{PROOF.realDatabaseText}</p>
     <p class="spaced">{PROOF.deadlock}</p>
     <CodeBlock title={PROOF.lockOrderTitle} source={code.postgresLockOrder} />

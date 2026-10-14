@@ -787,7 +787,9 @@ button.row:hover {
 .patch pre {
   margin: var(--space-2) 0 0;
   padding: var(--space-3);
-  overflow-x: auto;
+  /* Wrap, not scroll: a scroll box needs a keyboard stop, and this one sits inside a radio label. */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
   border-radius: var(--radius);
   background: var(--surface-2);
   font-size: 0.8125rem;

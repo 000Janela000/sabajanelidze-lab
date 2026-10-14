@@ -14,7 +14,8 @@ const { title, source } = Astro.props
     <strong>{title}</strong>
     <a href={source.url}>{source.file}:{source.startLine}–{source.endLine}</a>
   </figcaption>
-  <pre><code>{source.code}</code></pre>
+  <!-- Focusable, so a keyboard can scroll long lines sideways. -->
+  <pre tabindex="0"><code>{source.code}</code></pre>
 </figure>
 
 <style>
@@ -55,5 +56,7 @@ const { title, source } = Astro.props
     font-size: 0.8125rem;
     line-height: 1.55;
     color: var(--fg);
+    /* Go indents with tabs; a browser draws a tab 8 spaces wide unless told otherwise. */
+    tab-size: 2;
   }
 </style>

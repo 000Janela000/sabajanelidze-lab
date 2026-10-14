@@ -76,4 +76,38 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: concurrency test on a real Postgres server
-        run: pnpm --filter @lab/core exec vitest run test/postgres.test.ts
+        run: pnpm --filter @lab/core exec vitest run test/payments/postgres.test.ts
+
+  go:
+    name: Go version (race detector + real Postgres)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: lab-test-only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      # A throwaway database that exists only inside this CI run.
+      DATABASE_URL: postgres://postgres:lab-test-only@localhost:5432/postgres
+    defaults:
+      run:
+        working-directory: go
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go/go.mod
+          cache-dependency-path: go/go.sum
+      - name: format
+        run: test -z "$(gofmt -l .)" || (gofmt -l . && exit 1)
+      - name: vet
+        run: go vet ./...
+      - name: tests with the race detector (20 withdrawals at once, in memory and on Postgres)
+        run: go test -race -count=1 -timeout 2m -v ./...

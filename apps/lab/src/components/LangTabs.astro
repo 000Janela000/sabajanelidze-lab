@@ -1,0 +1,139 @@
+---
+/*
+ * The same code in more than one language, as tabs. Without JavaScript every version shows, one under
+ * the other. Picking a language in one tab set picks it in every tab set on the page.
+ */
+import type { Excerpt } from '../lib/source.ts'
+import CodeBlock from './CodeBlock.astro'
+
+interface Props {
+  id: string
+  title: string
+  label: string
+  tabs: readonly { lang: string; name: string; source: Excerpt }[]
+}
+
+const { id, title, label, tabs } = Astro.props
+---
+
+<div class="lang-tabs" data-lang-tabs>
+  <div class="tablist" role="tablist" aria-label={label} hidden>
+    {
+      tabs.map((tab, index) => (
+        <button
+          type="button"
+          role="tab"
+          id={`${id}-tab-${tab.lang}`}
+          aria-controls={`${id}-panel-${tab.lang}`}
+          aria-selected={index === 0 ? 'true' : 'false'}
+          tabindex={index === 0 ? 0 : -1}
+          data-lang={tab.lang}
+        >
+          {tab.name}
+        </button>
+      ))
+    }
+  </div>
+  {
+    tabs.map((tab) => (
+      <div role="tabpanel" id={`${id}-panel-${tab.lang}`} aria-labelledby={`${id}-tab-${tab.lang}`} data-lang={tab.lang}>
+        <CodeBlock title={`${title} · ${tab.name}`} source={tab.source} />
+      </div>
+    ))
+  }
+</div>
+
+<script>
+  const groups = [...document.querySelectorAll<HTMLElement>('[data-lang-tabs]')]
+
+  function show(lang: string) {
+    for (const group of groups) {
+      const tabs = [...group.querySelectorAll<HTMLButtonElement>('[role="tab"]')]
+      if (!tabs.some((tab) => tab.dataset.lang === lang)) continue
+      for (const tab of tabs) {
+        const selected = tab.dataset.lang === lang
+        tab.setAttribute('aria-selected', String(selected))
+        tab.tabIndex = selected ? 0 : -1
+      }
+      for (const panel of group.querySelectorAll<HTMLElement>('[role="tabpanel"]')) {
+        panel.hidden = panel.dataset.lang !== lang
+      }
+    }
+  }
+
+  for (const group of groups) {
+    const list = group.querySelector<HTMLElement>('[role="tablist"]')
+    if (!list) continue
+    const tabs = [...list.querySelectorAll<HTMLButtonElement>('[role="tab"]')]
+    list.hidden = false
+    list.addEventListener('click', (event) => {
+      const lang = (event.target as Element).closest<HTMLElement>('[role="tab"]')?.dataset.lang
+      if (lang) show(lang)
+    })
+    list.addEventListener('keydown', (event) => {
+      const index = tabs.indexOf(document.activeElement as HTMLButtonElement)
+      if (index < 0) return
+      const next =
+        event.key === 'ArrowRight'
+          ? (index + 1) % tabs.length
+          : event.key === 'ArrowLeft'
+            ? (index - 1 + tabs.length) % tabs.length
+            : event.key === 'Home'
+              ? 0
+              : event.key === 'End'
+                ? tabs.length - 1
+                : -1
+      const tab = tabs[next]
+      if (!tab?.dataset.lang) return
+      event.preventDefault()
+      show(tab.dataset.lang)
+      tab.focus()
+    })
+  }
+
+  const first = groups[0]?.querySelector<HTMLElement>('[role="tab"]')?.dataset.lang
+  if (first) show(first)
+</script>
+
+<style>
+  .lang-tabs {
+    min-width: 0;
+    margin-top: var(--space-4);
+  }
+  :global(.side) > .lang-tabs {
+    margin-top: 0;
+  }
+  .tablist {
+    display: flex;
+    gap: var(--space-1);
+    margin-bottom: var(--space-3);
+    border-bottom: 1px solid var(--line);
+  }
+  .tablist[hidden] {
+    display: none;
+  }
+  [role='tab'] {
+    min-height: 44px;
+    padding: 0 var(--space-4);
+    border: 0;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    background: none;
+    color: var(--muted);
+    font-family: var(--font-code);
+    font-size: var(--fs-sm);
+    cursor: pointer;
+  }
+  [role='tab'][aria-selected='true'] {
+    border-bottom-color: var(--accent);
+    color: var(--fg);
+    font-weight: var(--weight-strong);
+  }
+  .lang-tabs [role='tabpanel'] :global(.cb) {
+    margin-top: 0;
+  }
+  /* Without JavaScript the versions stack, one under the other. */
+  .tablist[hidden] ~ [role='tabpanel'] + [role='tabpanel'] {
+    margin-top: var(--space-4);
+  }
+</style>

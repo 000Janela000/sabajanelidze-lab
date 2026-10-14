@@ -27,6 +27,12 @@ export const FILES = {
   PROPERTY_TEST: `${TESTS}/simulation/properties.test.ts`,
   CLEAN_UP_TEST: `${TESTS}/payments/clean-up.test.ts`,
   POSTGRES_TEST: `${TESTS}/payments/postgres.test.ts`,
+  GO_WITHDRAW: 'go/payments/withdraw.go',
+  GO_MEMORY: 'go/payments/memory.go',
+  GO_POSTGRES: 'go/payments/postgres.go',
+  GO_WITHDRAW_TEST: 'go/payments/withdraw_test.go',
+  GO_RACE_TEST: 'go/payments/race_test.go',
+  GO_POSTGRES_TEST: 'go/payments/postgres_test.go',
 } as const
 
 export async function paymentsBuildData() {
@@ -40,6 +46,8 @@ export async function paymentsBuildData() {
     reconcile: excerpt(FILES.CLEAN_UP, 'reconcile'),
     postgresReserve: excerpt(FILES.POSTGRES, 'postgres-reserve'),
     postgresLockOrder: excerpt(FILES.POSTGRES, 'postgres-lock-order'),
+    goWithdraw: excerpt(FILES.GO_WITHDRAW, 'withdraw-go'),
+    goReserve: excerpt(FILES.GO_POSTGRES, 'reserve-go'),
   }
 
   const runs = {
@@ -69,20 +77,10 @@ export async function paymentsBuildData() {
     defenceCheck: lineUrl(FILES.PROPERTY_TEST, "test('with the atomic reserve switched off"),
     unknownOutcome: lineUrl(FILES.CLEAN_UP_TEST, 'settles the hold when the bank says it paid'),
     realDatabase: lineUrl(FILES.POSTGRES_TEST, 'describe.skipIf(!process.env.DATABASE_URL)'),
+    goRace: lineUrl(FILES.GO_RACE_TEST, 'func TestTwentyAtOnceBuildV1PaysOnce'),
   }
 
-  const chain = buildChain([
-    FILES.WITHDRAW,
-    FILES.BUILD_V01,
-    FILES.PATCHES,
-    FILES.CLEAN_UP,
-    FILES.POSTGRES,
-    FILES.RACE,
-    FILES.RACE_TEST,
-    FILES.PROPERTY_TEST,
-    FILES.CLEAN_UP_TEST,
-    FILES.POSTGRES_TEST,
-  ])
+  const chain = buildChain(Object.values(FILES))
 
   return {
     code,

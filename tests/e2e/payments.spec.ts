@@ -73,8 +73,38 @@ test('pages have no accessibility violations', async ({ page }) => {
   }
 })
 
+test('the proof card shows the fix in TypeScript or Go, by click or by keyboard', async ({ page }) => {
+  await page.goto('/day/payments')
+  await page.locator('#proof summary').click()
+  const v1 = page.getByRole('tablist', { name: 'Code language' }).first()
+  await expect(v1.getByRole('tab', { name: 'TypeScript' })).toHaveAttribute('aria-selected', 'true')
+  await expect(page.getByText('go/payments/withdraw.go')).toBeHidden()
+
+  await v1.getByRole('tab', { name: 'Go' }).click()
+  await expect(page.getByText(/^go\/payments\/withdraw\.go:\d+/)).toBeVisible()
+  // Every tab set on the card follows the same choice.
+  await expect(page.getByText(/^go\/payments\/postgres\.go:\d+/)).toBeVisible()
+  await expect(page.getByText(/^packages\/core\/src\/payments\/withdraw\.ts:\d+/)).toBeHidden()
+
+  await page.keyboard.press('ArrowLeft')
+  await expect(v1.getByRole('tab', { name: 'TypeScript' })).toBeFocused()
+  await expect(page.getByText(/^packages\/core\/src\/payments\/withdraw\.ts:\d+/)).toBeVisible()
+
+  const results = await new AxeBuilder({ page }).include('#proof').analyze()
+  expect(results.violations.map((violation) => violation.id)).toEqual([])
+  await noSidewaysScroll(page)
+})
+
 test.describe('without JavaScript (bots, AI crawlers, screen readers before load)', () => {
   test.use({ javaScriptEnabled: false })
+
+  test('the proof card shows both languages, one under the other', async ({ page }) => {
+    await page.goto('/day/payments')
+    await page.locator('#proof summary').click()
+    await expect(page.getByRole('tablist')).toHaveCount(0)
+    await expect(page.getByText(/^go\/payments\/withdraw\.go:\d+/)).toBeVisible()
+    await expect(page.getByText(/^packages\/core\/src\/payments\/withdraw\.ts:\d+/)).toBeVisible()
+  })
 
   test('the whole incident is readable as text', async ({ page }) => {
     await page.goto('/day/payments')
