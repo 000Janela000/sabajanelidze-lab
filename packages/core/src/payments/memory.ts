@@ -111,6 +111,11 @@ export class MemoryPaymentsStore implements PaymentsStore {
     return value
   }
 
+  /** Payouts still on hold, oldest first. */
+  openHolds(): Array<{ readonly payoutId: string; readonly customerId: string; readonly amount: Cents }> {
+    return [...this.#holds].map(([payoutId, hold]) => ({ payoutId, ...hold }))
+  }
+
   held(customerId: string): Cents {
     let total = 0
     for (const hold of this.#holds.values()) if (hold.customerId === customerId) total += hold.amount

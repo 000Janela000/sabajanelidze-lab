@@ -1,0 +1,138 @@
+/*
+ * Placeholder design tokens. The portfolio session owns the real ones (colours, fonts, timings);
+ * the lab switches to them once they exist. Keep every colour and timing here, never inline.
+ */
+:root {
+  color-scheme: light dark;
+
+  --bg: #f7f7f5;
+  --surface: #ffffff;
+  --surface-2: #f0f0ec;
+  --text: #1b1c1e;
+  --text-muted: #5d6066;
+  --border: #dcdcd6;
+  --accent: #2346d5;
+  --accent-text: #ffffff;
+  --safe: #1e7a46;
+  --safe-bg: #e3f3e9;
+  --lost: #b3261e;
+  --lost-bg: #fbe6e4;
+  --warn-bg: #fff4d6;
+  --warn-text: #6b4d00;
+  --focus: #2346d5;
+
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Noto Sans Georgian", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Consolas, "Liberation Mono", monospace;
+
+  --radius: 8px;
+  --gap: 16px;
+  --page-width: 1080px;
+
+  --dur-instant: 100ms;
+  --dur-fast: 150ms;
+  --dur-base: 250ms;
+  --step-delay: 350ms;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #121315;
+    --surface: #1a1b1e;
+    --surface-2: #222327;
+    --text: #ececea;
+    --text-muted: #a3a6ad;
+    --border: #33353a;
+    --accent: #8ea2ff;
+    --accent-text: #0b0d18;
+    --safe: #6fd39a;
+    --safe-bg: #15301f;
+    --lost: #ff8a80;
+    --lost-bg: #3a1714;
+    --warn-bg: #3a2f10;
+    --warn-text: #ffd978;
+    --focus: #8ea2ff;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-text-size-adjust: 100%;
+}
+
+a {
+  color: var(--accent);
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+code,
+pre {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  font-variant-ligatures: none;
+}
+
+.wrap {
+  max-width: var(--page-width);
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-text);
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .button {
+    transition:
+      background-color var(--dur-fast) ease-out,
+      border-color var(--dur-fast) ease-out;
+  }
+}

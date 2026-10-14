@@ -1,0 +1,50 @@
+---
+import type { Excerpt } from '../lib/source.ts'
+
+interface Props {
+  title: string
+  source: Excerpt
+}
+
+const { title, source } = Astro.props
+---
+
+<figure class="code-block">
+  <figcaption>
+    <span>{title}</span>
+    <a href={source.url}>{source.file}, lines {source.startLine}–{source.endLine}</a>
+  </figcaption>
+  <pre><code>{source.code}</code></pre>
+</figure>
+
+<style>
+  .code-block {
+    margin: 0;
+    min-width: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    overflow: hidden;
+  }
+  figcaption {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 4px 12px;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-2);
+    font-size: 0.8125rem;
+  }
+  figcaption span {
+    font-weight: 700;
+  }
+  pre {
+    margin: 0;
+    padding: 12px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+  }
+</style>

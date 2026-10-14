@@ -1,0 +1,24 @@
+{
+  "name": "@lab/site",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "The lab's website: the incidents, their text versions and proof cards.",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "typecheck": "astro check"
+  },
+  "dependencies": {
+    "@astrojs/preact": "6.0.6",
+    "@lab/core": "workspace:*",
+    "astro": "7.3.8",
+    "preact": "10.29.8"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.10",
+    "@types/node": "24.19.2",
+    "typescript": "6.0.3"
+  }
+}

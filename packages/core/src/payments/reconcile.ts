@@ -24,3 +24,28 @@ export function moneyPicture(
   return { deposited, available, held, paidOut, lost: available + held + paidOut - deposited }
 }
 // #endregion reconcile
+
+export interface ReconcileLine {
+  readonly payoutId: string
+  readonly amount: Cents
+  readonly found: 'paid' | 'refused' | 'not_found'
+  readonly action: 'settled' | 'released' | 'left on hold'
+}
+
+// #region reconcile-holds
+/**
+ * The end-of-day job: every payout still on hold is compared with the bank's own statement.
+ * Paid → settle. Refused → release. Not on the statement yet → leave it on hold for tomorrow.
+ */
+export async function reconcileHolds(store: MemoryPaymentsStore, bank: FakeBank): Promise<ReconcileLine[]> {
+  const lines: ReconcileLine[] = []
+  for (const hold of store.openHolds()) {
+    const found = await bank.status(hold.payoutId)
+    if (found === 'paid') await store.settle(hold.payoutId)
+    if (found === 'refused') await store.release(hold.payoutId)
+    const action = found === 'paid' ? 'settled' : found === 'refused' ? 'released' : 'left on hold'
+    lines.push({ payoutId: hold.payoutId, amount: hold.amount, found, action })
+  }
+  return lines
+}
+// #endregion reconcile-holds

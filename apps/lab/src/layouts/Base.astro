@@ -1,0 +1,84 @@
+---
+import '../styles/global.css'
+import ShiftStrip from '../components/ShiftStrip.astro'
+import { portfolio } from '../lib/links.ts'
+
+interface Props {
+  title: string
+  description: string
+  station: string
+}
+
+const { title, description, station } = Astro.props
+const canonical = new URL(Astro.url.pathname, Astro.site)
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta name="theme-color" content="#f7f7f5" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#121315" media="(prefers-color-scheme: dark)" />
+  </head>
+  <body>
+    <p class="test-mode" role="note"><strong>TEST MODE</strong> · no real money · fake data only</p>
+    <header class="site-header wrap">
+      <a class="brand" href="/">On call <span>· one day at a tiny crypto exchange</span></a>
+      <ShiftStrip current={station} />
+    </header>
+    <main class="wrap">
+      <slot />
+    </main>
+    <footer class="site-footer wrap">
+      <p>
+        Built at home by <a href={portfolio(station)}>Saba Janelidze</a>. New code written for this lab; no employer
+        code, documents or data. Every amount is fake.
+      </p>
+    </footer>
+  </body>
+</html>
+
+<style>
+  .test-mode {
+    margin: 0;
+    padding: 6px 16px;
+    background: var(--warn-bg);
+    color: var(--warn-text);
+    font-size: 0.875rem;
+    text-align: center;
+  }
+  .site-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 24px;
+    padding-top: 16px;
+    padding-bottom: 16px;
+  }
+  .brand {
+    color: var(--text);
+    font-weight: 700;
+    text-decoration: none;
+  }
+  .brand span {
+    color: var(--text-muted);
+    font-weight: 400;
+  }
+  .site-footer {
+    margin-top: 64px;
+    padding-top: 24px;
+    padding-bottom: 40px;
+    border-top: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 0.875rem;
+  }
+</style>

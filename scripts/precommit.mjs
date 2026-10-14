@@ -7,6 +7,8 @@ import { appendFileSync, mkdirSync } from 'node:fs'
 const checks = [
   { name: 'typecheck (core)', command: 'pnpm --filter @lab/core run typecheck' },
   { name: 'unit and property tests (core)', command: 'pnpm --filter @lab/core run test' },
+  { name: 'typecheck (site)', command: 'pnpm --filter @lab/site run typecheck' },
+  { name: 'build (site, incl. code excerpts)', command: 'pnpm --filter @lab/site run build' },
   { name: 'lint and format (biome)', command: 'pnpm exec biome check .' },
 ]
 

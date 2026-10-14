@@ -7,45 +7,48 @@ import type { Withdraw } from './withdraw.ts'
 
 // #region patch-check-twice
 /** "Check the balance twice": the gap between reading and saving moves, but it does not close. */
-export const withdrawCheckTwice: Withdraw = async ({ store, bank }, request) => {
-  await store.loadCustomer(request.customerId)
-  const first = await store.readAvailable(request.customerId)
-  if (first < request.amount) return { status: 'refused', reason: 'not enough money' }
-  const second = await store.readAvailable(request.customerId)
-  if (second < request.amount) return { status: 'refused', reason: 'not enough money' }
-  await store.writeAvailable(request.customerId, second - request.amount)
-  await bank.pay(request.payoutId, request.customerId, request.amount)
+export const withdrawCheckTwice: Withdraw = async ({ store, bank }, { customerId, amount, payoutId }) => {
+  await store.loadCustomer(customerId)
+  const first = await store.readAvailable(customerId)
+  if (first < amount) return { status: 'refused', reason: 'not enough money' }
+  const second = await store.readAvailable(customerId)
+  if (second < amount) return { status: 'refused', reason: 'not enough money' }
+  await store.writeAvailable(customerId, second - amount)
+  await bank.pay(payoutId, customerId, amount)
   return { status: 'paid' }
 }
 // #endregion patch-check-twice
 
 // #region patch-lock-read
 /** "Lock only the read": the lock is released before the save, so the race is still open. */
-export const withdrawLockRead: Withdraw = async ({ store, bank }, request) => {
-  await store.loadCustomer(request.customerId)
-  await store.lock(request.customerId)
-  const available = await store.readAvailable(request.customerId)
-  await store.unlock(request.customerId)
-  if (available < request.amount) return { status: 'refused', reason: 'not enough money' }
-  await store.writeAvailable(request.customerId, available - request.amount)
-  await bank.pay(request.payoutId, request.customerId, request.amount)
+export const withdrawLockRead: Withdraw = async ({ store, bank }, { customerId, amount, payoutId }) => {
+  await store.loadCustomer(customerId)
+  await store.lock(customerId)
+  const available = await store.readAvailable(customerId)
+  await store.unlock(customerId)
+  if (available < amount) return { status: 'refused', reason: 'not enough money' }
+  await store.writeAvailable(customerId, available - amount)
+  await bank.pay(payoutId, customerId, amount)
   return { status: 'paid' }
 }
 // #endregion patch-lock-read
 
 // #region patch-lock-read-and-save
-/** "Lock around the read and the save": safe, but simpler only on one server (see the trade-off). */
-export const withdrawLockReadAndSave: Withdraw = async ({ store, bank }, request) => {
-  await store.loadCustomer(request.customerId)
-  await store.lock(request.customerId)
-  const available = await store.readAvailable(request.customerId)
-  if (available < request.amount) {
-    await store.unlock(request.customerId)
+/** "Lock around the read and the save": safe too. The trade-off on the proof card says why the reserve still wins. */
+export const withdrawLockReadAndSave: Withdraw = async (
+  { store, bank },
+  { customerId, amount, payoutId },
+) => {
+  await store.loadCustomer(customerId)
+  await store.lock(customerId)
+  const available = await store.readAvailable(customerId)
+  if (available < amount) {
+    await store.unlock(customerId)
     return { status: 'refused', reason: 'not enough money' }
   }
-  await store.writeAvailable(request.customerId, available - request.amount)
-  await store.unlock(request.customerId)
-  await bank.pay(request.payoutId, request.customerId, request.amount)
+  await store.writeAvailable(customerId, available - amount)
+  await store.unlock(customerId)
+  await bank.pay(payoutId, customerId, amount)
   return { status: 'paid' }
 }
 // #endregion patch-lock-read-and-save

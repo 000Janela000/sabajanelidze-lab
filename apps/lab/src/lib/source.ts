@@ -1,0 +1,121 @@
+/*
+ * Build-time only: reads the real source files, so the code on the page is cut from the code that runs.
+ * The build fails if a marker is missing, so an excerpt can never quietly drift from its file.
+ */
+import { execFileSync } from 'node:child_process'
+import { existsSync, readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+import { STEP_LABELS } from '@lab/core'
+import type { CodeLine } from './code-line.ts'
+import { REPO_URL } from './links.ts'
+
+export type { CodeLine }
+
+const repoRoot = resolve(process.cwd(), '../..')
+
+export interface Excerpt {
+  readonly file: string
+  readonly startLine: number
+  readonly endLine: number
+  readonly code: string
+  readonly url: string
+}
+
+let headCommit: string | undefined
+
+/** The commit the site is built from. Code links point at it, so they never change under the reader. */
+export function commit(): string {
+  headCommit ??= execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repoRoot, encoding: 'utf8' }).trim()
+  return headCommit
+}
+
+export function fileUrl(file: string, startLine?: number, endLine?: number): string {
+  if (!existsSync(resolve(repoRoot, file))) throw new Error(`Linked file does not exist: ${file}`)
+  const lines = startLine ? `#L${startLine}${endLine ? `-L${endLine}` : ''}` : ''
+  return `${REPO_URL}/blob/${commit()}/${file}${lines}`
+}
+
+export function excerpt(file: string, region: string): Excerpt {
+  const lines = readFileSync(resolve(repoRoot, file), 'utf8').split('\n')
+  const start = lines.findIndex((line) => line.trim() === `// #region ${region}`)
+  const end = lines.findIndex((line) => line.trim() === `// #endregion ${region}`)
+  if (start < 0 || end <= start) throw new Error(`Excerpt marker "${region}" is missing in ${file}`)
+  const body = lines.slice(start + 1, end)
+  return {
+    file,
+    startLine: start + 2,
+    endLine: end,
+    code: body.join('\n'),
+    url: fileUrl(file, start + 2, end),
+  }
+}
+
+const PORT_CALL = /await (?:store|bank)\.(\w+)\(/
+
+/** The excerpt as game lines: comments dropped, each port call tagged with its plain label. */
+export function codeLines(source: Excerpt): CodeLine[] {
+  return source.code
+    .split('\n')
+    .filter((line) => {
+      const trimmed = line.trim()
+      return (
+        trimmed !== '' && !trimmed.startsWith('/**') && !trimmed.startsWith('*') && !trimmed.startsWith('//')
+      )
+    })
+    .map((text) => {
+      const method = PORT_CALL.exec(text)?.[1]
+      const step = method && method in STEP_LABELS ? STEP_LABELS[method as keyof typeof STEP_LABELS] : null
+      return { text, step }
+    })
+}
+
+export interface BuildChain {
+  readonly commits: number
+  readonly agentCommits: number
+  readonly checksRun: number
+  readonly refusals: number
+  readonly lastCommit: string
+  readonly lastCommitUrl: string
+}
+
+/** How these files were built, from git and the check log. Nothing here is typed by hand. */
+export function buildChain(files: readonly string[]): BuildChain {
+  const log = execFileSync('git', ['log', '--format=%H%x09%an', '--', ...files], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+  })
+    .trim()
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => {
+      const [hash = '', author = ''] = line.split('\t')
+      return { hash, author }
+    })
+
+  const checkLog = resolve(repoRoot, 'build-log/checks.jsonl')
+  const runs = existsSync(checkLog)
+    ? readFileSync(checkLog, 'utf8')
+        .split('\n')
+        .filter(Boolean)
+        .map((line) => JSON.parse(line) as { ok: boolean; files: string[] })
+        .filter((run) => run.files.some((file) => files.includes(file)))
+    : []
+
+  const last = log[0]?.hash ?? commit()
+  return {
+    commits: log.length,
+    agentCommits: log.filter((entry) => entry.author === 'Claude Agent').length,
+    checksRun: runs.length,
+    refusals: runs.filter((run) => !run.ok).length,
+    lastCommit: last.slice(0, 7),
+    lastCommitUrl: `${REPO_URL}/commit/${last}`,
+  }
+}
+
+/** A link to the first line of `file` that contains `needle`. Fails the build if it is not there. */
+export function lineUrl(file: string, needle: string): string {
+  const lines = readFileSync(resolve(repoRoot, file), 'utf8').split('\n')
+  const index = lines.findIndex((line) => line.includes(needle))
+  if (index === -1) throw new Error(`"${needle}" not found in ${file}`)
+  return fileUrl(file, index + 1)
+}

@@ -1,0 +1,106 @@
+---
+import Base from '../layouts/Base.astro'
+import { STATIONS } from '../lib/stations.ts'
+
+const tickets: Record<string, string> = {
+  payments: '"I tapped Withdraw 80 twice. The bank paid me 160 and my balance still shows 20."',
+  kyc: '"I was approved yesterday. This morning my status says pending again."',
+  deposits: '"We paid out 1.0 that never arrived."',
+  ai: '"Your support assistant told me to send coins to an address to release my deposit."',
+  books: 'Your incident reports for the day, and do the books still balance?',
+}
+---
+
+<Base
+  title="On call: one day at a tiny crypto exchange"
+  description="You are the on-call engineer at Tiny Exchange for one day. Each incident is a puzzle on real code: reproduce how the money was lost, pick the fix that survives every order of events, then clean up. Test mode, fake money."
+  station="home"
+>
+  <section class="intro">
+    <h1>On call: one day at a tiny crypto exchange</h1>
+    <p class="lead">
+      You are the on-call engineer at Tiny Exchange today. Incidents come in. For each one you <strong
+        >reproduce</strong
+      > how the money was lost, <strong>fix</strong> it by picking the patch that survives every order of events, and{' '}
+      <strong>clean up</strong> what the fix alone can't.
+    </p>
+    <p>
+      You never write code. You read a few lines, each with a plain label, and make choices. Every choice runs the real
+      code, the same files the proof cards link to, with their tests.
+    </p>
+  </section>
+
+  <ol class="incidents">
+    {
+      STATIONS.map((station, index) => (
+        <li class:list={['incident-card', { soon: !station.ready }]}>
+          <p class="meta">
+            Incident {index + 1} · {station.time} · {station.name}
+          </p>
+          <p class="ticket">{tickets[station.slug]}</p>
+          {station.ready ? (
+            <a class="button primary" href={`/day/${station.slug}`}>
+              Take this incident
+            </a>
+          ) : (
+            <p class="soon-label">Coming soon</p>
+          )}
+        </li>
+      ))
+    }
+  </ol>
+</Base>
+
+<style>
+  .intro {
+    max-width: 68ch;
+  }
+  h1 {
+    margin: 24px 0 12px;
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    line-height: 1.15;
+  }
+  .lead {
+    font-size: 1.125rem;
+  }
+  .incidents {
+    display: grid;
+    gap: var(--gap);
+    margin: 32px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  @media (min-width: 760px) {
+    .incidents {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  .incident-card {
+    display: grid;
+    align-content: start;
+    gap: 8px;
+    padding: 16px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+  }
+  .incident-card.soon {
+    background: transparent;
+  }
+  .meta {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+  }
+  .ticket {
+    margin: 0;
+  }
+  .soon-label {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+  }
+  .incident-card .button {
+    justify-self: start;
+  }
+</style>

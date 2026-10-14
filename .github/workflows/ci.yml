@@ -20,8 +20,27 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: typecheck
-        run: pnpm -r run typecheck
+        run: pnpm --filter @lab/core run typecheck
       - name: unit and property tests
-        run: pnpm -r run test
+        run: pnpm --filter @lab/core run test
       - name: lint and format
         run: pnpm exec biome ci .
+
+  site:
+    name: site build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The proof cards' build chain reads the full git history.
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: typecheck (astro check)
+        run: pnpm --filter @lab/site run typecheck
+      - name: build (fails if a code excerpt marker is missing)
+        run: pnpm --filter @lab/site run build

@@ -10,7 +10,7 @@ export {
   type PaymentPorts,
   type PaymentsStore,
 } from './payments/ports.ts'
-export { type MoneyPicture, moneyPicture } from './payments/reconcile.ts'
+export { type MoneyPicture, moneyPicture, type ReconcileLine, reconcileHolds } from './payments/reconcile.ts'
 export {
   ALL_DEFENCES,
   type PaymentDefences,

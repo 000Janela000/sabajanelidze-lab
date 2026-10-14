@@ -21,12 +21,12 @@ export type Withdraw = (ports: PaymentPorts, request: WithdrawRequest) => Promis
  * Build v0.1, the naive withdrawal. It checks the balance, so it looks safe.
  * But two copies running at once can both read the old balance before either saves.
  */
-export const withdrawV01: Withdraw = async ({ store, bank }, request) => {
-  await store.loadCustomer(request.customerId)
-  const available = await store.readAvailable(request.customerId)
-  if (available < request.amount) return { status: 'refused', reason: 'not enough money' }
-  await store.writeAvailable(request.customerId, available - request.amount)
-  await bank.pay(request.payoutId, request.customerId, request.amount)
+export const withdrawV01: Withdraw = async ({ store, bank }, { customerId, amount, payoutId }) => {
+  await store.loadCustomer(customerId)
+  const available = await store.readAvailable(customerId)
+  if (available < amount) return { status: 'refused', reason: 'not enough money' }
+  await store.writeAvailable(customerId, available - amount)
+  await bank.pay(payoutId, customerId, amount)
   return { status: 'paid' }
 }
 // #endregion build-v0.1
@@ -36,14 +36,14 @@ export const withdrawV01: Withdraw = async ({ store, bank }, request) => {
  * Build v1: reserve, then settle. The check and the move are one atomic step,
  * so a second request can never reserve money the first one already holds.
  */
-export const withdraw: Withdraw = async ({ store, bank }, request) => {
-  await store.loadCustomer(request.customerId)
-  const reserved = await store.reserve(request.customerId, request.amount, request.payoutId)
+export const withdraw: Withdraw = async ({ store, bank }, { customerId, amount, payoutId }) => {
+  await store.loadCustomer(customerId)
+  const reserved = await store.reserve(customerId, amount, payoutId)
   if (!reserved) return { status: 'refused', reason: 'not enough money' }
 
   let answer: Awaited<ReturnType<typeof bank.pay>>
   try {
-    answer = await bank.pay(request.payoutId, request.customerId, request.amount)
+    answer = await bank.pay(payoutId, customerId, amount)
   } catch (error) {
     // Never retry blindly: the bank may already have paid. Keep the hold and resolve it later.
     if (error instanceof BankTimeout) return { status: 'unknown' }
@@ -51,10 +51,10 @@ export const withdraw: Withdraw = async ({ store, bank }, request) => {
   }
 
   if (answer.status === 'paid') {
-    await store.settle(request.payoutId)
+    await store.settle(payoutId)
     return { status: 'paid' }
   }
-  await store.release(request.payoutId)
+  await store.release(payoutId)
   return { status: 'refused', reason: 'the bank refused the payout' }
 }
 // #endregion build-v1

@@ -4,6 +4,7 @@ import {
   MemoryPaymentsStore,
   moneyPicture,
   type PaymentPorts,
+  reconcileHolds,
   resolveUnknownPayout,
   withdraw,
   withdrawV01,
@@ -86,5 +87,23 @@ describe('withdrawV01 (build v0.1, naive)', () => {
       status: 'refused',
     })
     expect(picture()).toMatchObject({ available: 2000, paidOut: 8000, lost: 0 })
+  })
+})
+
+describe('reconcileHolds (the end-of-day job)', () => {
+  test('settles a payout the bank paid, and leaves one the bank has not seen on hold', async () => {
+    const store = new MemoryPaymentsStore({ [customerId]: 30000 })
+    const bank = new FakeBank()
+    const ports = { store, bank }
+    bank.failNext('timeout-after-paying')
+    await withdraw(ports, { customerId, amount: 8000, payoutId: 'p1' })
+    bank.failNext('timeout-before-paying')
+    await withdraw(ports, { customerId, amount: 5000, payoutId: 'p2' })
+
+    await expect(reconcileHolds(store, bank)).resolves.toEqual([
+      { payoutId: 'p1', amount: 8000, found: 'paid', action: 'settled' },
+      { payoutId: 'p2', amount: 5000, found: 'not_found', action: 'left on hold' },
+    ])
+    expect(moneyPicture(store, bank, customerId, 30000)).toMatchObject({ held: 5000, paidOut: 8000, lost: 0 })
   })
 })

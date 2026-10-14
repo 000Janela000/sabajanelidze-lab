@@ -1,0 +1,346 @@
+---
+import {
+  allOrders,
+  formatCents,
+  pauseAfter,
+  withdraw,
+  withdrawCheckTwice,
+  withdrawLockRead,
+  withdrawLockReadAndSave,
+  withdrawV01,
+} from '@lab/core'
+import CodeBlock from '../../components/CodeBlock.astro'
+import { type PatchOption, PaymentsIncident } from '../../islands/payments/PaymentsIncident.tsx'
+import Base from '../../layouts/Base.astro'
+import { bookACall } from '../../lib/links.ts'
+import { buildChain, codeLines, excerpt, lineUrl } from '../../lib/source.ts'
+
+const WITHDRAW = 'packages/core/src/payments/withdraw.ts'
+const PATCHES = 'packages/core/src/payments/patches.ts'
+const RECONCILE = 'packages/core/src/payments/reconcile.ts'
+const RACE_TEST = 'packages/core/test/race.test.ts'
+const PROPERTY_TEST = 'packages/core/test/properties.test.ts'
+const WITHDRAW_TEST = 'packages/core/test/withdraw.test.ts'
+
+const v01 = excerpt(WITHDRAW, 'build-v0.1')
+const v1 = excerpt(WITHDRAW, 'build-v1')
+const checkTwice = excerpt(PATCHES, 'patch-check-twice')
+const lockRead = excerpt(PATCHES, 'patch-lock-read')
+const lockBoth = excerpt(PATCHES, 'patch-lock-read-and-save')
+const resolveUnknown = excerpt(WITHDRAW, 'resolve-unknown')
+const reconcile = excerpt(RECONCILE, 'reconcile-holds')
+
+// Every number on this page is computed here, at build time, by running the same code the game runs.
+const OPENING = 10000
+const AMOUNT = 8000
+const naive = await allOrders(withdrawV01, OPENING, AMOUNT)
+const results = {
+  checkTwice: await allOrders(withdrawCheckTwice, OPENING, AMOUNT),
+  lockRead: await allOrders(withdrawLockRead, OPENING, AMOUNT),
+  lockBoth: await allOrders(withdrawLockReadAndSave, OPENING, AMOUNT),
+  reserve: await allOrders(withdraw, OPENING, AMOUNT),
+}
+const losingLines: number[] = []
+for (let line = 1; line <= naive.linesPerRequest; line++) {
+  if ((await pauseAfter(withdrawV01, OPENING, AMOUNT, line)).picture.lost !== 0) losingLines.push(line)
+}
+const lossExample = naive.outcomes.find((outcome) => outcome.picture.lost !== 0)?.picture
+
+const patches: PatchOption[] = [
+  {
+    id: 'check-twice',
+    name: 'Check the balance twice',
+    summary: 'Read and check the balance again, just before saving.',
+    lines: codeLines(checkTwice),
+  },
+  {
+    id: 'reserve',
+    name: 'Reserve, then settle',
+    summary: 'One atomic step moves the 80 to "on hold", only if it is there. Then pay. Then settle.',
+    lines: codeLines(v1),
+  },
+  {
+    id: 'lock-read',
+    name: 'Lock only the read',
+    summary: 'Put a lock around reading the balance.',
+    lines: codeLines(lockRead),
+  },
+]
+
+const chain = buildChain([
+  WITHDRAW,
+  PATCHES,
+  RECONCILE,
+  'packages/core/src/sim/race.ts',
+  RACE_TEST,
+  PROPERTY_TEST,
+])
+const shareUrl = 'https://lab.sabajanelidze.com/day/payments'
+const pct = (part: number, whole: number) => `${Math.round((100 * part) / whole)}%`
+const v01Steps = codeLines(v01).filter((line) => line.step)
+---
+
+<Base
+  title="Incident 1: the bank paid out twice · On call"
+  description="A puzzle on real code: find how two withdrawals of 80 from a balance of 100 make the bank pay out 160, then pick the fix that survives every order of events. Test mode, fake money."
+  station="payments"
+>
+  <article>
+    <p class="kicker">Incident 1 · 09:30 · Payments</p>
+    <h1>The bank paid out twice</h1>
+    <blockquote class="ticket">
+      <p>
+        "I had 100. I tapped <em>Withdraw 80</em> twice by accident. The bank paid me 160, and my balance still shows
+        20."
+      </p>
+      <footer>Customer #42</footer>
+    </blockquote>
+    <p class="cta-row">
+      <a class="button" href="#proof">Read the code</a>
+      <a class="button" href={bookACall('payments')}>Book a call</a>
+    </p>
+
+    <PaymentsIncident
+      client:visible
+      v01={codeLines(v01)}
+      patches={patches}
+      shareUrl={shareUrl}
+      bookUrl={bookACall('payments')}
+      proofId="proof"
+    />
+
+    <details id="proof" class="proof">
+      <summary>How it works: the code, the tests, and how it was built</summary>
+
+      <h2>What happened, and the fix</h2>
+      <p>
+        Build v0.1 reads the balance, checks it, and later saves a new number. When two requests overlap, both can read
+        100 before either saves, so both pass the check and the bank pays twice. Build v1 makes the check and the move
+        one atomic step: "move 80 from available to on hold, only if 80 is available". The second request finds only
+        20 available and is refused.
+      </p>
+
+      <div class="side-by-side">
+        <CodeBlock title="Build v0.1 (naive)" source={v01} />
+        <CodeBlock title="Build v1 (reserve, then settle)" source={v1} />
+      </div>
+
+      <h2>The tests</h2>
+      <ul class="tests">
+        <li>
+          <a href={lineUrl(RACE_TEST, "describe('incident 1: every order")}>Every order, counted</a>: all{' '}
+          {naive.orders} orders of build v0.1 ({naive.losing} lose money), and every patch on this page. The numbers in
+          the game are the numbers in this test.
+        </li>
+        <li>
+          <a href={lineUrl(PROPERTY_TEST, "test('with every defence on")}>Random schedules</a>: 2 to 5 withdrawals of
+          random amounts, run in hundreds of random orders. With build v1, none loses money.
+        </li>
+        <li>
+          <a href={lineUrl(PROPERTY_TEST, "test('with the atomic reserve switched off")}>The defence check</a>: the
+          same test runs with the atomic reserve switched off, and it must fail. <span class="badge"
+            >fails when the defence is off ✓</span
+          >
+        </li>
+        <li>
+          <a href={lineUrl(WITHDRAW_TEST, 'keeps the hold when the bank times out')}>The unknown outcome</a>: a
+          timeout keeps the money on hold; it is resolved by asking the bank, never by paying again.
+        </li>
+      </ul>
+
+      <h2>The trade-off</h2>
+      <p>
+        A lock around both the read and the save also holds ({results.lockBoth.losing} of {results.lockBoth.possible}{' '}
+        possible orders lose money). The reserve is still the better step, for two reasons. It is one statement, so
+        there is no lock to forget to release on an early return (look at the extra <code>unlock</code> the lock version
+        needs). And money in flight gets its own state, "on hold", so a timeout or a refused payout can be settled or
+        released later from the books.
+      </p>
+      <CodeBlock title="Lock around the read and the save (also safe)" source={lockBoth} />
+      <p>In Postgres, the reserve is one conditional update, with a constraint as a backstop:</p>
+      <pre class="sql"><code>{`UPDATE balances
+   SET available = available - $2,
+       held      = held + $2
+ WHERE customer_id = $1
+   AND available >= $2;          -- 0 rows updated = not enough money
+
+ALTER TABLE balances ADD CHECK (available >= 0);`}</code></pre>
+
+      <h2>The clean-up code</h2>
+      <div class="side-by-side">
+        <CodeBlock title="Resolve an unknown payout" source={resolveUnknown} />
+        <CodeBlock title="Tonight's reconciliation" source={reconcile} />
+      </div>
+
+      <h2>How this code was built</h2>
+      <p class="chain">
+        {chain.commits} {chain.commits === 1 ? 'commit' : 'commits'}, {chain.agentCommits} of them written by an AI agent
+        (Claude) under automatic checks.
+        The checks ran {chain.checksRun} {chain.checksRun === 1 ? 'time' : 'times'} before commits on these files and
+        refused {chain.refusals}. Last change: <a href={chain.lastCommitUrl}>{chain.lastCommit}</a>. Saba approves each
+        incident before it goes live.
+      </p>
+
+      <p class="book">
+        I build this for teams that handle money. <a class="button primary" href={bookACall('payments')}>Book a call</a>
+      </p>
+    </details>
+
+    <section class="text-version" aria-labelledby="text-version">
+      <h2 id="text-version">The whole incident, as text</h2>
+      <h3>The code: build v0.1</h3>
+      <p>Two copies of this withdrawal run at the same moment, each for 80, on a balance of 100:</p>
+      <ol>
+        {v01Steps.map((line) => <li>{line.step}{line.step === 'read the balance' ? ' and check it is at least 80' : ''}</li>)}
+      </ol>
+
+      <h3>1. Reproduce</h3>
+      <p>
+        Pick the line after which request A gets slow; B then runs to the end, then A finishes. Only
+        {losingLines.length === 1 ? ' one' : ` ${losingLines.length}`} of the {naive.linesPerRequest} places loses money:
+        after line {losingLines.join(', ')}. A has read 100; B reads 100 too, saves 20 and pays 80; A saves 20 and pays
+        80.
+        {
+          lossExample ? (
+            <>
+              {' '}
+              The bank paid out {formatCents(lossExample.paidOut)}, the balance shows {formatCents(lossExample.available)},
+              and the exchange is {formatCents(lossExample.lost)} short.
+            </>
+          ) : null
+        }
+      </p>
+
+      <h3>2. Count</h3>
+      <p>
+        There are {naive.orders} possible orders of the 8 steps. {naive.losing} of them ({pct(naive.losing, naive.orders)})
+        lose money. Build v0.1 is only safe when the two requests don't overlap.
+      </p>
+
+      <h3>3. Fix</h3>
+      <ul>
+        <li>
+          <strong>Check the balance twice:</strong> still loses in {results.checkTwice.losing} of{' '}
+          {results.checkTwice.possible} orders ({pct(results.checkTwice.losing, results.checkTwice.possible)}). The gap
+          moves; it doesn't close.
+        </li>
+        <li>
+          <strong>Lock only the read:</strong> still loses in {results.lockRead.losing} of {results.lockRead.possible}{' '}
+          possible orders ({pct(results.lockRead.losing, results.lockRead.possible)}). The lock is released before the
+          save.
+        </li>
+        <li>
+          <strong>Reserve, then settle:</strong> loses in {results.reserve.losing} of {results.reserve.possible} orders.
+          This is build v1.
+        </li>
+      </ul>
+
+      <h3>Go deeper: the bank stops answering</h3>
+      <p>
+        With build v1 live, a payout of 80 times out at the bank. The money stays on hold and the payout is marked
+        "unknown". Sending the payout again pays twice if the bank had already paid. Asking the bank about this payout
+        settles or releases the hold at once. Tonight's reconciliation compares every open hold with the bank's own
+        statement, and is the safety net under the faster answer.
+      </p>
+    </section>
+  </article>
+</Base>
+
+<style>
+  .kicker {
+    margin: 24px 0 0;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+  }
+  h1 {
+    margin: 4px 0 12px;
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    line-height: 1.15;
+  }
+  .ticket {
+    margin: 0;
+    padding: 12px 16px;
+    border-left: 4px solid var(--lost);
+    border-radius: var(--radius);
+    background: var(--surface);
+  }
+  .ticket p {
+    margin: 0;
+    font-size: 1.0625rem;
+  }
+  .ticket footer {
+    margin-top: 4px;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+  }
+  .cta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .proof {
+    margin-top: 32px;
+    padding: 12px 16px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+  }
+  .proof summary {
+    font-weight: 700;
+    cursor: pointer;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+  .proof h2 {
+    font-size: 1.125rem;
+    margin: 24px 0 8px;
+  }
+  .side-by-side {
+    display: grid;
+    align-items: start;
+    gap: var(--gap);
+  }
+  @media (min-width: 900px) {
+    .side-by-side {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  .tests li {
+    margin-bottom: 6px;
+  }
+  .badge {
+    display: inline-block;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: var(--safe-bg);
+    color: var(--safe);
+    font-size: 0.8125rem;
+    font-weight: 600;
+  }
+  .sql {
+    padding: 12px;
+    border-radius: var(--radius);
+    background: var(--surface-2);
+    overflow-x: auto;
+  }
+  .book {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-top: 24px;
+    font-weight: 600;
+  }
+  .text-version {
+    margin-top: 48px;
+    max-width: 72ch;
+  }
+  .text-version h2 {
+    font-size: 1.25rem;
+  }
+  .text-version h3 {
+    font-size: 1.0625rem;
+    margin-bottom: 4px;
+  }
+</style>

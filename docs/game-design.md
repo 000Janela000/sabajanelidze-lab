@@ -194,11 +194,11 @@ Each incident's card shows, in this order:
 
 | Patch | What it does | Result (all orders) |
 |---|---|---|
-| "Check the balance twice" | read and check again just before saving | still loses in **43%** of orders: the gap moves, it doesn't close |
-| "Lock only the read" | a lock around reading the balance | still loses in **45%** of orders: the lock is released before the save |
+| "Check the balance twice" | read and check again just before saving | still loses in **120 of 252** orders (48%): the gap moves, it doesn't close |
+| "Lock only the read" | a lock around reading the balance | still loses in **100 of 224** possible orders (45%): the lock is released before the save |
 | **"Reserve, then settle"** (Saba's) | one atomic step: "move 80 from available to on hold, only if 80 is available"; then pay; then settle (or release the hold if the bank refuses) | **0%** |
 
-(Numbers from the same script; the game shows the grid live.) **The trade-off line:** a lock held around both the read and the save is also safe (0%), but it holds the lock during the slow bank call; the reserve is one short statement, works across many servers, and leaves a visible "on hold" row in the ledger. In Postgres it is `UPDATE balances SET available = available - 80, held = held + 80 WHERE id = $1 AND available >= 80`, plus a `CHECK (available >= 0)` as a backstop.
+(Numbers from the real code, checked by `packages/core/test/race.test.ts`; the game computes them live.) **The trade-off line:** a lock around both the read and the save is also safe (0 of 74 possible orders lose). The reserve still wins: it is one statement, so there is no lock to forget to release on an early return, and money in flight gets its own state ("on hold"), so a timeout or a refused payout can be settled or released later from the books. In Postgres it is `UPDATE balances SET available = available - 80, held = held + 80 WHERE id = $1 AND available >= 80`, plus a `CHECK (available >= 0)` as a backstop.
 
 **Step 3 — Clean up (Go deeper).** "Your fix is live. Now the bank times out on a payout. Did it pay or not?"
 - **Retry at once** → if the first call did pay, the customer is paid twice. ✗
@@ -540,6 +540,6 @@ After each incident: desktop and phone screenshots, a reduced-motion check, a 10
 - Incidents cited by the reviewers: [Kraken, June 2024: deposits credited "before asset deposits fully cleared", nearly $3M](https://www.theblock.co/post/300888/kraken-discloses-bug-exploited-for-nearly-3-million) (checked); Revolut's 2022 payment flaw, about $20M ([Help Net Security](https://www.helpnetsecurity.com/2023/07/10/flaw-in-revolut-payment-systems-exploited-to-steal-20-million/), via the CTO review, not re-checked).
 - Agent security: the "Design Patterns for Securing LLM Agents" paper ([arXiv 2506.08837](https://arxiv.org/abs/2506.08837v3)) via the AI engineer's review, not re-checked.
 - The "Utopia / UTO" specimen (ICAO Doc 9303 examples) via secondary sources ([mrz-parser](https://docs.rs/crate/mrz-parser/0.3.1), [PyPI mrz](https://pypi.org/project/mrz)); tests will use the official Part 4 examples.
-- **Race numbers** (scripts in this session's scratchpad, every order of two 4-step requests): v1's naive code 68 of 70 orders lose; v2's build v0.1 36 of 70; "check twice" 43% of orders; "lock only the read" 45%; "reserve, then settle" 0%; "lock around read and save" 0%; pause points: 1 of 4 loses for build v0.1.
+- **Race numbers** (from the real code in `packages/core`, pinned by `packages/core/test/race.test.ts`): v1's naive code 68 of 70 orders lose (an earlier script); build v0.1 36 of 70; "check twice" 120 of 252; "lock only the read" 100 of 224 possible; "lock around read and save" 0 of 74 possible; "reserve, then settle" 0 of 70. Pause points: build v0.1 loses only after line 2.
 
 **Not verified yet:** Alchemy WebSockets on the free plan (not needed); the exact faucet amount after the first live test; Sepolia's end date (none announced).
