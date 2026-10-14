@@ -1,8 +1,25 @@
 /*
  * The lab's core. Folders: money/ (cents, ledger), payments/ (codes, ports, the real withdrawal, clean-up;
  * adapters/ for the stores and the fake bank; teaching/ for the naive code and wrong patches the game shows),
- * simulation/ (running real code one step at a time).
+ * kyc/ (the identity provider's messages: the same layout), simulation/ (running real code one step at a
+ * time, or delivering messages in every order).
  */
+export { MemoryKycStore } from './kyc/adapters/memory-store.ts'
+export * from './kyc/codes.ts'
+export { handleEvent } from './kyc/handle-event.ts'
+export type {
+  Applicant,
+  ApplicantTx,
+  HandleEvent,
+  KycPorts,
+  KycStore,
+  ProviderEvent,
+  SignatureCheck,
+} from './kyc/ports.ts'
+export { ANNA, annaMessages, BORIS, borisMessages, forgedApprovalForBoris } from './kyc/scenarios.ts'
+export { PROVIDER_TEST_KEY, sign, signatureCheck } from './kyc/signature.ts'
+export { handleEventV01 } from './kyc/teaching/build-v01.ts'
+export { ALLOWED_MOVES, handleEventAllowedMoves, handleEventTimestamp } from './kyc/teaching/patches.ts'
 export { type Cents, cents, formatCents } from './money/cents.ts'
 export { type Entry, Ledger, type Transaction } from './money/ledger.ts'
 export { type BankPayout, FakeBank } from './payments/adapters/fake-bank.ts'
@@ -32,6 +49,13 @@ export {
   withdraw,
 } from './payments/withdraw.ts'
 export { type AllRunsSummary, allRuns, pauseAfter, runSchedule } from './simulation/all-runs.ts'
+export {
+  type AllDeliveriesSummary,
+  allDeliveryOrders,
+  type DeliveryOutcome,
+  deliver,
+  deliveryOrders,
+} from './simulation/deliveries.ts'
 export { gatedPaymentPorts } from './simulation/gated-ports.ts'
 export {
   CUSTOMER_ID,
