@@ -172,9 +172,9 @@ race-figure .rf-books div {
   gap: 0.4rem;
 }
 
-/* "Exchange short" keeps its place while a run plays, so nothing below moves when a loss appears. */
-race-figure .rf-books div[hidden] {
-  display: flex;
+/* "Exchange short" keeps its place while a run plays, so nothing below moves when a loss appears.
+   A data attribute, not hidden: a page's own [hidden] rule (Tailwind's is !important) would remove the space. */
+race-figure .rf-books [data-rf-reserved] {
   visibility: hidden;
 }
 

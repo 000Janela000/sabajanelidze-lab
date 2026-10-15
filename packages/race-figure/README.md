@@ -1,6 +1,6 @@
 # `<race-figure>` — the payments race, as one element
 
-Version **1.1.1**. 1.1.0: "Exchange short", and the link says "Reproduce it yourself →". 1.1.1: on phones the figure keeps one height from the first step to the result (the link sits on its own line, and "Exchange short" keeps its place while a run plays), and below 336 px wide step 2 reads "read and check the balance" so every label fits its row. Built from the lab repo (`packages/race-figure`). The lab's home page uses it, and the portfolio's home page embeds the same files.
+Version **1.1.2**. 1.1.0: "Exchange short", and the link says "Reproduce it yourself →". 1.1.1: on phones the figure keeps one height from the first step to the result (the link sits on its own line, and "Exchange short" keeps its place while a run plays), and below 336 px wide step 2 reads "read and check the balance" so every label fits its row. 1.1.2: the "Exchange short" slot is kept with a data attribute, not `hidden`, so a page's own `[hidden]` rule (Tailwind 4's is `!important`) cannot take its space away. Built from the lab repo (`packages/race-figure`). The lab's home page uses it, and the portfolio's home page embeds the same files.
 
 ## What it shows
 

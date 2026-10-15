@@ -42,6 +42,10 @@ test('on a phone the figure keeps one height from the first step to the result',
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
   test.skip(await reducedMotion(page), 'nothing plays with reduced motion')
+  // The portfolio's base styles (Tailwind 4) hide every [hidden] element with !important; the figure must still hold.
+  await page.addStyleTag({
+    content: '@layer base { [hidden]:where(:not([hidden=until-found])) { display: none !important; } }',
+  })
   const figure = page.locator('race-figure')
   await figure.scrollIntoViewIfNeeded()
   await expect(figure.getByRole('button', { name: 'Pause' })).toBeVisible()
