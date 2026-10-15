@@ -1,24 +1,25 @@
 ---
 import { endStateHtml } from '@lab/race-figure/end-state'
 import '@lab/race-figure/style.css'
+import Maker from '../components/Maker.astro'
 import Base from '../layouts/Base.astro'
 import { STATIONS } from '../lib/stations.ts'
-import { FRAME, HOME, STATION_NAME, TEST_MODE } from '../site-texts.ts'
+import { GAME_NAME, HOME, STATION_NAME, TEST_MODE } from '../site-texts.ts'
 
-const ready = STATIONS.filter((station) => station.ready).length
+const playable = STATIONS.flatMap((station, index) => (station.ready ? [{ station, number: index + 1 }] : []))
 ---
 
 <Base title={HOME.title} description={HOME.description} station="home">
   <section class="intro">
     <div class="intro-text">
-      <p class="meta">{HOME.meta(ready, STATIONS.length)} · {TEST_MODE}</p>
-      <p class="frame">{FRAME}</p>
+      <p class="meta"><b class="game-name">{GAME_NAME}</b> · {HOME.meta} · <span class="nowrap">{TEST_MODE}</span></p>
       <h1 class="h1">{HOME.heading}</h1>
       <p class="lead">{HOME.lead}</p>
       <p class="start">
         <a class="btn" href="/day/payments">{HOME.start}</a>
         <span class="meta">{HOME.startNote}</span>
       </p>
+      <Maker station="home" />
     </div>
     <race-figure class="console intro-figure" lab-url="/day/payments" set:html={endStateHtml('/day/payments')} />
   </section>
@@ -40,27 +41,22 @@ const ready = STATIONS.filter((station) => station.ready).length
     <p class="no-code">{HOME.noCode}</p>
   </section>
 
-  <section class="section" aria-labelledby="day-heading">
-    <h2 id="day-heading" class="h2">{HOME.dayHeading}</h2>
+  <section class="section" aria-labelledby="incidents-heading">
+    <h2 id="incidents-heading" class="h2">{HOME.incidentsHeading}</h2>
     <ol class="incidents">
       {
-        STATIONS.map((station, index) => (
-          <li class:list={['card', { soon: !station.ready }]}>
-            <p class="meta">
-              {HOME.incident(index + 1, STATIONS.length, STATION_NAME[station.slug] ?? station.slug)}
-            </p>
+        playable.map(({ station, number }) => (
+          <li class="card">
+            <p class="meta">{HOME.incident(number, STATION_NAME[station.slug] ?? station.slug)}</p>
             <p class="card-ticket">{HOME.tickets[station.slug]}</p>
-            {station.ready ? (
-              <a class="btn" href={`/day/${station.slug}`}>
-                {HOME.take}
-              </a>
-            ) : (
-              <span class="badge">{HOME.notBuilt}</span>
-            )}
+            <a class="btn" href={`/day/${station.slug}`}>
+              {HOME.take}
+            </a>
           </li>
         ))
       }
     </ol>
+    <p class="next">{HOME.next}</p>
   </section>
 </Base>
 
@@ -156,8 +152,10 @@ const ready = STATIONS.filter((station) => station.ready).length
     border-radius: var(--radius-card);
     background: var(--surface);
   }
-  .card.soon {
-    background: transparent;
+  .next {
+    max-width: 44em;
+    margin-top: var(--space-5);
+    color: var(--muted);
   }
   .card-ticket {
     font-size: var(--fs-md);

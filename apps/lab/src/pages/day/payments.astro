@@ -1,4 +1,5 @@
 ---
+import Maker from '../../components/Maker.astro'
 import { paymentsBuildData } from '../../incidents/payments/build-data.ts'
 import { PaymentsIncident } from '../../incidents/payments/PaymentsIncident.tsx'
 import ProofCard from '../../incidents/payments/ProofCard.astro'
@@ -6,7 +7,7 @@ import TextVersion from '../../incidents/payments/TextVersion.astro'
 import { PAGE } from '../../incidents/payments/texts.ts'
 import Base from '../../layouts/Base.astro'
 import { bookACall } from '../../lib/links.ts'
-import { FRAME, TEST_MODE } from '../../site-texts.ts'
+import { GAME_NAME, TEST_MODE } from '../../site-texts.ts'
 
 const data = await paymentsBuildData()
 const shareUrl = 'https://lab.sabajanelidze.com/day/payments'
@@ -15,8 +16,7 @@ const shareUrl = 'https://lab.sabajanelidze.com/day/payments'
 <Base title={PAGE.title} description={PAGE.description} station="payments">
   <section class="hero">
     <div class="hero-text">
-      <p class="meta">{PAGE.meta} · {TEST_MODE}</p>
-      <p class="frame">{FRAME}</p>
+      <p class="meta"><b class="game-name">{GAME_NAME}</b> · {PAGE.meta} · <span class="nowrap">{TEST_MODE}</span></p>
       <h1 class="h1">{PAGE.heading}</h1>
       <blockquote class="ticket">
         <p>“{PAGE.ticket}”</p>
@@ -26,6 +26,7 @@ const shareUrl = 'https://lab.sabajanelidze.com/day/payments'
         <a class="btn find" href="#play">{PAGE.findTheBug}</a>
         <a class="link" href="#proof">{PAGE.readCode} →</a>
       </p>
+      <Maker station="payments" />
     </div>
     <div class="hero-game" id="play">
       <PaymentsIncident
@@ -51,6 +52,17 @@ const shareUrl = 'https://lab.sabajanelidze.com/day/payments'
     </details>
   </section>
 </Base>
+
+<script>
+  import { FIND_THE_BUG } from '../../game/find-the-bug.ts'
+
+  // With the console on screen, "Find the bug" moves focus to lane A's first step (after the first run, if it
+  // is playing). Before the console has been seen, the link scrolls to it and the first run starts there.
+  document.querySelector('.find')?.addEventListener('click', (event) => {
+    const handled = !window.dispatchEvent(new Event(FIND_THE_BUG, { cancelable: true }))
+    if (handled) event.preventDefault()
+  })
+</script>
 
 <style>
   .hero {
@@ -85,10 +97,6 @@ const shareUrl = 'https://lab.sabajanelidze.com/day/payments'
     }
     .hero-text .h1 {
       font-size: clamp(2rem, 2vw + 1.2rem, 2.75rem);
-    }
-    /* On desktop the console is right there: the button only moves focus into it. */
-    .find {
-      display: none;
     }
   }
   .text-fold {

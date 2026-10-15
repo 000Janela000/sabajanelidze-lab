@@ -15,11 +15,16 @@ export const LAYOUT = {
   theme: { label: 'Theme:', light: 'Light', dark: 'Dark', auto: 'Auto' },
 }
 
-/** Who made the lab and what it is: the first sentence on every page. */
-export const FRAME =
-  "A working demo by Saba Janelidze, Principal Engineer: payment and ledger systems for fintech and crypto teams. You're the on-call engineer. No code to write: you tap."
+/** The game's name, at the start of the first line on every page. */
+export const GAME_NAME = 'On call'
 
-export const TEST_MODE = 'Test mode, fake money'
+/** Who made the lab and what he offers: after the game's hook and its first action, never before. */
+export const MAKER = {
+  text: 'Made by Saba Janelidze, principal engineer: I build payment and ledger systems for fintech and crypto teams. Hiring, or need help with payments?',
+  book: 'Book a call →',
+}
+
+export const TEST_MODE = 'TEST MODE, no real money'
 
 export const STATION_NAME: Record<string, string> = {
   payments: 'Payments',
@@ -33,11 +38,11 @@ export const HOME = {
   title: 'On call: one day at a tiny crypto exchange',
   description:
     'A working demo by Saba Janelidze. You are the on-call engineer at a made-up crypto exchange. Each incident is a 2-minute puzzle on real code: reproduce how the money was lost, count how often it happens, pick the fix that survives every way the code can run. Test mode, fake money.',
-  meta: (ready: number, total: number) => `${ready} of ${total} incidents ready · about 2 minutes each`,
+  meta: 'a 2-minute puzzle at a made-up crypto exchange',
   heading: 'A customer was paid 160 from a balance of 100.',
-  lead: "You're on call at Tiny Exchange, a made-up crypto exchange. Find out how it happened, then pick the fix that holds in every way the code can run. Every result comes from the real code.",
+  lead: 'Two taps on Withdraw 80 at the same moment, and the bank paid twice. Find how on the real code, then pick the fix that holds in every order.',
   start: 'Play incident 1',
-  startNote: 'about 2 minutes · no sign-up',
+  startNote: 'no sign-up',
   howHeading: 'How each incident works',
   how: [
     { step: 'Reproduce', text: 'pick the step where one request gets slow, and watch two requests race.' },
@@ -49,10 +54,10 @@ export const HOME = {
   ],
   noCode:
     'You never write code. You tap steps with plain labels. Every tap runs the real code, the same files the "How it works" card links to, with their tests.',
-  dayHeading: 'The day',
-  incident: (number: number, total: number, name: string) => `Incident ${number} of ${total} · ${name}`,
+  incidentsHeading: 'Incidents',
+  incident: (number: number, name: string) => `Incident ${number} · ${name}`,
   take: 'Play this incident',
-  notBuilt: 'Not built yet',
+  next: 'Next: incident 2, new customers: approved yesterday, pending again this morning. Later: deposits on a test network, a support AI that must not be tricked, and the end-of-shift books.',
   tickets: {
     payments: '"I tapped Withdraw 80 twice. The bank paid me 160 and my balance still shows 20."',
     kyc: '"I was approved yesterday. This morning my status says pending again."',

@@ -9,6 +9,7 @@ import {
 } from '@lab/core'
 import { useEffect, useRef, useState } from 'preact/hooks'
 import { CodePanel, type CodePanelTexts } from '../../game/CodePanel.tsx'
+import { FIND_THE_BUG } from '../../game/find-the-bug.ts'
 import { MoneyPanel } from '../../game/MoneyPanel.tsx'
 import type { PauseGate } from '../../game/pause-gate.ts'
 import { LANE_STATE, type Lane, RaceFigure } from '../../game/RaceFigure.tsx'
@@ -69,9 +70,14 @@ function short(cents: number): string {
 /** What a step shows on the figure once it ran, read from the books right after it. */
 function valueAfter(step: string, picture: MoneyPicture): string {
   if (step === STEP.READ_BALANCE) return short(picture.available)
-  if (step === STEP.SAVE_BALANCE) return `→ ${short(picture.available)}`
-  if (step === STEP.PAY_OUT) return `−${short(AMOUNT)}`
+  if (step === STEP.SAVE_BALANCE) return short(picture.available)
+  if (step === STEP.PAY_OUT) return short(AMOUNT)
   return '✓'
+}
+
+/** Lane A's first step button, when the steps can be tapped. */
+function firstStep(figure: HTMLElement | null): HTMLButtonElement | null {
+  return figure?.querySelector<HTMLButtonElement>('.lane-a button') ?? null
 }
 
 /** The next code line after `from` that waits at this step. */
@@ -118,6 +124,8 @@ export function Reproduce(props: {
   const [losingLine, setLosingLine] = useState<number | null>(null)
   const started = useRef(false)
   const box = useRef<HTMLDivElement>(null)
+  // "Find the bug" was pressed while a run played: focus the first step once the buttons are back.
+  const focusWhenReady = useRef(false)
 
   const steps = props.lines.flatMap((line) =>
     line.step ? [{ long: STEP_TEXT[line.step], short: STEP_SHORT[line.step] ?? STEP_TEXT[line.step] }] : [],
@@ -260,6 +268,29 @@ export function Reproduce(props: {
     observer.observe(element)
     return () => observer.disconnect()
   }, [])
+
+  // "Find the bug": once the console has been seen, focus lane A's first step (now, or when the run ends).
+  // Before that the page scrolls to the console as usual, and the first run starts there.
+  useEffect(() => {
+    const onFind = (event: Event) => {
+      if (!started.current) {
+        focusWhenReady.current = true
+        return
+      }
+      event.preventDefault()
+      const button = firstStep(box.current)
+      if (button) button.focus()
+      else focusWhenReady.current = true
+    }
+    window.addEventListener(FIND_THE_BUG, onFind)
+    return () => window.removeEventListener(FIND_THE_BUG, onFind)
+  }, [])
+
+  useEffect(() => {
+    if (running || !focusWhenReady.current) return
+    focusWhenReady.current = false
+    firstStep(box.current)?.focus()
+  }, [running])
 
   const lastSafe = result && !result.lost ? result.line : null
   const message = result?.lost ? (

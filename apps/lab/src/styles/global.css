@@ -195,12 +195,6 @@ button {
   background: var(--btn-bg-hover);
 }
 
-.btn--sm {
-  min-height: 40px;
-  padding: 0 1rem;
-  font-size: var(--fs-sm);
-}
-
 .btn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
@@ -315,8 +309,10 @@ button {
   color: var(--muted);
 }
 
+/* A quiet link: the first action on every page is the game, not the call. */
 .head-book {
   margin-left: auto;
+  padding-block: 0.65rem;
 }
 
 /* ---------- Footer ---------- */
@@ -350,10 +346,13 @@ button {
   color: var(--muted);
 }
 
-.frame {
-  max-width: 40em;
-  font-size: var(--fs-md);
-  line-height: 1.55;
+.nowrap {
+  white-space: nowrap;
+}
+
+.game-name {
+  color: var(--fg);
+  font-weight: var(--weight-strong);
 }
 
 .h1 {
@@ -392,22 +391,4 @@ button {
 
 .section {
   margin-top: var(--section-space);
-}
-
-@media (max-width: 639px) {
-  /* On phones "Book a call" is a quiet link, so the first tap is the game. */
-  .head-book.btn {
-    min-height: 44px;
-    padding: 0;
-    border: 0;
-    background: none;
-    color: var(--accent);
-    font-weight: var(--weight-regular);
-    text-decoration: underline;
-    text-underline-offset: 3px;
-  }
-
-  .head-book.btn:hover:not(:disabled) {
-    background: none;
-  }
 }

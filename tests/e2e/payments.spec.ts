@@ -20,9 +20,9 @@ test('incident 1 plays from reproduce to clean-up on the real code', async ({ pa
   await page.goto('/day/payments')
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('The bank paid out twice')
   await expect(
-    page.getByText(/Incident 1 of 5 · Payments · about 2 minutes · Test mode, fake money/),
+    page.getByText(/^On call · Incident 1 · Payments · about 2 minutes · TEST MODE, no real money$/),
   ).toBeVisible()
-  await expect(page.getByText(/A working demo by Saba Janelidze/)).toBeVisible()
+  await expect(page.getByText(/^Made by Saba Janelidze/)).toBeVisible()
 
   // On arrival one safe run plays by itself in the console, then it asks for the run that breaks.
   await openTheConsole(page)
@@ -155,6 +155,17 @@ test('the home page opens with the situation and leads to incident 1', async ({ 
   )
   await page.getByRole('link', { name: 'Play incident 1' }).click()
   await expect(page).toHaveURL(/\/day\/payments$/)
+})
+
+test('"Find the bug" puts focus on the first step the visitor can tap, after the first run', async ({
+  page,
+}) => {
+  await page.goto('/day/payments')
+  await page.getByRole('link', { name: 'Find the bug' }).click()
+  await expect(page.getByRole('button', { name: /Make request A slow after step 1/ })).toBeFocused({
+    timeout: 8000,
+  })
+  await expect(page.getByText(/Your turn: tap a step on lane A\./)).toBeVisible()
 })
 
 test('"Read the code and tests" goes straight to the proof card', async ({ page }) => {

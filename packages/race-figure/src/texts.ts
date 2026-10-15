@@ -6,7 +6,7 @@ export const TEXTS = {
   refused: 'refused',
   balance: 'Balance',
   paidOut: 'Paid out',
-  short80: 'Short',
+  short80: 'Exchange short',
   order: (n: number, of: number) => `Order ${n} of ${of}.`,
   lost: (balance: string, paidOut: string) =>
     `Both passed the check. Balance ${balance}, paid out ${paidOut}.`,
@@ -15,6 +15,6 @@ export const TEXTS = {
   another: 'Run another order',
   pause: 'Pause',
   play: 'Play',
-  find: 'Find the bug →',
+  find: 'Reproduce it yourself →',
   note: "Each run is a recorded trace of the game's real code, checked by a test on every build.",
 }

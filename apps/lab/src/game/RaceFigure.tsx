@@ -15,7 +15,7 @@ export type LaneState = (typeof LANE_STATE)[keyof typeof LANE_STATE]
 export interface Lane {
   /** How many steps this request has taken. */
   readonly done: number
-  /** A short value per step once it ran, for example "100" or "→ 20". */
+  /** A short value per step once it ran, for example "100" or "20". */
   readonly values: readonly (string | null)[]
   readonly state: LaneState
   /** The end of the request in words ("paid 80", "refused"), once it finished. */

@@ -1,13 +1,13 @@
 # `<race-figure>` — the payments race, as one element
 
-Version **1.0.0**. Built from the lab repo (`packages/race-figure`). The lab's home page uses it, and the portfolio's home page embeds the same files.
+Version **1.1.0** (1.1.0: "Exchange short", and the link says "Reproduce it yourself →"). Built from the lab repo (`packages/race-figure`). The lab's home page uses it, and the portfolio's home page embeds the same files.
 
 ## What it shows
 
 Two withdrawals of 80 run at the same time on a balance of 100. Both follow the four steps of the real code: **load the customer → read the balance (and check 80 ≤ balance) → save the new balance → pay out**. Each withdrawal has a ring that moves down its column; the values appear as each step runs; the books show the balance and the total paid out. In the losing run both requests read 100, both pass the check, and the bank pays 160 from a balance of 100.
 
 - **Honest by construction.** Each run is a recorded trace of the game's real code, checked by a test on every build. The 54 runs in `src/runs.generated.ts` come from running the lab's real withdrawal (build v0.1) one step at a time (`scripts/record.ts`). A test fails if the shipped data differs from a fresh recording, or from the core's own count (54 ways to run, 36 lose money, 18 don't). The element ships no money logic: it only replays.
-- **Plays once** when at least half of it is on screen (about 4 seconds), then stops on the result, with **Run another order** (one of the 54 recorded runs) and **Find the bug →** (the lab).
+- **Plays once** when at least half of it is on screen (about 4 seconds), then stops on the result, with **Run another order** (one of the 54 recorded runs) and **Reproduce it yourself →** (the lab).
 - **Without JavaScript** the end of the losing run is already in the HTML, so the result shows.
 - **Reduced motion:** nothing moves; "Run another order" shows another result at once.
 - **While it plays** there is a Pause / Play button (WCAG 2.2.2), and it pauses in a hidden tab.

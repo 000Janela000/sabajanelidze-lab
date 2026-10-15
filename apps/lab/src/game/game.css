@@ -68,11 +68,15 @@
   color: var(--accent-fg);
 }
 
+/* A small control: the run is short, and the steps, not the pause, are what to tap. */
 .console-pause.btn-2 {
   margin-left: auto;
-  min-height: 40px;
-  padding: 0 0.85rem;
+  min-height: 32px;
+  padding: 0 0.6rem;
+  border-color: var(--line);
+  color: var(--muted);
   font-size: var(--fs-sm);
+  font-weight: var(--weight-regular);
 }
 
 .console-body {

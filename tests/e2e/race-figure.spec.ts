@@ -63,7 +63,7 @@ test.describe('without JavaScript', () => {
     await expect(figure.locator('figcaption')).toContainText(LOST)
     await expect(figure.locator('[data-rf="short"]')).toHaveText('80')
     await expect(figure.getByRole('button')).toHaveCount(0)
-    await expect(figure.getByRole('link', { name: 'Find the bug →' })).toHaveAttribute(
+    await expect(figure.getByRole('link', { name: 'Reproduce it yourself →' })).toHaveAttribute(
       'href',
       '/day/payments',
     )

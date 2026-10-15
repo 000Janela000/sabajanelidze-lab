@@ -5,7 +5,7 @@
  * - Without JavaScript the end state written in the page shows the result.
  * - With reduced motion nothing moves: "Run another order" shows another result at once.
  * - While it plays there is a pause control, and it pauses in a hidden tab.
- * Attributes: lab-url (where "Find the bug" goes).
+ * Attributes: lab-url (where "Reproduce it yourself" goes).
  */
 
 import { endStateHtml, first, LAB_URL, runs } from './end-state.ts'

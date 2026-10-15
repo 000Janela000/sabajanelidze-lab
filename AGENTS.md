@@ -68,6 +68,7 @@ The code layout and architecture are planned in `docs/game-design.md` section 10
 
 ### Code
 - **Statuses, results and error codes are UPPER_CASE constants, never plain-text sentences** (Saba, 2026-10-15). Example: `reason: REFUSAL.INSUFFICIENT_FUNDS`, not `reason: 'not enough money'`. Code compares codes; the words people read live only in the site's texts files, so they can be changed or translated without touching logic.
+- **Name what a working call gives back before you use it** (Saba, 2026-10-15). When a call is awaited, reads or writes a store, calls the bank or moves the scheduler, put its result on its own line with a name (Go: `:=` or `=`) before an `if`, a `return` or another call. Example: not `if (!(await race.step('A'))) break` but `const stepped = await race.step('A')`, then `if (!stepped) break`. In Go, not `return Result{…}, store.Settle(ctx, id)` but `err = store.Settle(ctx, id)`, then `return Result{…}, err`. Go's `if err := f(); err != nil` already names the result and stays. Why: in this code every `await` is a moment when another request can run, so each one gets its own line.
 
 ### Git
 - **No commit and no push without Saba's OK.**

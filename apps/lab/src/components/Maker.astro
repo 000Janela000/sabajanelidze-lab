@@ -1,0 +1,24 @@
+---
+/* Who made the lab and what he offers, in one short line after the game's first action. */
+import { bookACall } from '../lib/links.ts'
+import { MAKER } from '../site-texts.ts'
+
+interface Props {
+  station: string
+}
+
+const { station } = Astro.props
+---
+
+<p class="maker">
+  {MAKER.text} <a class="link" href={bookACall(station)}>{MAKER.book}</a>
+</p>
+
+<style>
+  .maker {
+    max-width: 36em;
+    font-size: var(--fs-sm);
+    line-height: 1.55;
+    color: var(--muted);
+  }
+</style>

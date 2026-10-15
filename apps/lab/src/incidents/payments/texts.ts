@@ -60,7 +60,7 @@ export const PAGE = {
   title: 'Incident 1: the bank paid out twice · On call',
   description:
     'A working demo by Saba Janelidze on real code: find how two withdrawals of 80 from a balance of 100 make the bank pay out 160, then pick the fix that survives every way they can run. Test mode, fake money.',
-  meta: 'Incident 1 of 5 · Payments · about 2 minutes',
+  meta: 'Incident 1 · Payments · about 2 minutes',
   heading: 'The bank paid out twice',
   ticket:
     'I had 100. I tapped Withdraw 80 twice by accident. The bank paid me 160, and my balance still shows 20.',
@@ -83,10 +83,10 @@ export const CONSOLE = {
 
 export const REPRODUCE = {
   heading: 'Reproduce it',
-  goal: 'Two withdrawals of 80 run at once on a balance of 100. Tap a step on lane A: A gets slow right after it, B runs past, then A finishes.',
+  goal: "Your job: make the bank pay twice. The customer's two taps are requests A and B, running at once. Tap a step on lane A: A gets slow right after it, B runs past, then A finishes.",
   demoLead: 'Watch one run first.',
   demoDone:
-    'That one was fine: A got slow after step 1, then read 20 and was refused. Now find the step where it makes the bank pay twice.',
+    'That one was fine: A got slow after step 1, then read 20 and was refused. Your turn: tap a step on lane A.',
   hintAfterSafe: (step: number) =>
     `No money lost after step ${step}. Where is the gap between reading the balance and saving it?`,
   lane: (name: string) => `Request ${name}`,
