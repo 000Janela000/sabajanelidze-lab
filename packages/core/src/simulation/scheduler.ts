@@ -37,7 +37,8 @@ export class StepScheduler {
     run: () => T | Promise<T>,
     ready: () => boolean = () => true,
   ): Promise<T> {
-    if (this.#pending.has(requestId)) throw new Error(`${requestId} is already waiting at a step`)
+    const waiting = this.#pending.has(requestId)
+    if (waiting) throw new Error(`${requestId} is already waiting at a step`)
     return new Promise<T>((resolve, reject) => {
       this.#pending.set(requestId, {
         step: code,
@@ -64,7 +65,8 @@ export class StepScheduler {
   async advance(requestId: string): Promise<void> {
     const step = this.#pending.get(requestId)
     if (!step) throw new Error(`${requestId} has no step waiting`)
-    if (!step.ready()) throw new Error(`${requestId} is blocked at ${step.step}`)
+    const ready = step.ready()
+    if (!ready) throw new Error(`${requestId} is blocked at ${step.step}`)
     this.#pending.delete(requestId)
     this.trace.push({ requestId, step: step.step })
     const arrived = this.#waitForArrival(requestId)

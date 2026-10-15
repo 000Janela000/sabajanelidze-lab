@@ -46,7 +46,8 @@ export class PostgresPaymentsStore implements PaymentsStore {
   }
 
   async reserve(customerId: string, amount: Cents, payoutId: string): Promise<ReserveResult> {
-    if (!isValidAmount(amount)) throw new RangeError(`Not a valid amount: ${amount}`)
+    const amountIsValid = isValidAmount(amount)
+    if (!amountIsValid) throw new RangeError(`Not a valid amount: ${amount}`)
     try {
       // #region postgres-reserve
       const { rows } = await this.#sql.query(

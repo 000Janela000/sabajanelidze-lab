@@ -10,7 +10,8 @@ import { PAID, refused, type Withdraw } from '../withdraw.ts'
 // #region patch-check-twice
 /** "Check the balance twice": the gap between reading and saving moves, but it does not close. */
 export const withdrawCheckTwice: Withdraw = async ({ store, bank }, { customerId, amount, payoutId }) => {
-  if (!isValidAmount(amount)) return refused(REFUSAL.INVALID_AMOUNT)
+  const amountIsValid = isValidAmount(amount)
+  if (!amountIsValid) return refused(REFUSAL.INVALID_AMOUNT)
   await store.loadCustomer(customerId)
   const first = await store.readAvailable(customerId)
   if (first < amount) return refused(REFUSAL.INSUFFICIENT_FUNDS)
@@ -25,7 +26,8 @@ export const withdrawCheckTwice: Withdraw = async ({ store, bank }, { customerId
 // #region patch-lock-read
 /** "Lock only the read": the lock is released before the save, so the race is still open. */
 export const withdrawLockRead: Withdraw = async ({ store, bank }, { customerId, amount, payoutId }) => {
-  if (!isValidAmount(amount)) return refused(REFUSAL.INVALID_AMOUNT)
+  const amountIsValid = isValidAmount(amount)
+  if (!amountIsValid) return refused(REFUSAL.INVALID_AMOUNT)
   await store.loadCustomer(customerId)
   await store.lock(customerId)
   const available = await store.readAvailable(customerId)
@@ -43,7 +45,8 @@ export const withdrawLockReadAndSave: Withdraw = async (
   { store, bank },
   { customerId, amount, payoutId },
 ) => {
-  if (!isValidAmount(amount)) return refused(REFUSAL.INVALID_AMOUNT)
+  const amountIsValid = isValidAmount(amount)
+  if (!amountIsValid) return refused(REFUSAL.INVALID_AMOUNT)
   await store.loadCustomer(customerId)
   await store.lock(customerId)
   const available = await store.readAvailable(customerId)

@@ -26,7 +26,8 @@ export class MemoryPaymentsStore implements PaymentsStore {
   }
 
   async loadCustomer(customerId: string): Promise<void> {
-    if (!this.#available.has(customerId)) throw new Error(`Unknown customer ${customerId}`)
+    const known = this.#available.has(customerId)
+    if (!known) throw new Error(`Unknown customer ${customerId}`)
   }
 
   async readAvailable(customerId: string): Promise<Cents> {
@@ -38,9 +39,11 @@ export class MemoryPaymentsStore implements PaymentsStore {
   }
 
   async reserve(customerId: string, amount: Cents, payoutId: string): Promise<ReserveResult> {
-    if (!isValidAmount(amount)) throw new RangeError(`Not a valid amount: ${amount}`)
+    const amountIsValid = isValidAmount(amount)
+    if (!amountIsValid) throw new RangeError(`Not a valid amount: ${amount}`)
     // Every check comes before the first change, so a refused reserve changes nothing.
-    if (this.#payouts.has(payoutId)) return RESERVE_RESULT.DUPLICATE
+    const duplicate = this.#payouts.has(payoutId)
+    if (duplicate) return RESERVE_RESULT.DUPLICATE
     const available = this.available(customerId)
     if (available < amount) return RESERVE_RESULT.INSUFFICIENT_FUNDS
     this.ledger.post({
@@ -88,8 +91,10 @@ export class MemoryPaymentsStore implements PaymentsStore {
   }
 
   async lock(customerId: string): Promise<void> {
-    while (this.#lockOwner.has(customerId)) {
+    let taken = this.#lockOwner.has(customerId)
+    while (taken) {
       await new Promise<void>((wake) => this.#queue(customerId).push(wake))
+      taken = this.#lockOwner.has(customerId)
     }
     this.#lockOwner.set(customerId, 'store')
   }
@@ -101,7 +106,8 @@ export class MemoryPaymentsStore implements PaymentsStore {
 
   /** For the step scheduler: take the lock now, or say it is busy. */
   tryLock(customerId: string, owner: string): boolean {
-    if (!this.lockFreeFor(customerId, owner)) return false
+    const free = this.lockFreeFor(customerId, owner)
+    if (!free) return false
     this.#lockOwner.set(customerId, owner)
     return true
   }
@@ -112,7 +118,8 @@ export class MemoryPaymentsStore implements PaymentsStore {
   }
 
   unlockFor(customerId: string, owner: string): void {
-    if (this.#lockOwner.get(customerId) === owner) this.#lockOwner.delete(customerId)
+    const holder = this.#lockOwner.get(customerId)
+    if (holder === owner) this.#lockOwner.delete(customerId)
   }
 
   available(customerId: string): Cents {

@@ -55,7 +55,8 @@ export class Race {
 
   /** Lets one request take its next step. Returns false if it is finished or blocked. */
   async step(name: string): Promise<boolean> {
-    if (!this.scheduler.canAdvance(name)) return false
+    const canGo = this.scheduler.canAdvance(name)
+    if (!canGo) return false
     await this.scheduler.advance(name)
     return true
   }
@@ -112,8 +113,10 @@ export function* interleavings(a: number, b: number, prefix: string[] = []): Gen
 export async function runOrder(setup: RaceSetup, order: readonly string[]): Promise<RaceOutcome> {
   const race = await Race.start(setup)
   for (const name of order) {
-    if (race.scheduler.isFinished(name)) continue
-    if (!race.scheduler.canAdvance(name)) return race.outcome(false)
+    const finished = race.scheduler.isFinished(name)
+    if (finished) continue
+    const canGo = race.scheduler.canAdvance(name)
+    if (!canGo) return race.outcome(false)
     await race.scheduler.advance(name)
   }
   await race.finish()

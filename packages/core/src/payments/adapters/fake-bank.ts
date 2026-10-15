@@ -33,9 +33,8 @@ export class FakeBank implements Bank {
   }
 
   async pay(payoutId: string, customerId: string, amount: Cents): Promise<BankAnswer> {
-    if (this.#idempotent && this.payouts.some((payout) => payout.payoutId === payoutId)) {
-      return BANK_ANSWER.PAID
-    }
+    const paidBefore = this.payouts.some((payout) => payout.payoutId === payoutId)
+    if (this.#idempotent && paidBefore) return BANK_ANSWER.PAID
     const fault = this.#faults.shift()
     if (fault === BANK_FAULT.REFUSE) {
       this.#refused.add(payoutId)
@@ -48,8 +47,10 @@ export class FakeBank implements Bank {
   }
 
   async status(payoutId: string): Promise<BankStatus> {
-    if (this.payouts.some((payout) => payout.payoutId === payoutId)) return BANK_STATUS.PAID
-    if (this.#refused.has(payoutId)) return BANK_STATUS.REFUSED
+    const paid = this.payouts.some((payout) => payout.payoutId === payoutId)
+    if (paid) return BANK_STATUS.PAID
+    const wasRefused = this.#refused.has(payoutId)
+    if (wasRefused) return BANK_STATUS.REFUSED
     return BANK_STATUS.NOT_FOUND
   }
 

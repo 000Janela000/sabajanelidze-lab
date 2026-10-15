@@ -37,7 +37,8 @@ export function signatureCheck(secret: string): SignatureCheck {
   const pendingKey = hmacKey(secret)
   return {
     async verify(event) {
-      const bytes = event.signature.match(/^[0-9a-f]{64}$/) ? hexToBytes(event.signature) : null
+      const wellFormed = /^[0-9a-f]{64}$/.test(event.signature)
+      const bytes = wellFormed ? hexToBytes(event.signature) : null
       if (!bytes) return false
       const key = await pendingKey
       return crypto.subtle.verify('HMAC', key, bytes, signedText(event))

@@ -37,7 +37,8 @@ func NewPostgresStore(pool *pgxpool.Pool) *PostgresStore {
 func (s *PostgresStore) LoadCustomer(ctx context.Context, customerID string) error {
 	var one int
 	err := s.pool.QueryRow(ctx, `SELECT 1 FROM balances WHERE customer_id = $1`, customerID).Scan(&one)
-	if errors.Is(err, pgx.ErrNoRows) {
+	notFound := errors.Is(err, pgx.ErrNoRows)
+	if notFound {
 		return fmt.Errorf("unknown customer %s", customerID)
 	}
 	return err
@@ -78,11 +79,13 @@ func (s *PostgresStore) Reserve(ctx context.Context, customerID string, amount C
 		return Reserved, nil
 	}
 	var pgErr *pgconn.PgError
-	if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+	isPgErr := errors.As(err, &pgErr)
+	if isPgErr && pgErr.Code == "23505" {
 		// The same new ID at the same moment: the primary key stops the second statement, all of it.
 		return ReserveDuplicate, nil
 	}
-	if !errors.Is(err, pgx.ErrNoRows) {
+	noRows := errors.Is(err, pgx.ErrNoRows)
+	if !noRows {
 		return "", err
 	}
 	if record, err := s.Payout(ctx, payoutID); err != nil {
@@ -99,7 +102,8 @@ func (s *PostgresStore) Payout(ctx context.Context, payoutID string) (*PayoutRec
 	record := PayoutRecord{PayoutID: payoutID}
 	err := s.pool.QueryRow(ctx, `SELECT customer_id, amount, status FROM payouts WHERE payout_id = $1`, payoutID).
 		Scan(&record.CustomerID, &record.Amount, &record.Status)
-	if errors.Is(err, pgx.ErrNoRows) {
+	notFound := errors.Is(err, pgx.ErrNoRows)
+	if notFound {
 		return nil, nil
 	}
 	return &record, err
@@ -131,7 +135,8 @@ func (s *PostgresStore) closeHold(ctx context.Context, payoutID string, status P
 		if err != nil {
 			return err
 		}
-		if tag.RowsAffected() == 0 {
+		changed := tag.RowsAffected()
+		if changed == 0 {
 			return fmt.Errorf("no open hold for payout %s", payoutID)
 		}
 		return nil

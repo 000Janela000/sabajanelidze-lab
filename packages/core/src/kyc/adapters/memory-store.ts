@@ -48,7 +48,8 @@ export class MemoryKycStore implements KycStore {
         this.#applicants.set(applicantId, applicant)
       },
       recordEvent: async (event) => {
-        if (this.#events.has(event.eventId)) return false
+        const seen = this.#events.has(event.eventId)
+        if (seen) return false
         this.#events.set(event.eventId, event)
         return true
       },

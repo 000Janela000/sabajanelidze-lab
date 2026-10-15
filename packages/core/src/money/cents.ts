@@ -3,7 +3,8 @@ export type Cents = number
 
 /** Checks that a value is a safe whole number of cents. */
 export function cents(value: number): Cents {
-  if (!Number.isSafeInteger(value)) throw new RangeError(`Not a whole number of cents: ${value}`)
+  const whole = Number.isSafeInteger(value)
+  if (!whole) throw new RangeError(`Not a whole number of cents: ${value}`)
   return value
 }
 

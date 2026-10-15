@@ -33,7 +33,8 @@ func Withdraw(ctx context.Context, store Store, bank Bank, req Request) (Result,
 	}
 
 	answer, err := bank.Pay(ctx, req.PayoutID, req.CustomerID, req.Amount)
-	if errors.Is(err, ErrBankTimeout) {
+	timedOut := errors.Is(err, ErrBankTimeout)
+	if timedOut {
 		// Never retry blindly: the bank may already have paid. Keep the hold and resolve it later.
 		return Result{Status: StatusUnknown}, nil
 	}

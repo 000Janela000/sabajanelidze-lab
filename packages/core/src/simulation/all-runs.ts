@@ -23,7 +23,8 @@ export async function allRuns(withdraw: Withdraw, opening: Cents, amount: Cents)
     const outcome = await runOrder({ withdraw, opening, amounts: [amount, amount] }, order)
     if (!outcome.possible) continue
     const key = outcome.trace.map((line) => `${line.requestId}:${line.step}`).join('|')
-    if (!runs.has(key)) runs.set(key, outcome)
+    const seen = runs.has(key)
+    if (!seen) runs.set(key, outcome)
   }
   const outcomes = [...runs.values()]
   return {

@@ -38,7 +38,8 @@ export const ALLOWED_MOVES: Readonly<Record<KycStatus, readonly KycStatus[]>> = 
 export const handleEventAllowedMoves: HandleEvent = async ({ store }, event) =>
   store.forApplicant(event.applicantId, async (tx) => {
     const applicant = await tx.loadApplicant()
-    if (!ALLOWED_MOVES[applicant.status].includes(event.status)) return EVENT_RESULT.MOVE_NOT_ALLOWED
+    const allowed = ALLOWED_MOVES[applicant.status].includes(event.status)
+    if (!allowed) return EVENT_RESULT.MOVE_NOT_ALLOWED
     await tx.saveApplicant({
       ...applicant,
       status: event.status,

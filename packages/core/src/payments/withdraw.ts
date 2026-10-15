@@ -34,7 +34,8 @@ export const refused = (reason: Refusal): WithdrawResult => ({ status: WITHDRAW_
  * A repeated payout ID gets the first request's answer, and nothing moves twice.
  */
 export const withdraw: Withdraw = async ({ store, bank }, { customerId, amount, payoutId }) => {
-  if (!isValidAmount(amount)) return refused(REFUSAL.INVALID_AMOUNT)
+  const amountIsValid = isValidAmount(amount)
+  if (!amountIsValid) return refused(REFUSAL.INVALID_AMOUNT)
   await store.loadCustomer(customerId)
   const reserved = await store.reserve(customerId, amount, payoutId)
   if (reserved === RESERVE_RESULT.DUPLICATE) {

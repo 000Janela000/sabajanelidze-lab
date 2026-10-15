@@ -22,7 +22,8 @@ export class Ledger {
   readonly #balances = new Map<string, Cents>()
 
   post(transaction: Transaction): void {
-    if (this.#ids.has(transaction.id)) throw new Error(`Transaction ${transaction.id} is already posted`)
+    const alreadyPosted = this.#ids.has(transaction.id)
+    if (alreadyPosted) throw new Error(`Transaction ${transaction.id} is already posted`)
     if (transaction.entries.length < 2)
       throw new Error(`Transaction ${transaction.id} needs at least two entries`)
     const sum = transaction.entries.reduce((total, entry) => total + cents(entry.amount), 0)
