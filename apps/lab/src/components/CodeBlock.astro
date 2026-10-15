@@ -4,59 +4,79 @@ import type { Excerpt } from '../lib/source.ts'
 interface Props {
   title: string
   source: Excerpt
+  /** The language, when several versions of the same code sit side by side in tabs (hidden once the tabs show it). */
+  tag?: string
 }
 
-const { title, source } = Astro.props
+const { title, source, tag } = Astro.props
+const lines = `${source.startLine}–${source.endLine}`
+const name = source.file.split('/').at(-1) ?? source.file
 ---
 
 <figure class="cb">
   <figcaption class="cb-head">
-    <strong>{title}</strong>
-    <a href={source.url}>{source.file}:{source.startLine}–{source.endLine}</a>
+    <strong>{title}{tag ? <span class="cb-lang"> · {tag}</span> : null}</strong>
+    <a href={source.url} title={`${source.file}:${lines}`}>
+      <span class="cb-path">{source.file}</span><span class="cb-name">{name}</span>:{lines}
+    </a>
   </figcaption>
-  <!-- Focusable, so a keyboard can scroll long lines sideways. -->
-  <pre tabindex="0"><code set:html={source.html} /></pre>
+  <pre><code set:html={source.html} /></pre>
 </figure>
 
 <style>
   .cb {
-    min-width: 0; /* the code scrolls inside its column instead of widening the page */
+    min-width: 0;
     margin: var(--space-4) 0 0;
     border: 1px solid var(--line);
     border-radius: var(--radius);
     background: var(--surface);
   }
-  :global(.side) .cb {
-    margin-top: 0;
-  }
   .cb-head {
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
-    gap: var(--space-2) var(--space-3);
+    gap: var(--space-1) var(--space-3);
     padding: var(--space-2) var(--space-3);
     border-bottom: 1px solid var(--line);
     background: var(--surface-2);
-    font-family: var(--font-code);
-    font-size: var(--fs-xs);
+    font-size: var(--fs-sm);
   }
   .cb-head strong {
     font-weight: var(--weight-strong);
     color: var(--fg);
   }
+  /* The source is the one monospace part of the header. */
   .cb-head a {
     margin-left: auto;
     color: var(--accent);
-    overflow-wrap: anywhere;
+    font-family: var(--font-code);
+  }
+  .cb-name {
+    display: none;
+  }
+  @media (max-width: 30rem) {
+    .cb-path {
+      display: none;
+    }
+    .cb-name {
+      display: inline;
+    }
   }
   pre {
     margin: 0;
     padding: var(--space-3);
-    overflow-x: auto;
     font-size: 0.8125rem;
     line-height: 1.55;
     color: var(--fg);
-    /* Go indents with tabs; a browser draws a tab 8 spaces wide unless told otherwise. */
+    /* Long lines wrap; a tab is 2 wide, the same as the indent the lines are given. */
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
     tab-size: 2;
+  }
+  /* A wrapped line continues 2 characters further in than it starts, so it reads as one line. */
+  pre :global(.ln) {
+    display: block;
+    padding-left: calc(var(--i) + 2ch);
+    text-indent: calc(-1 * (var(--i) + 2ch));
   }
 </style>

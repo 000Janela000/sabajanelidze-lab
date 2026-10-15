@@ -8,6 +8,11 @@ async function openTheConsole(page: Page) {
   await expect(page.getByText(/^That one was fine/)).toBeVisible()
 }
 
+/** A code block's source link on the proof card, by its file (phones show only the file name, so the title has the path). */
+function source(page: Page, file: string) {
+  return page.locator(`#proof a[title^="${file}:"]`).first()
+}
+
 async function noSidewaysScroll(page: Page) {
   const widths = await page.evaluate(() => [
     document.documentElement.scrollWidth,
@@ -59,8 +64,10 @@ test('incident 1 plays from reproduce to clean-up on the real code', async ({ pa
   await page.getByRole('button', { name: 'Ask the bank what happened to this payout' }).click()
   await expect(page.getByText(/The bank says payout-1 was paid/)).toBeVisible()
 
+  // The card opens and keyboard focus moves into it (a Codex finding: it used to stay on the button).
   await page.getByRole('button', { name: 'Read the code and the tests' }).click()
   await expect(page.locator('#proof')).toHaveAttribute('open', '')
+  await expect(page.locator('#proof > summary')).toBeFocused()
   await noSidewaysScroll(page)
 })
 
@@ -83,20 +90,20 @@ test('pages have no accessibility violations', async ({ page }) => {
 
 test('the proof card shows the fix in TypeScript or Go, by click or by keyboard', async ({ page }) => {
   await page.goto('/day/payments')
-  await page.locator('#proof summary').click()
+  await page.locator('#proof > summary').click()
   const v1 = page.getByRole('tablist', { name: 'Code language' }).first()
   await expect(v1.getByRole('tab', { name: 'TypeScript' })).toHaveAttribute('aria-selected', 'true')
-  await expect(page.getByText('go/payments/withdraw.go')).toBeHidden()
+  await expect(source(page, 'go/payments/withdraw.go')).toBeHidden()
 
   await v1.getByRole('tab', { name: 'Go' }).click()
-  await expect(page.getByText(/^go\/payments\/withdraw\.go:\d+/)).toBeVisible()
+  await expect(source(page, 'go/payments/withdraw.go')).toBeVisible()
   // Every tab set on the card follows the same choice.
-  await expect(page.getByText(/^go\/payments\/postgres\.go:\d+/)).toBeVisible()
-  await expect(page.getByText(/^packages\/core\/src\/payments\/withdraw\.ts:\d+/)).toBeHidden()
+  await expect(source(page, 'go/payments/postgres.go')).toBeVisible()
+  await expect(source(page, 'packages/core/src/payments/withdraw.ts')).toBeHidden()
 
   await page.keyboard.press('ArrowLeft')
   await expect(v1.getByRole('tab', { name: 'TypeScript' })).toBeFocused()
-  await expect(page.getByText(/^packages\/core\/src\/payments\/withdraw\.ts:\d+/)).toBeVisible()
+  await expect(source(page, 'packages/core/src/payments/withdraw.ts')).toBeVisible()
 
   const results = await new AxeBuilder({ page }).include('#proof').analyze()
   expect(results.violations.map((violation) => violation.id)).toEqual([])
@@ -112,7 +119,7 @@ for (const scheme of ['light', 'dark'] as const) {
     await page.getByRole('button', { name: /Make request A slow after step 2/ }).click()
     await expect(page.getByText('MONEY LOST')).toBeVisible()
     await page.getByText('Show the code it runs').click()
-    await page.locator('#proof summary').click()
+    await page.locator('#proof > summary').click()
     const contrast = async () =>
       (
         await new AxeBuilder({ page }).include('code').withRules(['color-contrast']).analyze()
@@ -132,10 +139,10 @@ test.describe('without JavaScript (bots, AI crawlers, screen readers before load
 
   test('the proof card shows both languages, one under the other', async ({ page }) => {
     await page.goto('/day/payments')
-    await page.locator('#proof summary').click()
+    await page.locator('#proof > summary').click()
     await expect(page.getByRole('tablist')).toHaveCount(0)
-    await expect(page.getByText(/^go\/payments\/withdraw\.go:\d+/)).toBeVisible()
-    await expect(page.getByText(/^packages\/core\/src\/payments\/withdraw\.ts:\d+/)).toBeVisible()
+    await expect(source(page, 'go/payments/withdraw.go')).toBeVisible()
+    await expect(source(page, 'packages/core/src/payments/withdraw.ts')).toBeVisible()
   })
 
   test('the whole incident is readable as text', async ({ page }) => {

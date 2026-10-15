@@ -31,7 +31,7 @@ export function Solved(props: {
     if (proof instanceof HTMLDetailsElement) {
       proof.open = true
       proof.scrollIntoView({ block: 'start' })
-      proof.querySelector('summary')?.focus()
+      proof.querySelector<HTMLElement>(':scope > summary')?.focus()
     }
   }
 

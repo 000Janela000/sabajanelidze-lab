@@ -11,7 +11,7 @@ import {
   withdrawLockReadAndSave,
   withdrawV01,
 } from '@lab/core'
-import { buildChain, codeLines, excerpt, lineUrl } from '../../lib/source.ts'
+import { buildChain, codeLines, excerpt, fileUrl, lineUrl } from '../../lib/source.ts'
 import { AMOUNT, OPENING, PATCH, type PatchOption } from './setup.ts'
 
 const CORE = 'packages/core/src/payments'
@@ -53,6 +53,7 @@ export async function paymentsBuildData() {
   const code = {
     v01: excerpt(FILES.BUILD_V01, 'build-v0.1'),
     v1: excerpt(FILES.WITHDRAW, 'build-v1'),
+    v1Answer: excerpt(FILES.WITHDRAW, 'build-v1-answer'),
     checkTwice: excerpt(FILES.PATCHES, 'patch-check-twice'),
     lockRead: excerpt(FILES.PATCHES, 'patch-lock-read'),
     lockBoth: excerpt(FILES.PATCHES, 'patch-lock-read-and-save'),
@@ -61,6 +62,7 @@ export async function paymentsBuildData() {
     postgresReserve: excerpt(FILES.POSTGRES, 'postgres-reserve'),
     postgresLockOrder: excerpt(FILES.POSTGRES, 'postgres-lock-order'),
     goWithdraw: excerpt(FILES.GO_WITHDRAW, 'withdraw-go'),
+    goAnswer: excerpt(FILES.GO_WITHDRAW, 'withdraw-go-answer'),
     goReserve: excerpt(FILES.GO_POSTGRES, 'reserve-go'),
   }
 
@@ -97,6 +99,12 @@ export async function paymentsBuildData() {
 
   const chain = buildChain(HISTORY)
 
+  // Codex's two reviews, word for word, with what was done about each finding.
+  const reviews = {
+    incident: fileUrl('docs/reviews/codex-incident-1.md'),
+    go: fileUrl('docs/reviews/codex-go.md'),
+  }
+
   return {
     code,
     v01Lines: codeLines(code.v01),
@@ -106,6 +114,7 @@ export async function paymentsBuildData() {
     patches,
     tests,
     chain,
+    reviews,
   }
 }
 

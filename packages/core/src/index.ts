@@ -31,11 +31,14 @@ export { ALL_DEFENCES, type PaymentDefences, withdrawWith } from './payments/def
 export { type MoneyPicture, moneyPicture } from './payments/money-picture.ts'
 export {
   type Bank,
+  type BankStatement,
   BankTimeout,
   isValidAmount,
   type PaymentPorts,
   type PaymentsStore,
   type PayoutRecord,
+  type ReconcileStore,
+  type StatementLine,
 } from './payments/ports.ts'
 export { withdrawV01 } from './payments/teaching/build-v01.ts'
 export { withdrawCheckTwice, withdrawLockRead, withdrawLockReadAndSave } from './payments/teaching/patches.ts'

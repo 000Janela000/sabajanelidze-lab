@@ -129,19 +129,23 @@ export class MemoryPaymentsStore implements PaymentsStore {
   }
 
   /** Payouts still on hold, oldest first. */
-  openHolds(): PayoutRecord[] {
-    return [...this.#payouts.values()].filter((payout) => payout.status === PAYOUT_STATUS.HELD)
+  async openHolds(): Promise<readonly PayoutRecord[]> {
+    return this.#holds()
   }
 
   /** Every payout we have a record of. */
-  payouts(): PayoutRecord[] {
+  async payoutRecords(): Promise<readonly PayoutRecord[]> {
     return [...this.#payouts.values()]
   }
 
   held(customerId: string): Cents {
     let total = 0
-    for (const hold of this.openHolds()) if (hold.customerId === customerId) total += hold.amount
+    for (const hold of this.#holds()) if (hold.customerId === customerId) total += hold.amount
     return total
+  }
+
+  #holds(): PayoutRecord[] {
+    return [...this.#payouts.values()].filter((payout) => payout.status === PAYOUT_STATUS.HELD)
   }
 
   #openHold(payoutId: string): PayoutRecord {

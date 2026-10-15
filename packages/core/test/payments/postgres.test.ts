@@ -3,14 +3,19 @@ import pg from 'pg'
 import { afterAll, beforeAll, describe, expect, test } from 'vitest'
 import {
   BANK_FAULT,
+  BANK_STATUS,
   FakeBank,
   PAID,
   type PaymentsStore,
   POSTGRES_SCHEMA,
   PostgresPaymentsStore,
+  RECONCILE_ACTION,
+  RECONCILE_FLAG,
   REFUSAL,
+  reconcile,
   refused,
   type Sql,
+  UNKNOWN,
   type Withdraw,
   withdraw,
   withdrawV01,
@@ -83,6 +88,50 @@ describe('Postgres store on PGlite (the SQL, one request at a time)', () => {
   test('the CHECK constraint is only a backstop: it refuses a negative balance', async () => {
     await freshCustomer(sql, 'p3', 100)
     await expect(new PostgresPaymentsStore(sql).writeAvailable('p3', -1)).rejects.toThrow()
+  })
+
+  test('the end-of-day reconciliation runs on Postgres: it settles a paid hold and flags a payout we never made', async () => {
+    await freshCustomer(sql, 'r1', 10000)
+    const store = new PostgresPaymentsStore(sql)
+    const bank = new FakeBank()
+    bank.failNext(BANK_FAULT.TIMEOUT_AFTER_PAYING)
+    await expect(
+      withdraw({ store, bank }, { customerId: 'r1', amount: 3000, payoutId: 'r1-a' }),
+    ).resolves.toEqual(UNKNOWN)
+    await bank.pay('r1-stray', 'r1', 500)
+
+    const lines = await reconcile(store, bank)
+    expect(lines.filter((line) => line.payoutId.startsWith('r1-'))).toEqual([
+      { payoutId: 'r1-a', amount: 3000, bank: BANK_STATUS.PAID, action: RECONCILE_ACTION.SETTLED },
+      {
+        payoutId: 'r1-stray',
+        amount: 500,
+        bank: BANK_STATUS.PAID,
+        action: RECONCILE_ACTION.FLAGGED,
+        flag: RECONCILE_FLAG.NOT_IN_OUR_BOOKS,
+      },
+    ])
+    await expect(store.balance('r1')).resolves.toEqual({ available: 7000, held: 0 })
+  })
+
+  test('on Postgres, a hold the bank never paid stays on hold until the statement is final, then goes back', async () => {
+    await freshCustomer(sql, 'r2', 10000)
+    const store = new PostgresPaymentsStore(sql)
+    const bank = new FakeBank()
+    bank.failNext(BANK_FAULT.TIMEOUT_BEFORE_PAYING)
+    await expect(
+      withdraw({ store, bank }, { customerId: 'r2', amount: 3000, payoutId: 'r2-a' }),
+    ).resolves.toEqual(UNKNOWN)
+
+    const before = await reconcile(store, bank)
+    expect(before.filter((line) => line.payoutId === 'r2-a')).toEqual([
+      { payoutId: 'r2-a', amount: 3000, bank: BANK_STATUS.NOT_FOUND, action: RECONCILE_ACTION.LEFT_ON_HOLD },
+    ])
+    const final = await reconcile(store, bank, { statementIsFinal: true })
+    expect(final.filter((line) => line.payoutId === 'r2-a')).toEqual([
+      { payoutId: 'r2-a', amount: 3000, bank: BANK_STATUS.NOT_FOUND, action: RECONCILE_ACTION.RELEASED },
+    ])
+    await expect(store.balance('r2')).resolves.toEqual({ available: 10000, held: 0 })
   })
 })
 

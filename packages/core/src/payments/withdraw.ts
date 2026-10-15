@@ -61,7 +61,9 @@ export const withdraw: Withdraw = async ({ store, bank }, { customerId, amount, 
   await store.release(payoutId)
   return refused(REFUSAL.BANK_REFUSED)
 }
+// #endregion build-v1
 
+// #region build-v1-answer
 /** The stored answer for a repeated payout ID. The same ID with a different request is refused. */
 function answerFor(record: PayoutRecord | null, customerId: string, amount: Cents): WithdrawResult {
   if (!record || record.customerId !== customerId || record.amount !== amount) {
@@ -71,4 +73,4 @@ function answerFor(record: PayoutRecord | null, customerId: string, amount: Cent
   if (record.status === PAYOUT_STATUS.RELEASED) return refused(REFUSAL.BANK_REFUSED)
   return UNKNOWN
 }
-// #endregion build-v1
+// #endregion build-v1-answer

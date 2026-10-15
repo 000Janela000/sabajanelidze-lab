@@ -73,19 +73,26 @@ export function highlight(code: string, lang: Lang): CodeToken[][] {
   })
 }
 
-/** Coloured lines as HTML, for build-time pages (the islands render tokens themselves). */
+/**
+ * Coloured lines as HTML, for build-time pages (the islands render tokens themselves). Each line is its own
+ * element that knows its indent (--i, a tab counts 2), so a long line wraps under itself instead of being cut off.
+ */
 export function toHtml(lines: readonly (readonly CodeToken[])[]): string {
   return lines
-    .map((line) =>
-      line
-        .map((token) =>
-          token.color
-            ? `<span style="color:${token.color}">${escapeHtml(token.text)}</span>`
-            : escapeHtml(token.text),
-        )
-        .join(''),
-    )
-    .join('\n')
+    .map((line) => {
+      const text = line.map((token) => token.text).join('')
+      const lead = /^[\t ]*/.exec(text)?.[0] ?? ''
+      const indent = [...lead].reduce((width, char) => width + (char === '\t' ? 2 : 1), 0)
+      const html = line
+        .map((token) => {
+          // A narrow screen breaks after a dot, a bracket or a comma, never inside a name.
+          const text = escapeHtml(token.text).replace(/([.(,])/g, '$1<wbr>')
+          return token.color ? `<span style="color:${token.color}">${text}</span>` : text
+        })
+        .join('')
+      return `<span class="ln" style="--i:${indent}ch">${html || ' '}</span>`
+    })
+    .join('')
 }
 
 function escapeHtml(text: string): string {

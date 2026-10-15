@@ -1,6 +1,6 @@
 import type { Cents } from '../../money/cents.ts'
 import { PAYOUT_STATUS, type PayoutStatus, RESERVE_RESULT, type ReserveResult } from '../codes.ts'
-import { isValidAmount, type PaymentsStore, type PayoutRecord } from '../ports.ts'
+import { isValidAmount, type PaymentsStore, type PayoutRecord, type ReconcileStore } from '../ports.ts'
 
 /** What both node-postgres and PGlite can do: run a statement, or several in one transaction. */
 export interface Sql {
@@ -23,8 +23,23 @@ CREATE TABLE IF NOT EXISTS payouts (
   status      text NOT NULL CHECK (status IN ('HELD', 'PAID', 'RELEASED'))
 );`
 
+interface PayoutRow {
+  readonly payout_id: string
+  readonly customer_id: string
+  readonly amount: unknown
+  readonly status: PayoutStatus
+}
+
+/** A row of the payouts table as a record. Postgres returns bigint as text, so the amount is converted. */
+const toRecord = (row: PayoutRow): PayoutRecord => ({
+  payoutId: row.payout_id,
+  customerId: row.customer_id,
+  amount: Number(row.amount),
+  status: row.status,
+})
+
 /** The same store, on a real database. */
-export class PostgresPaymentsStore implements PaymentsStore {
+export class PostgresPaymentsStore implements PaymentsStore, ReconcileStore {
   readonly #sql: Sql
 
   constructor(sql: Sql) {
@@ -84,6 +99,22 @@ export class PostgresPaymentsStore implements PaymentsStore {
     return row
       ? { payoutId, customerId: row.customer_id, amount: Number(row.amount), status: row.status }
       : null
+  }
+
+  /** Payouts still on hold, by payout ID (the table keeps no time). */
+  async openHolds(): Promise<readonly PayoutRecord[]> {
+    const { rows } = await this.#sql.query<PayoutRow>(
+      `SELECT payout_id, customer_id, amount, status FROM payouts WHERE status = 'HELD' ORDER BY payout_id`,
+    )
+    return rows.map(toRecord)
+  }
+
+  /** Every payout we have a record of. */
+  async payoutRecords(): Promise<readonly PayoutRecord[]> {
+    const { rows } = await this.#sql.query<PayoutRow>(
+      'SELECT payout_id, customer_id, amount, status FROM payouts ORDER BY payout_id',
+    )
+    return rows.map(toRecord)
   }
 
   async settle(payoutId: string): Promise<void> {

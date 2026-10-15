@@ -51,6 +51,9 @@ func Withdraw(ctx context.Context, store Store, bank Bank, req Request) (Result,
 	return refused(RefusalBankRefused), err
 }
 
+// #endregion withdraw-go
+
+// #region withdraw-go-answer
 // answerFor is the stored answer for a repeated payout ID. The same ID with a different request is refused.
 func answerFor(record *PayoutRecord, req Request) Result {
 	if record == nil || record.CustomerID != req.CustomerID || record.Amount != req.Amount {
@@ -66,7 +69,7 @@ func answerFor(record *PayoutRecord, req Request) Result {
 	}
 }
 
-// #endregion withdraw-go
+// #endregion withdraw-go-answer
 
 func refused(reason Refusal) Result {
 	return Result{Status: StatusRefused, Reason: reason}

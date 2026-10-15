@@ -7,16 +7,12 @@ import {
   type BankFault,
   type BankStatus,
 } from '../codes.ts'
-import { type Bank, BankTimeout } from '../ports.ts'
+import { type Bank, type BankStatement, BankTimeout, type StatementLine } from '../ports.ts'
 
-export interface BankPayout {
-  readonly payoutId: string
-  readonly customerId: string
-  readonly amount: Cents
-}
+export type BankPayout = StatementLine
 
 /** A fake bank. It keeps its own record of payouts: the "statement" that reconciliation checks against. */
-export class FakeBank implements Bank {
+export class FakeBank implements Bank, BankStatement {
   readonly payouts: BankPayout[] = []
   readonly #refused = new Set<string>()
   readonly #faults: BankFault[] = []
@@ -52,6 +48,11 @@ export class FakeBank implements Bank {
     const wasRefused = this.#refused.has(payoutId)
     if (wasRefused) return BANK_STATUS.REFUSED
     return BANK_STATUS.NOT_FOUND
+  }
+
+  /** The day's statement: every payout the bank made. */
+  async statement(): Promise<readonly StatementLine[]> {
+    return [...this.payouts]
   }
 
   paidOut(customerId: string): Cents {

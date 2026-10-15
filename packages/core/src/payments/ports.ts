@@ -52,6 +52,29 @@ export interface PaymentPorts {
   readonly bank: Bank
 }
 
+/** One payout as the bank's statement for the day lists it. */
+export interface StatementLine {
+  readonly payoutId: string
+  readonly customerId: string
+  readonly amount: Cents
+}
+
+/** What the end-of-day reconciliation needs from our books. Both stores have it: memory and Postgres. */
+export interface ReconcileStore {
+  /** Payouts still on hold. */
+  openHolds(): Promise<readonly PayoutRecord[]>
+  /** Every payout we have a record of. */
+  payoutRecords(): Promise<readonly PayoutRecord[]>
+  settle(payoutId: string): Promise<void>
+  release(payoutId: string): Promise<void>
+}
+
+/** What reconciliation needs from the bank: one payout's status, and the day's statement. */
+export interface BankStatement {
+  status(payoutId: string): Promise<BankStatus>
+  statement(): Promise<readonly StatementLine[]>
+}
+
 /** A withdrawal amount must be a positive whole number of cents. */
 export function isValidAmount(amount: Cents): boolean {
   return Number.isSafeInteger(amount) && amount > 0

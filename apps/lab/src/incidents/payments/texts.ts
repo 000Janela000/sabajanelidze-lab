@@ -198,11 +198,30 @@ export const CLEAN_UP = {
 
 export const PROOF = {
   summary: 'How it works: the code, the tests, and how it was built',
+  results: {
+    label: 'The results',
+    v01: 'Build v0.1 (naive)',
+    v1: 'Build v1 (the fix)',
+    lose: (losing: number, runs: number) => `${losing} of ${runs} orders lose money`,
+    postgres: 'Real Postgres, 20 withdrawals at once',
+    paidOnce: 'build v1 pays out once',
+    ci: 'CI on this build',
+    ciLink: 'see the result',
+    note: 'Each build has its own steps, so its own number of orders. The first two numbers are computed from the code when the site is built; the third is what the real-database test checks on every push.',
+  },
+  run: {
+    intro: 'Run the tests yourself:',
+    repo: 'the code on GitHub',
+    commands: ['pnpm install', 'pnpm --filter @lab/core test', 'cd go && go test -race ./...'],
+    note: 'The real-database tests also run when DATABASE_URL points at a Postgres server.',
+  },
+  showCode: (lines: number) => `Show the code (${lines} lines)`,
   whatHappenedHeading: 'What happened, and the fix',
   whatHappened:
-    'Build v0.1 reads the balance, checks it, and later saves a new number. When two requests overlap, both can read 100 before either saves, so both pass the check and the bank pays twice. Build v1 makes the check and the move one atomic step: "move 80 from available to on hold, only if 80 is available". The second request finds only 20 available and is refused.',
+    'Build v0.1 reads, checks and saves the balance in separate steps, so two requests can both pass the check. Build v1 makes the check and the move one atomic step.',
   v01Title: 'Build v0.1 (naive)',
   v1Title: 'Build v1 (reserve, then settle)',
+  answerTitle: 'The stored answer for a repeated payout ID',
   langLabel: 'Code language',
   langs: { TS: 'TypeScript', GO: 'Go' },
   testsHeading: 'The tests',
@@ -227,6 +246,7 @@ export const PROOF = {
   tradeOff: (losing: number, runs: number, naiveRuns: number) =>
     `A lock around both the read and the save also holds: ${losing} of its ${runs} ways to run lose money (its steps differ from build v0.1, so it has ${runs} ways to run, not ${naiveRuns}). The reserve is still the better step, for two reasons. It is one statement, so there is no lock to forget to release on an early return (look at the extra unlock the lock version needs). And money in flight gets its own state, "on hold", so a timeout or a refused payout can be settled or released later from the books.`,
   lockBothTitle: 'Lock around the read and the save (also safe)',
+  realDatabaseHeading: 'On a real database',
   postgresIntro:
     'On a real database the reserve is one statement: a conditional update, and the payout record in the same statement. The CHECK (available >= 0) on the table is a backstop, not the fix.',
   postgresTitle: 'The reserve on Postgres',
@@ -237,13 +257,18 @@ export const PROOF = {
     "That test also caught a bug the in-memory model can't show: a deadlock. A request repeating a payout ID held the balance row and waited for the payout row, while the settle of the first request held the payout row and waited for the balance row. The fix is the usual one: settle and release now lock the balance row first, in the same order as the reserve.",
   lockOrderTitle: 'The lock order (found by the real-database test)',
   cleanUpHeading: 'The clean-up code',
+  cleanUpIntro:
+    "When the bank doesn't answer, the money stays on hold, and two pieces of code settle it later. One asks the bank about a single payout. The end-of-day job checks every open hold and the bank's statement for the day. Both work on either store, and the end-of-day job is tested on Postgres too.",
   resolveTitle: 'Resolve an unknown payout',
-  reconcileTitle: 'Reconciliation (a demo: it runs on the in-memory store)',
+  reconcileTitle: 'The end-of-day reconciliation',
   chainHeading: 'How this code was built',
   chain: (commits: number, agentCommits: number, checksRun: number, refusals: number) =>
     `${commits} ${commits === 1 ? 'commit' : 'commits'} on this code, ${agentCommits === commits ? 'all' : agentCommits} written by an AI agent (Claude). The local checks before a commit ran ${checksRun} ${checksRun === 1 ? 'time' : 'times'} on this code and refused ${refusals}; on every push, CI runs the tests, the real-database race and Go's race detector. Codex (another company's AI) reviewed the money code twice: eight problems in the TypeScript, four in the Go version. All were fixed, with tests for the money cases.`,
   ciLink: 'CI result for this build',
   lastChange: 'Last change:',
+  reviewsLead: 'The reviews, word for word:',
+  reviewIncident: 'incident 1',
+  reviewGo: 'the Go version',
   approval: 'Saba approves each incident before it goes live.',
   book: 'I build this for teams that handle money.',
   bookButton: 'Book a call',

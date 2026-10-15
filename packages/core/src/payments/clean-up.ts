@@ -1,6 +1,4 @@
 import type { Cents } from '../money/cents.ts'
-import type { FakeBank } from './adapters/fake-bank.ts'
-import type { MemoryPaymentsStore } from './adapters/memory-store.ts'
 import {
   BANK_STATUS,
   type BankStatus,
@@ -12,7 +10,7 @@ import {
   type ReconcileFlag,
   type Resolution,
 } from './codes.ts'
-import type { PaymentPorts } from './ports.ts'
+import type { BankStatement, PaymentPorts, ReconcileStore } from './ports.ts'
 
 // #region resolve-unknown
 /**
@@ -53,15 +51,17 @@ export interface ReconcileLine {
  *    not found → leave on hold, unless the bank's statement for the day is final.
  * 2. Every payout on the bank's statement must match one of our payout records.
  *    Anything else is flagged for a person: money left that our books can't explain.
+ * It runs on either store (memory or Postgres) through two small ports.
  */
 export async function reconcile(
-  store: MemoryPaymentsStore,
-  bank: FakeBank,
+  store: ReconcileStore,
+  bank: BankStatement,
   options: { readonly statementIsFinal: boolean } = { statementIsFinal: false },
 ): Promise<ReconcileLine[]> {
   const lines: ReconcileLine[] = []
 
-  for (const hold of store.openHolds()) {
+  const holds = await store.openHolds()
+  for (const hold of holds) {
     const found = await bank.status(hold.payoutId)
     const line = { payoutId: hold.payoutId, amount: hold.amount, bank: found }
     if (found === BANK_STATUS.PAID) {
@@ -75,9 +75,11 @@ export async function reconcile(
     }
   }
 
-  const records = new Map(store.payouts().map((record) => [record.payoutId, record]))
+  const ours = await store.payoutRecords()
+  const records = new Map(ours.map((record) => [record.payoutId, record]))
+  const statement = await bank.statement()
   const seen = new Map<string, number>()
-  for (const payout of bank.payouts) {
+  for (const payout of statement) {
     const times = (seen.get(payout.payoutId) ?? 0) + 1
     seen.set(payout.payoutId, times)
     const record = records.get(payout.payoutId)
