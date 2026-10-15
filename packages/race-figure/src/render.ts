@@ -7,6 +7,9 @@
 import { type Frame, type Lane, NAMES, type Name } from './frames.ts'
 import { TEXTS } from './texts.ts'
 
+/* A reserved amount is a no-break space, not nothing: an empty cell lines up differently (1 px on Linux fonts). */
+const EMPTY = '\u00a0'
+
 const escapeHtml = (text: string) =>
   text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('"', '&quot;')
 
@@ -32,7 +35,7 @@ export function figureHtml(frame: Frame, captionText: string, labUrl: string): s
       return `<span class="rf-step"><b>${index + 1}</b> ${label}</span>`
     })
     .join('')
-  return `<figure class="rf${frame.short ? ' rf-lost' : ''}" aria-label="${escapeHtml(TEXTS.label)}"><div class="rf-lanes" aria-hidden="true"><div class="rf-steps"><span class="rf-name"></span>${steps}<span class="rf-res"></span></div>${NAMES.map((name) => laneHtml(name, frame.lanes[name])).join('')}</div><dl class="rf-books"><div><dt>${TEXTS.balance}</dt><dd data-rf="balance">${frame.balance}</dd></div><div><dt>${TEXTS.paidOut}</dt><dd data-rf="paid">${frame.paidOut}</dd></div><div class="rf-short-row"${frame.short ? '' : ' data-rf-reserved'}><dt>${TEXTS.short80}</dt><dd data-rf="short">${frame.short ?? ''}</dd></div></dl><figcaption class="rf-caption" aria-live="polite">${escapeHtml(captionText)}</figcaption><div class="rf-actions"><button type="button" class="rf-btn" data-rf="another" hidden>${TEXTS.another}</button><button type="button" class="rf-btn rf-btn-2" data-rf="pause" aria-pressed="false" hidden>${TEXTS.pause}</button><a class="rf-link" href="${escapeHtml(labUrl)}">${TEXTS.find}</a></div><p class="rf-note">${escapeHtml(TEXTS.note)}</p></figure>`
+  return `<figure class="rf${frame.short ? ' rf-lost' : ''}" aria-label="${escapeHtml(TEXTS.label)}"><div class="rf-lanes" aria-hidden="true"><div class="rf-steps"><span class="rf-name"></span>${steps}<span class="rf-res"></span></div>${NAMES.map((name) => laneHtml(name, frame.lanes[name])).join('')}</div><dl class="rf-books"><div><dt>${TEXTS.balance}</dt><dd data-rf="balance">${frame.balance}</dd></div><div><dt>${TEXTS.paidOut}</dt><dd data-rf="paid">${frame.paidOut}</dd></div><div class="rf-short-row"${frame.short ? '' : ' data-rf-reserved'}><dt>${TEXTS.short80}</dt><dd data-rf="short">${frame.short ?? EMPTY}</dd></div></dl><figcaption class="rf-caption" aria-live="polite">${escapeHtml(captionText)}</figcaption><div class="rf-actions"><button type="button" class="rf-btn" data-rf="another" hidden>${TEXTS.another}</button><button type="button" class="rf-btn rf-btn-2" data-rf="pause" aria-pressed="false" hidden>${TEXTS.pause}</button><a class="rf-link" href="${escapeHtml(labUrl)}">${TEXTS.find}</a></div><p class="rf-note">${escapeHtml(TEXTS.note)}</p></figure>`
 }
 
 /** Shows a frame on the figure already in the page. */
@@ -59,7 +62,7 @@ export function applyFrame(root: Element, frame: Frame): void {
   }
   set('balance', frame.balance)
   set('paid', frame.paidOut)
-  set('short', frame.short ?? '')
+  set('short', frame.short ?? EMPTY)
   const shortRow = root.querySelector('.rf-short-row')
   // Not the hidden attribute: a page's own [hidden] rule (Tailwind's is !important) would take the space away.
   shortRow?.toggleAttribute('data-rf-reserved', frame.short === null)

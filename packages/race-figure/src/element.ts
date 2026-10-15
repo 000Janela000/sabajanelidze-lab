@@ -29,11 +29,12 @@ class RaceFigure extends HTMLElement {
     this.#button('another')?.addEventListener('click', () => this.#another())
     this.#button('pause')?.addEventListener('click', () => this.#togglePause())
     document.addEventListener('visibilitychange', this.#onVisibility)
+    // "Run another order" shows from the start, so the buttons row keeps one height before, during and after a run.
+    this.#showButtons()
     if (
       matchMedia('(prefers-reduced-motion: reduce)').matches ||
       typeof IntersectionObserver === 'undefined'
     ) {
-      this.#showButtons()
       return
     }
     this.#observer = new IntersectionObserver(
@@ -62,6 +63,8 @@ class RaceFigure extends HTMLElement {
   }
 
   #play(index: number) {
+    // Any run, the first one or one the visitor asked for, ends the wait for the figure to come into view.
+    this.#observer?.disconnect()
     this.#index = index
     this.#count = 0
     this.#playing = true
