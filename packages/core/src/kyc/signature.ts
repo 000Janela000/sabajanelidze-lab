@@ -26,19 +26,21 @@ function hmacKey(secret: string): Promise<CryptoKey> {
 
 /** Signs a message the way the provider does (HMAC-SHA256, hex). */
 export async function sign(event: Unsigned, secret: string): Promise<ProviderEvent> {
-  const mac = await crypto.subtle.sign('HMAC', await hmacKey(secret), signedText(event))
+  const key = await hmacKey(secret)
+  const mac = await crypto.subtle.sign('HMAC', key, signedText(event))
   const signature = [...new Uint8Array(mac)].map((byte) => byte.toString(16).padStart(2, '0')).join('')
   return { ...event, signature }
 }
 
 /** Checks signatures with the shared key. `crypto.subtle.verify` compares in constant time. */
 export function signatureCheck(secret: string): SignatureCheck {
-  const key = hmacKey(secret)
+  const pendingKey = hmacKey(secret)
   return {
     async verify(event) {
       const bytes = event.signature.match(/^[0-9a-f]{64}$/) ? hexToBytes(event.signature) : null
       if (!bytes) return false
-      return crypto.subtle.verify('HMAC', await key, bytes, signedText(event))
+      const key = await pendingKey
+      return crypto.subtle.verify('HMAC', key, bytes, signedText(event))
     },
   }
 }

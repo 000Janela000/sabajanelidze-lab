@@ -64,7 +64,10 @@ export async function deliver(
   const store = new MemoryKycStore(ids)
   const ports = { store, signatures: signatureCheck(PROVIDER_TEST_KEY) }
   const results: EventResult[] = []
-  for (const event of order) results.push(await handle(ports, event))
+  for (const event of order) {
+    const result = await handle(ports, event)
+    results.push(result)
+  }
   return { order, results, applicants: Object.fromEntries(ids.map((id) => [id, store.applicant(id)])) }
 }
 
@@ -83,7 +86,10 @@ export async function allDeliveryOrders(
   expected: KycStatus,
 ): Promise<AllDeliveriesSummary> {
   const outcomes: DeliveryOutcome[] = []
-  for (const order of deliveryOrders(messages)) outcomes.push(await deliver(handle, order))
+  for (const order of deliveryOrders(messages)) {
+    const outcome = await deliver(handle, order)
+    outcomes.push(outcome)
+  }
   return {
     orders: outcomes.length,
     wrong: outcomes.filter((outcome) => outcome.applicants[applicantId]?.status !== expected).length,

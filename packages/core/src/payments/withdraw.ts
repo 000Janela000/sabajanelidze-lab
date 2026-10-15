@@ -37,8 +37,10 @@ export const withdraw: Withdraw = async ({ store, bank }, { customerId, amount, 
   if (!isValidAmount(amount)) return refused(REFUSAL.INVALID_AMOUNT)
   await store.loadCustomer(customerId)
   const reserved = await store.reserve(customerId, amount, payoutId)
-  if (reserved === RESERVE_RESULT.DUPLICATE)
-    return answerFor(await store.payout(payoutId), customerId, amount)
+  if (reserved === RESERVE_RESULT.DUPLICATE) {
+    const record = await store.payout(payoutId)
+    return answerFor(record, customerId, amount)
+  }
   if (reserved === RESERVE_RESULT.INSUFFICIENT_FUNDS) return refused(REFUSAL.INSUFFICIENT_FUNDS)
 
   let answer: Awaited<ReturnType<typeof bank.pay>>

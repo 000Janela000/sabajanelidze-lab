@@ -69,7 +69,8 @@ export class StepScheduler {
     this.trace.push({ requestId, step: step.step })
     const arrived = this.#waitForArrival(requestId)
     try {
-      step.resolve(await step.run())
+      const result = await step.run()
+      step.resolve(result)
     } catch (error) {
       step.reject(error)
     }
