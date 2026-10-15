@@ -51,9 +51,9 @@ export const MONEY_TEXT = {
   balance: 'Balance shows',
   held: 'On hold',
   paidOut: 'Bank paid out',
-  short: 'Exchange is short',
   lost: 'Money lost',
   none: 'none',
+  pending: '…',
 }
 
 export const PAGE = {

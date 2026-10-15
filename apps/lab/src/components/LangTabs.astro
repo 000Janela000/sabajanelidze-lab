@@ -34,13 +34,15 @@ const { id, title, label, tabs } = Astro.props
       ))
     }
   </div>
-  {
-    tabs.map((tab) => (
-      <div role="tabpanel" id={`${id}-panel-${tab.lang}`} aria-labelledby={`${id}-tab-${tab.lang}`} data-lang={tab.lang}>
-        <CodeBlock title={title} tag={tab.name} source={tab.source} />
-      </div>
-    ))
-  }
+  <div class="panels">
+    {
+      tabs.map((tab) => (
+        <div role="tabpanel" id={`${id}-panel-${tab.lang}`} aria-labelledby={`${id}-tab-${tab.lang}`} data-lang={tab.lang}>
+          <CodeBlock title={title} tag={tab.name} source={tab.source} />
+        </div>
+      ))
+    }
+  </div>
 </div>
 
 <script>
@@ -55,8 +57,11 @@ const { id, title, label, tabs } = Astro.props
         tab.setAttribute('aria-selected', String(selected))
         tab.tabIndex = selected ? 0 : -1
       }
+      // Every version stays laid out in the same place, so switching changes nothing below the code.
       for (const panel of group.querySelectorAll<HTMLElement>('[role="tabpanel"]')) {
-        panel.hidden = panel.dataset.lang !== lang
+        const off = panel.dataset.lang !== lang
+        panel.toggleAttribute('data-off', off)
+        panel.inert = off
       }
     }
   }
@@ -105,6 +110,26 @@ const { id, title, label, tabs } = Astro.props
   .tabbed :global(.cb-lang) {
     display: none;
   }
+  /* With tabs, the versions share one cell: the box is as tall as the longest, whichever shows. */
+  .tabbed .panels {
+    display: grid;
+  }
+  .tabbed [role='tabpanel'] {
+    grid-area: 1 / 1;
+    min-width: 0;
+  }
+  .tabbed [role='tabpanel'][data-off] {
+    visibility: hidden;
+  }
+  /* The shorter version's box fills the cell too, like an editor with a few empty lines at the end. */
+  .tabbed [role='tabpanel'] :global(.cb) {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  .tabbed [role='tabpanel'] :global(.cb pre) {
+    flex: 1;
+  }
   .tablist {
     display: flex;
     gap: var(--space-1);
@@ -134,7 +159,7 @@ const { id, title, label, tabs } = Astro.props
     margin-top: 0;
   }
   /* Without JavaScript the versions stack, one under the other. */
-  .tablist[hidden] ~ [role='tabpanel'] + [role='tabpanel'] {
+  .tablist[hidden] ~ .panels [role='tabpanel'] + [role='tabpanel'] {
     margin-top: var(--space-4);
   }
 </style>

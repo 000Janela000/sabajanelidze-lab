@@ -40,7 +40,7 @@ test('incident 1 plays from reproduce to clean-up on the real code', async ({ pa
   await page.getByRole('button', { name: /Make request A slow after step 2/ }).click()
   await expect(page.getByText(/^Reproduced on try 2\./)).toBeVisible()
   await expect(page.getByRole('region', { name: 'The books' }).first()).toContainText('80.00')
-  await expect(page.getByText('MONEY LOST')).toBeVisible()
+  await expect(page.getByText('MONEY LOST', { exact: true })).toBeVisible()
 
   await page.getByRole('button', { name: 'Next: how often does this happen?' }).click()
   await page.getByLabel('Your guess').fill('20')
@@ -69,6 +69,60 @@ test('incident 1 plays from reproduce to clean-up on the real code', async ({ pa
   await expect(page.locator('#proof')).toHaveAttribute('open', '')
   await expect(page.locator('#proof > summary')).toBeFocused()
   await noSidewaysScroll(page)
+})
+
+/** Records the console's height on every frame until the returned function is called. */
+async function recordConsoleHeights(page: Page) {
+  await page.locator('.console').evaluate((element) => {
+    const heights: number[] = []
+    const holder = window as unknown as { heights: number[]; stop: boolean }
+    holder.heights = heights
+    holder.stop = false
+    const sample = () => {
+      heights.push(element.getBoundingClientRect().height)
+      if (!holder.stop) requestAnimationFrame(sample)
+    }
+    sample()
+  })
+  return () =>
+    page.evaluate(() => {
+      const holder = window as unknown as { heights: number[]; stop: boolean }
+      holder.stop = true
+      return holder.heights
+    })
+}
+
+test('nothing in the console jumps while a run plays: one height from start to result', async ({
+  page,
+}, info) => {
+  test.skip(info.project.name !== 'desktop', 'runs animate only with motion')
+  for (const viewport of [
+    { width: 1280, height: 720 },
+    { width: 390, height: 844 },
+  ]) {
+    await page.setViewportSize(viewport)
+    await page.goto('/day/payments')
+    await openTheConsole(page)
+
+    // A safe run: the pause control, the step values, the books and the message all keep their size.
+    let stop = await recordConsoleHeights(page)
+    await page.getByRole('button', { name: /Make request A slow after step 1/ }).click()
+    await expect(page.getByText(/No money lost after step 1/)).toBeVisible()
+    let heights = await stop()
+    expect(Math.max(...heights) - Math.min(...heights), `safe run at ${viewport.width} px`).toBeLessThan(1)
+
+    // The losing run adds the "Next" row under the books (new content under the result). A replay then holds still.
+    await page.getByRole('button', { name: /Make request A slow after step 2/ }).click()
+    await expect(page.getByText(/^Reproduced on try 2\./)).toBeVisible()
+    stop = await recordConsoleHeights(page)
+    await page.getByRole('button', { name: 'Replay the losing order' }).click()
+    await expect(page.getByRole('button', { name: 'Replay the losing order' })).toBeDisabled()
+    await expect(page.getByRole('button', { name: 'Replay the losing order' })).toBeEnabled({
+      timeout: 10000,
+    })
+    heights = await stop()
+    expect(Math.max(...heights) - Math.min(...heights), `replay at ${viewport.width} px`).toBeLessThan(1)
+  }
 })
 
 test('every link back to the portfolio is tagged with the station', async ({ page }) => {
@@ -117,7 +171,7 @@ for (const scheme of ['light', 'dark'] as const) {
     await openTheConsole(page)
     // The red "money lost" line and the highlighted line are the hardest backgrounds.
     await page.getByRole('button', { name: /Make request A slow after step 2/ }).click()
-    await expect(page.getByText('MONEY LOST')).toBeVisible()
+    await expect(page.getByText('MONEY LOST', { exact: true })).toBeVisible()
     await page.getByText('Show the code it runs').click()
     await page.locator('#proof > summary').click()
     const contrast = async () =>

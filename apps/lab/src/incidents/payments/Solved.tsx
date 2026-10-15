@@ -8,6 +8,19 @@ const COPY = { RESULT: 'RESULT', LINK: 'LINK', FAILED: 'FAILED' } as const
 type Copied = (typeof COPY)[keyof typeof COPY]
 
 /** The win: the fix holds everywhere, then the ways out (the code, a call, sharing) and the clean-up. */
+/** Both labels in one cell, so the button is as wide as the longer one and never changes width. */
+function Labels(props: { shown: number; texts: readonly string[] }) {
+  return (
+    <span class="label-stack">
+      {props.texts.map((text, index) => (
+        <span key={text} class={index === props.shown ? '' : 'is-off'}>
+          {text}
+        </span>
+      ))}
+    </span>
+  )
+}
+
 export function Solved(props: {
   fixed: AllRunsSummary
   shareText: string
@@ -57,10 +70,10 @@ export function Solved(props: {
           {SOLVED.book}
         </a>
         <button type="button" class="btn-2" onClick={() => copy(props.shareText, COPY.RESULT)}>
-          {copied === COPY.RESULT ? SOLVED.copied : SOLVED.copyResult}
+          <Labels shown={copied === COPY.RESULT ? 1 : 0} texts={[SOLVED.copyResult, SOLVED.copied]} />
         </button>
         <button type="button" class="btn-2" onClick={() => copy(props.shareUrl, COPY.LINK)}>
-          {copied === COPY.LINK ? SOLVED.linkCopied : SOLVED.sendToCto}
+          <Labels shown={copied === COPY.LINK ? 1 : 0} texts={[SOLVED.sendToCto, SOLVED.linkCopied]} />
         </button>
       </div>
       {copied === COPY.FAILED ? <p class="why">{SOLVED.copyFailed(props.shareUrl)}</p> : null}

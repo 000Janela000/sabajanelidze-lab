@@ -75,6 +75,16 @@ function valueAfter(step: string, picture: MoneyPicture): string {
   return '✓'
 }
 
+/**
+ * The longest things the message under the figure can say (the numbers of this incident are fixed). They are drawn
+ * by CSS from attributes, so they take space without being text on the page (not read, found or indexed).
+ */
+const ANNOUNCE_SIZERS = [
+  { lead: `✗ ${REPRODUCE.lostLead(10)}`, text: REPRODUCE.lost(4, AMOUNT * 2, OPENING - AMOUNT, AMOUNT) },
+  { lead: `✓ ${REPRODUCE.safeLead}`, text: REPRODUCE.hintAfterSafe(4) },
+  { lead: '', text: REPRODUCE.demoDone },
+]
+
 /** Lane A's first step button, when the steps can be tapped. */
 function firstStep(figure: HTMLElement | null): HTMLButtonElement | null {
   return figure?.querySelector<HTMLButtonElement>('.lane-a button') ?? null
@@ -333,9 +343,19 @@ export function Reproduce(props: {
           hinting={demo === 'DONE' && tries === 0}
         />
       </div>
-      <p class="announce" aria-live="polite">
-        {message}
-      </p>
+      <div class="announce">
+        {/* The longest messages, laid out but invisible, so the box never changes height. */}
+        {ANNOUNCE_SIZERS.map((sizer) => (
+          <p
+            key={sizer.text}
+            class="sizer"
+            aria-hidden="true"
+            data-lead={sizer.lead}
+            data-text={sizer.text}
+          />
+        ))}
+        <p aria-live="polite">{message}</p>
+      </div>
       <MoneyPanel picture={playback.picture} final={playback.final} texts={MONEY_TEXT} />
       {losingLine !== null ? (
         <div class="next">

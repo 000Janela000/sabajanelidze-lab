@@ -8,14 +8,15 @@ export interface MoneyPanelTexts {
   readonly balance: string
   readonly held: string
   readonly paidOut: string
-  readonly short: string
   readonly lost: string
+  /** Shown under "Money lost" while a run is still going. */
+  readonly pending: string
   readonly none: string
 }
 
 /**
  * "The books": our ledger next to the bank's own record. A number that changes fades in (it is keyed by its value).
- * When money is lost, the panel turns red and gets stamped.
+ * When money is lost, the panel turns red and gets stamped. Nothing here changes its size between states.
  */
 export function MoneyPanel(props: { picture: MoneyPicture; final: boolean; texts: MoneyPanelTexts }) {
   const { picture, final, texts } = props
@@ -54,15 +55,18 @@ export function MoneyPanel(props: { picture: MoneyPicture; final: boolean; texts
             {formatCents(picture.paidOut)}
           </dd>
         </div>
-        {final ? (
-          <div class="r verdict">
-            <dt>{lost ? texts.short : texts.lost}</dt>
-            <dd class="tnum">
+        {/* Always there, so the columns never rewrap when the verdict arrives. */}
+        <div class="r verdict">
+          <dt>{texts.lost}</dt>
+          {final ? (
+            <dd class="tnum" key={lost ? 'lost' : 'none'}>
               <span aria-hidden="true">{lost ? '✗ ' : '✓ '}</span>
               {lost ? formatCents(Math.abs(picture.lost)) : texts.none}
             </dd>
-          </div>
-        ) : null}
+          ) : (
+            <dd class="pending">{texts.pending}</dd>
+          )}
+        </div>
       </dl>
     </section>
   )

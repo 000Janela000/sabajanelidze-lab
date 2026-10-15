@@ -123,11 +123,26 @@ export function PaymentsIncident(props: Props) {
             </li>
           ))}
         </ol>
-        {playing ? (
-          <button type="button" class="btn-2 console-pause" aria-pressed={paused} onClick={togglePause}>
-            {paused ? CONSOLE.resume : CONSOLE.pause}
+        <div class="console-meta">
+          <span>
+            {CONSOLE.title} · {CONSOLE.timing}
+          </span>
+          {/* Always in the row, so the header keeps its height; between runs it is invisible and out of reach. */}
+          <button
+            type="button"
+            class={`btn-2 console-pause${playing ? '' : ' is-idle'}`}
+            aria-pressed={paused}
+            aria-hidden={playing ? undefined : 'true'}
+            tabIndex={playing ? undefined : -1}
+            disabled={!playing}
+            onClick={togglePause}
+          >
+            <span class="label-stack">
+              <span class={paused ? 'is-off' : ''}>{CONSOLE.pause}</span>
+              <span class={paused ? '' : 'is-off'}>{CONSOLE.resume}</span>
+            </span>
           </button>
-        ) : null}
+        </div>
       </header>
       <div class="console-body">
         {receipts.some(Boolean) ? (
@@ -198,9 +213,6 @@ export function PaymentsIncident(props: Props) {
           ) : null}
         </div>
       </div>
-      <p class="console-foot">
-        {CONSOLE.title} · {CONSOLE.timing}
-      </p>
     </section>
   )
 }
