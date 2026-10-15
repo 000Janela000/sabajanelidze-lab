@@ -1,6 +1,6 @@
 # `<race-figure>` — the payments race, as one element
 
-Version **1.1.0** (1.1.0: "Exchange short", the link says "Reproduce it yourself →", and step labels no longer overlap on narrow phones). Built from the lab repo (`packages/race-figure`). The lab's home page uses it, and the portfolio's home page embeds the same files.
+Version **1.1.1**. 1.1.0: "Exchange short", and the link says "Reproduce it yourself →". 1.1.1: on phones the figure keeps one height from the first step to the result (the link sits on its own line, and "Exchange short" keeps its place while a run plays), and below 336 px wide step 2 reads "read and check the balance" so every label fits its row. Built from the lab repo (`packages/race-figure`). The lab's home page uses it, and the portfolio's home page embeds the same files.
 
 ## What it shows
 
@@ -55,7 +55,7 @@ It reads the design tokens of the page around it, so it follows light and dark. 
 | `--rf-radius` | `var(--radius-card)` |
 | `--rf-row` (height of one step) | `2.6rem` |
 
-Size, as measured in the portfolio's hero (2026-10-15, version 1.0.0): 413 × 438 px on desktop, 335 × 419 px on a 390 px phone. Since 1.1.0 the rows keep their full height on phones (labels are a little smaller instead, so the longest step takes two lines, not three), so phones show it about 20 px taller. At most 28 rem (448 px) wide; full width on phones.
+Size, as measured in the portfolio's hero (2026-10-15, version 1.0.0): 413 × 438 px on desktop, 335 × 419 px on a 390 px phone. Since 1.1.0 the rows keep their full height on phones (labels are a little smaller instead, so the longest step takes two lines, not three), so phones show it about 20 px taller. Measured in the lab (1.1.1): 489 px tall at a 350 px wide figure, 508 px at 272 to 320 px wide, the same while playing and after. At most 28 rem (448 px) wide; full width on phones.
 
 ## Develop
 

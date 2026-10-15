@@ -38,6 +38,19 @@ test('the pause control stops the run and goes on from the same step', async ({ 
   await expect(figure.locator('figcaption')).toContainText(LOST, { timeout: 8000 })
 })
 
+test('on a phone the figure keeps one height from the first step to the result', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/')
+  test.skip(await reducedMotion(page), 'nothing plays with reduced motion')
+  const figure = page.locator('race-figure')
+  await figure.scrollIntoViewIfNeeded()
+  await expect(figure.getByRole('button', { name: 'Pause' })).toBeVisible()
+  const playing = await figure.evaluate((element) => element.getBoundingClientRect().height)
+  await expect(figure.getByRole('button', { name: 'Run another order' })).toBeVisible({ timeout: 8000 })
+  const ended = await figure.evaluate((element) => element.getBoundingClientRect().height)
+  expect(ended).toBe(playing)
+})
+
 test.describe('with reduced motion', () => {
   test.use({ reducedMotion: 'reduce' })
 

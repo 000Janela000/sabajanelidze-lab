@@ -2,6 +2,8 @@
 export const TEXTS = {
   label: 'Two withdrawals of 80 from a balance of 100, running at the same time',
   steps: ['load the customer', 'read the balance, check 80 ≤ balance', 'save the new balance', 'pay out'],
+  /** The same steps on very narrow phones, where the long label would take four lines. */
+  stepsNarrow: ['load the customer', 'read and check the balance', 'save the new balance', 'pay out'],
   paid: 'paid 80',
   refused: 'refused',
   balance: 'Balance',

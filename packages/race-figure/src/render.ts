@@ -23,7 +23,14 @@ function laneHtml(name: Name, lane: Lane): string {
 
 export function figureHtml(frame: Frame, captionText: string, labUrl: string): string {
   const steps = TEXTS.steps
-    .map((step, index) => `<span class="rf-step"><b>${index + 1}</b> ${escapeHtml(step)}</span>`)
+    .map((step, index) => {
+      const narrow = TEXTS.stepsNarrow[index] ?? step
+      const label =
+        narrow === step
+          ? escapeHtml(step)
+          : `<span class="rf-wide">${escapeHtml(step)}</span><span class="rf-narrow">${escapeHtml(narrow)}</span>`
+      return `<span class="rf-step"><b>${index + 1}</b> ${label}</span>`
+    })
     .join('')
   return `<figure class="rf${frame.short ? ' rf-lost' : ''}" aria-label="${escapeHtml(TEXTS.label)}"><div class="rf-lanes" aria-hidden="true"><div class="rf-steps"><span class="rf-name"></span>${steps}<span class="rf-res"></span></div>${NAMES.map((name) => laneHtml(name, frame.lanes[name])).join('')}</div><dl class="rf-books"><div><dt>${TEXTS.balance}</dt><dd data-rf="balance">${frame.balance}</dd></div><div><dt>${TEXTS.paidOut}</dt><dd data-rf="paid">${frame.paidOut}</dd></div><div class="rf-short-row"${frame.short ? '' : ' hidden'}><dt>${TEXTS.short80}</dt><dd data-rf="short">${frame.short ?? ''}</dd></div></dl><figcaption class="rf-caption" aria-live="polite">${escapeHtml(captionText)}</figcaption><div class="rf-actions"><button type="button" class="rf-btn" data-rf="another" hidden>${TEXTS.another}</button><button type="button" class="rf-btn rf-btn-2" data-rf="pause" aria-pressed="false" hidden>${TEXTS.pause}</button><a class="rf-link" href="${escapeHtml(labUrl)}">${TEXTS.find}</a></div><p class="rf-note">${escapeHtml(TEXTS.note)}</p></figure>`
 }

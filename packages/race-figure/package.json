@@ -1,6 +1,6 @@
 {
   "name": "@lab/race-figure",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "private": true,
   "type": "module",
   "description": "The payments race as one embeddable element, <race-figure>: two withdrawals of 80 from a balance of 100, replayed from recorded traces of the lab's real code.",

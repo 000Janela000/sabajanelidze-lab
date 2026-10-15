@@ -55,6 +55,10 @@ race-figure .rf-step {
   color: var(--rf-muted);
 }
 
+race-figure .rf-narrow {
+  display: none;
+}
+
 race-figure .rf-step b {
   font-weight: 600;
   color: var(--rf-fg);
@@ -168,8 +172,15 @@ race-figure .rf-books div {
   gap: 0.4rem;
 }
 
+/* "Exchange short" keeps its place while a run plays, so nothing below moves when a loss appears. */
 race-figure .rf-books div[hidden] {
-  display: none;
+  display: flex;
+  visibility: hidden;
+}
+
+/* Room for the amount ("80") before it is written in. */
+race-figure .rf-books [data-rf="short"] {
+  min-width: 2ch;
 }
 
 race-figure .rf-books dt {
@@ -269,5 +280,31 @@ race-figure :focus-visible {
   /* Smaller labels, so the longest step ("read the balance, check 80 ≤ balance") takes two lines, not three. */
   race-figure .rf-step {
     font-size: 0.8125rem;
+  }
+
+  /* The link on its own line, so the row keeps its height when "Pause" turns into "Run another order". */
+  race-figure .rf-actions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* Very narrow phones (320 px): narrower lanes and the shorter label for step 2, so every label fits its row. */
+@media (max-width: 21rem) {
+  race-figure .rf-lanes {
+    grid-template-columns: minmax(0, 1fr) 3.4rem 3.4rem;
+    column-gap: 0.25rem;
+  }
+
+  race-figure .rf-res {
+    font-size: 0.8125rem;
+  }
+
+  race-figure .rf-wide {
+    display: none;
+  }
+
+  race-figure .rf-narrow {
+    display: inline;
   }
 }
