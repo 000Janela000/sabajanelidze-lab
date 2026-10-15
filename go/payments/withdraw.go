@@ -9,7 +9,8 @@ import (
 
 // Withdraw is build v1 in Go: reserve, then settle. The check and the move are one atomic step,
 // so a second request can never reserve money the first one already holds.
-// A repeated payout ID gets the first request's answer, and nothing moves twice.
+// A repeated payout ID never moves money again: it gets the stored answer
+// (UNKNOWN while the first payout is still on hold).
 func Withdraw(ctx context.Context, store Store, bank Bank, req Request) (Result, error) {
 	if req.Amount <= 0 {
 		return refused(RefusalInvalidAmount), nil

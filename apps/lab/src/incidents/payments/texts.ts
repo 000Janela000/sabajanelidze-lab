@@ -221,11 +221,11 @@ export const PROOF = {
       ': a timeout keeps the money on hold; it is resolved by asking the bank, never by paying again.',
     goRace: 'The Go version',
     goRaceText:
-      ": the same fix in Go, with the same codes and the same SQL. Its tests send 20 withdrawals at once, in memory and on a real Postgres server, under Go's race detector (a tool that fails the test if two parts of the program touch the same memory at the same time without a lock). Build v1 pays out once; build v0.1 pays out more than once.",
+      ": the same fix in Go, with the same codes and the same reserve SQL. Its tests send 20 withdrawals at once, in memory and on a real Postgres server, under Go's race detector (a tool that fails the test when one part of the program writes to memory while another part reads or writes it, with nothing keeping them in order). Build v1 pays out once; build v0.1 pays out more than once.",
   },
   tradeOffHeading: 'The trade-off',
-  tradeOff: (losing: number, runs: number) =>
-    `A lock around both the read and the save also holds (${losing} of ${runs} ways to run lose money). The reserve is still the better step, for two reasons. It is one statement, so there is no lock to forget to release on an early return (look at the extra unlock the lock version needs). And money in flight gets its own state, "on hold", so a timeout or a refused payout can be settled or released later from the books.`,
+  tradeOff: (losing: number, runs: number, naiveRuns: number) =>
+    `A lock around both the read and the save also holds: ${losing} of its ${runs} ways to run lose money (its steps differ from build v0.1, so it has ${runs} ways to run, not ${naiveRuns}). The reserve is still the better step, for two reasons. It is one statement, so there is no lock to forget to release on an early return (look at the extra unlock the lock version needs). And money in flight gets its own state, "on hold", so a timeout or a refused payout can be settled or released later from the books.`,
   lockBothTitle: 'Lock around the read and the save (also safe)',
   postgresIntro:
     'On a real database the reserve is one statement: a conditional update, and the payout record in the same statement. The CHECK (available >= 0) on the table is a backstop, not the fix.',
@@ -234,14 +234,16 @@ export const PROOF = {
   realDatabaseText:
     ': in CI, 20 withdrawals of 80 hit a real Postgres server at once, each waiting 20 ms after its read like a slow network. Build v1 pays out exactly once. Build v0.1, on the same database, pays out more than once.',
   deadlock:
-    "That test also caught a bug the in-memory model can't show: a deadlock. A request repeating a payout ID held the balance row and waited for the payout row, while the settle of the first request held the payout row and waited for the balance row. The fix is the usual one: every statement takes the balance row first.",
+    "That test also caught a bug the in-memory model can't show: a deadlock. A request repeating a payout ID held the balance row and waited for the payout row, while the settle of the first request held the payout row and waited for the balance row. The fix is the usual one: settle and release now lock the balance row first, in the same order as the reserve.",
   lockOrderTitle: 'The lock order (found by the real-database test)',
   cleanUpHeading: 'The clean-up code',
   resolveTitle: 'Resolve an unknown payout',
-  reconcileTitle: "Tonight's reconciliation",
+  reconcileTitle: 'Reconciliation (a demo: it runs on the in-memory store)',
   chainHeading: 'How this code was built',
   chain: (commits: number, agentCommits: number, checksRun: number, refusals: number) =>
-    `${commits} ${commits === 1 ? 'commit' : 'commits'}, ${agentCommits} of them written by an AI agent (Claude) under automatic checks. The checks ran ${checksRun} ${checksRun === 1 ? 'time' : 'times'} before commits on these files and refused ${refusals}. Codex (another company's AI) reviewed the money code and found seven problems; all were fixed with tests. Last change:`,
+    `${commits} ${commits === 1 ? 'commit' : 'commits'} on this code, ${agentCommits === commits ? 'all' : agentCommits} written by an AI agent (Claude). The local checks before a commit ran ${checksRun} ${checksRun === 1 ? 'time' : 'times'} on this code and refused ${refusals}; on every push, CI runs the tests, the real-database race and Go's race detector. Codex (another company's AI) reviewed the money code twice: eight problems in the TypeScript, four in the Go version. All were fixed, with tests for the money cases.`,
+  ciLink: 'CI result for this build',
+  lastChange: 'Last change:',
   approval: 'Saba approves each incident before it goes live.',
   book: 'I build this for teams that handle money.',
   bookButton: 'Book a call',

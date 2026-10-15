@@ -31,7 +31,8 @@ export const refused = (reason: Refusal): WithdrawResult => ({ status: WITHDRAW_
 /**
  * Build v1: reserve, then settle. The check and the move are one atomic step,
  * so a second request can never reserve money the first one already holds.
- * A repeated payout ID gets the first request's answer, and nothing moves twice.
+ * A repeated payout ID never moves money again: it gets the stored answer
+ * (UNKNOWN while the first payout is still on hold).
  */
 export const withdraw: Withdraw = async ({ store, bank }, { customerId, amount, payoutId }) => {
   const amountIsValid = isValidAmount(amount)

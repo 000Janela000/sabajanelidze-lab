@@ -35,6 +35,20 @@ export const FILES = {
   GO_POSTGRES_TEST: 'go/payments/postgres_test.go',
 } as const
 
+/** Where the payment code, its simulator and their tests live now, and lived before the folder move (`1908990`). */
+const HISTORY = [
+  CORE,
+  'packages/core/src/simulation',
+  'packages/core/src/sim',
+  'packages/core/test/payments',
+  'packages/core/test/simulation',
+  'packages/core/test/withdraw.test.ts',
+  'packages/core/test/race.test.ts',
+  'packages/core/test/properties.test.ts',
+  'packages/core/test/postgres.test.ts',
+  'go/payments',
+]
+
 export async function paymentsBuildData() {
   const code = {
     v01: excerpt(FILES.BUILD_V01, 'build-v0.1'),
@@ -81,7 +95,7 @@ export async function paymentsBuildData() {
     goRace: lineUrl(FILES.GO_RACE_TEST, 'func TestTwentyAtOnceBuildV1PaysOnce'),
   }
 
-  const chain = buildChain(Object.values(FILES))
+  const chain = buildChain(HISTORY)
 
   return {
     code,

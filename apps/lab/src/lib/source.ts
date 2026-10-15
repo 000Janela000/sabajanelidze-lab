@@ -108,11 +108,17 @@ export interface BuildChain {
   readonly refusals: number
   readonly lastCommit: string
   readonly lastCommitUrl: string
+  /** The CI checks of the commit the site is built from. */
+  readonly ciUrl: string
 }
 
-/** How these files were built, from git and the check log. Nothing here is typed by hand. */
-export function buildChain(files: readonly string[]): BuildChain {
-  const log = execFileSync('git', ['log', '--format=%H%x09%an', '--', ...files], {
+/**
+ * How this code was built, from git and the check log. Nothing here is typed by hand.
+ * `paths` are files or folders, old names included, so the history survives a folder move.
+ */
+export function buildChain(paths: readonly string[]): BuildChain {
+  const covers = (file: string) => paths.some((path) => file === path || file.startsWith(`${path}/`))
+  const log = execFileSync('git', ['log', '--format=%H%x09%an', '--', ...paths], {
     cwd: repoRoot,
     encoding: 'utf8',
   })
@@ -130,7 +136,7 @@ export function buildChain(files: readonly string[]): BuildChain {
         .split('\n')
         .filter(Boolean)
         .map((line) => JSON.parse(line) as { ok: boolean; files: string[] })
-        .filter((run) => run.files.some((file) => files.includes(file)))
+        .filter((run) => run.files.some(covers))
     : []
 
   const last = log[0]?.hash ?? commit()
@@ -141,6 +147,7 @@ export function buildChain(files: readonly string[]): BuildChain {
     refusals: runs.filter((run) => !run.ok).length,
     lastCommit: last.slice(0, 7),
     lastCommitUrl: `${REPO_URL}/commit/${last}`,
+    ciUrl: `${REPO_URL}/commit/${commit()}/checks`,
   }
 }
 
