@@ -39,7 +39,8 @@ export function Fix(props: {
     let losingLine: number | null = null
     if (summary.losing > 0) {
       for (let line = 1; line <= summary.linesPerRequest; line++) {
-        if ((await pauseAfter(code, OPENING, AMOUNT, line)).picture.lost !== 0) {
+        const outcome = await pauseAfter(code, OPENING, AMOUNT, line)
+        if (outcome.picture.lost !== 0) {
           losingLine = line
           break
         }

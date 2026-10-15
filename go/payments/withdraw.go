@@ -42,9 +42,11 @@ func Withdraw(ctx context.Context, store Store, bank Bank, req Request) (Result,
 	}
 
 	if answer == BankPaid {
-		return Result{Status: StatusPaid}, store.Settle(ctx, req.PayoutID)
+		err = store.Settle(ctx, req.PayoutID)
+		return Result{Status: StatusPaid}, err
 	}
-	return refused(RefusalBankRefused), store.Release(ctx, req.PayoutID)
+	err = store.Release(ctx, req.PayoutID)
+	return refused(RefusalBankRefused), err
 }
 
 // answerFor is the stored answer for a repeated payout ID. The same ID with a different request is refused.

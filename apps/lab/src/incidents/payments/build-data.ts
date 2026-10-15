@@ -60,7 +60,8 @@ export async function paymentsBuildData() {
 
   const losingLines: number[] = []
   for (let line = 1; line <= runs.naive.linesPerRequest; line++) {
-    if ((await pauseAfter(withdrawV01, OPENING, AMOUNT, line)).picture.lost !== 0) losingLines.push(line)
+    const outcome = await pauseAfter(withdrawV01, OPENING, AMOUNT, line)
+    if (outcome.picture.lost !== 0) losingLines.push(line)
   }
   const lossExample = runs.naive.outcomes.find((outcome) => outcome.picture.lost !== 0)?.picture ?? null
 

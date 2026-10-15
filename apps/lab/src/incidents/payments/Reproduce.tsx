@@ -200,7 +200,8 @@ export function Reproduce(props: {
     show()
     for (;;) {
       await tick()
-      if (!(await race.step('B'))) break
+      const stepped = await race.step('B')
+      if (!stepped) break
       show()
     }
     slow = null

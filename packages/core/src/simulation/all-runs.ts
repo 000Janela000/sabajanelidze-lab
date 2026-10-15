@@ -46,10 +46,12 @@ export async function pauseAfter(
 ): Promise<RaceOutcome> {
   const race = await Race.start({ withdraw, opening, amounts: [amount, amount] })
   for (let line = 0; line < afterLine; line++) {
-    if (!(await race.step('A'))) break
+    const stepped = await race.step('A')
+    if (!stepped) break
   }
   for (;;) {
-    if (!(await race.step('B'))) break
+    const stepped = await race.step('B')
+    if (!stepped) break
   }
   await race.finish()
   return race.outcome()

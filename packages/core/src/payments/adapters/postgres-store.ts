@@ -37,7 +37,8 @@ export class PostgresPaymentsStore implements PaymentsStore {
   }
 
   async readAvailable(customerId: string): Promise<Cents> {
-    return (await this.balance(customerId)).available
+    const balance = await this.balance(customerId)
+    return balance.available
   }
 
   async writeAvailable(customerId: string, value: Cents): Promise<void> {
@@ -69,7 +70,8 @@ export class PostgresPaymentsStore implements PaymentsStore {
       if ((error as { code?: string }).code === '23505') return RESERVE_RESULT.DUPLICATE
       throw error
     }
-    return (await this.payout(payoutId)) ? RESERVE_RESULT.DUPLICATE : RESERVE_RESULT.INSUFFICIENT_FUNDS
+    const existing = await this.payout(payoutId)
+    return existing ? RESERVE_RESULT.DUPLICATE : RESERVE_RESULT.INSUFFICIENT_FUNDS
   }
 
   async payout(payoutId: string): Promise<PayoutRecord | null> {
