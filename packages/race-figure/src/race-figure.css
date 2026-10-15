@@ -259,11 +259,15 @@ race-figure :focus-visible {
 
 @media (max-width: 30rem) {
   race-figure {
-    --rf-row: 2.3rem;
     max-width: none;
   }
 
   race-figure .rf-lanes {
     grid-template-columns: minmax(0, 1fr) 4rem 4rem;
+  }
+
+  /* Smaller labels, so the longest step ("read the balance, check 80 ≤ balance") takes two lines, not three. */
+  race-figure .rf-step {
+    font-size: 0.8125rem;
   }
 }
