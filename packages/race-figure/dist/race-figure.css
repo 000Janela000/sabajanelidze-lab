@@ -282,6 +282,11 @@ race-figure :focus-visible {
     font-size: 0.8125rem;
   }
 
+  /* "Exchange short" on its own line, so the books don't rewrap as the digits change during a run. */
+  race-figure .rf-short-row {
+    flex-basis: 100%;
+  }
+
   /* The link on its own line, so the row keeps its height when "Pause" turns into "Run another order". */
   race-figure .rf-actions {
     flex-direction: column;

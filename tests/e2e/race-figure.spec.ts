@@ -47,12 +47,22 @@ test('on a phone the figure keeps one height from the first step to the result',
     content: '@layer base { [hidden]:where(:not([hidden=until-found])) { display: none !important; } }',
   })
   const figure = page.locator('race-figure')
+  // Every frame's height, from before the run (idle) to its result: the digits change, the height must not.
+  await figure.evaluate((element) => {
+    const heights: number[] = []
+    ;(window as unknown as { heights: number[] }).heights = heights
+    const sample = () => {
+      heights.push(element.getBoundingClientRect().height)
+      requestAnimationFrame(sample)
+    }
+    sample()
+  })
   await figure.scrollIntoViewIfNeeded()
   await expect(figure.getByRole('button', { name: 'Pause' })).toBeVisible()
-  const playing = await figure.evaluate((element) => element.getBoundingClientRect().height)
   await expect(figure.getByRole('button', { name: 'Run another order' })).toBeVisible({ timeout: 8000 })
-  const ended = await figure.evaluate((element) => element.getBoundingClientRect().height)
-  expect(ended).toBe(playing)
+  const heights = await page.evaluate(() => (window as unknown as { heights: number[] }).heights)
+  expect(heights.length).toBeGreaterThan(30)
+  expect(Math.max(...heights) - Math.min(...heights)).toBeLessThan(1)
 })
 
 test.describe('with reduced motion', () => {
