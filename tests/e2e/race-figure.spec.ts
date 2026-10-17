@@ -65,6 +65,37 @@ test('on a phone the figure keeps one height from the first step to the result',
   expect(Math.max(...heights) - Math.min(...heights)).toBeLessThan(1)
 })
 
+test('the figure is as tall before its script runs as after, so nothing under it moves when it upgrades', async ({
+  browser,
+}, info) => {
+  test.skip(info.project.name !== 'desktop', 'one run covers every width')
+  const baseURL = info.project.use.baseURL
+  for (const width of [1024, 1280, 1440, 320, 390, 430]) {
+    const heights: number[] = []
+    for (const javaScriptEnabled of [false, true]) {
+      const context = await browser.newContext({
+        baseURL,
+        viewport: { width, height: 900 },
+        javaScriptEnabled,
+      })
+      const page = await context.newPage()
+      await page.goto('/')
+      const figure = page.locator('race-figure')
+      if (javaScriptEnabled) {
+        await expect(figure.getByRole('button', { name: 'Run another order' })).toBeVisible({ timeout: 8000 })
+      }
+      const box = await figure.boundingBox()
+      heights.push(box?.height ?? 0)
+      await context.close()
+    }
+    const [before = 0, after = 0] = heights
+    expect(
+      Math.abs(after - before),
+      `${width} px: ${before} without the script, ${after} with it`,
+    ).toBeLessThan(1)
+  }
+})
+
 test.describe('with reduced motion', () => {
   test.use({ reducedMotion: 'reduce' })
 

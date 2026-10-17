@@ -203,11 +203,14 @@ race-figure .rf-caption {
   margin-top: 0.5rem;
 }
 
+/* As tall as a button from the start: before the script runs only the link shows, after it one button does,
+   and the figure must not grow when it upgrades (everything under it on a page would move). */
 race-figure .rf-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem 1rem;
+  min-height: 44px;
   margin-top: 0.5rem;
 }
 
@@ -287,10 +290,12 @@ race-figure :focus-visible {
     flex-basis: 100%;
   }
 
-  /* The link on its own line, so the row keeps its height when "Pause" turns into "Run another order". */
+  /* The link on its own line, so the row keeps its height when "Pause" turns into "Run another order". It is as tall
+     as a button, the gap and the link from the start, so the figure does not grow when its script runs either. */
   race-figure .rf-actions {
     flex-direction: column;
     align-items: flex-start;
+    min-height: calc(44px + 0.5rem + 1lh);
   }
 }
 
