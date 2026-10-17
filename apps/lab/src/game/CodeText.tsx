@@ -16,3 +16,37 @@ export function CodeText(props: { readonly tokens: readonly CodeToken[] }) {
     </>
   )
 }
+
+/**
+ * One line of code that wraps under its own indent: the leading spaces become a padding, and a wrapped part starts
+ * two characters further in, so a long line that wraps on a phone still reads as one line.
+ */
+export function IndentedCode(props: { readonly tokens: readonly CodeToken[] }) {
+  const indent = leadingSpaces(props.tokens)
+  return (
+    <code class="wrap-code" style={{ '--i': indent }}>
+      <CodeText tokens={withoutIndent(props.tokens, indent)} />
+    </code>
+  )
+}
+
+function leadingSpaces(tokens: readonly CodeToken[]): number {
+  const text = tokens.map((token) => token.text).join('')
+  return text.length - text.trimStart().length
+}
+
+function withoutIndent(tokens: readonly CodeToken[], indent: number): CodeToken[] {
+  let left = indent
+  const out: CodeToken[] = []
+  for (const token of tokens) {
+    if (left > 0) {
+      const cut = Math.min(left, token.text.length)
+      left -= cut
+      const rest = token.text.slice(cut)
+      if (rest) out.push({ ...token, text: rest })
+      continue
+    }
+    out.push(token)
+  }
+  return out
+}

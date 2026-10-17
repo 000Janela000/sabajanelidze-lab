@@ -73,17 +73,72 @@ export const PAGE = {
 /** The console: the dark panel where the game runs. */
 export const CONSOLE = {
   label: 'The console',
-  title: 'build v0.1 · withdraw 80 · real code',
-  timing: 'simulated timing',
   steps: ['Reproduce', 'Count', 'Fix'],
   progressLabel: 'Steps of this incident',
   pause: 'Pause',
   resume: 'Resume',
+  /** The light in the header that is lit while the machine runs something. */
+  running: 'RUN',
+  /** What the screen shows, per stage: long on wide screens, short on phones. */
+  screen: {
+    REPRODUCE: {
+      long: 'build v0.1 · withdraw 80 · real code · simulated timing',
+      short: 'v0.1 · real code · simulated timing',
+    },
+    COUNT: {
+      long: 'build v0.1 · every order of its 8 steps · real code',
+      short: 'v0.1 · every order · real code',
+    },
+    FIX: { long: 'three patches · real code', short: 'three patches · real code' },
+    SOLVED: { long: 'build v1 · reserve, then settle · real code', short: 'v1 · reserve, then settle' },
+    DEEPER: {
+      long: 'build v1 · real code · a simulated bank that stops answering',
+      short: 'v1 · a bank that stops answering',
+    },
+  },
+  viewsLabel: 'What the screen shows',
+  views: { RACE: 'Race', CODE: 'Code', PATCH: 'Patch', RESULT: 'Result' },
+  /** Shown at the foot of a code box that has more lines below. */
+  more: 'more below ↓',
+}
+
+/** The strip of five numbers under the screen: the books, or what each step found so far. */
+export const READOUT = {
+  unknown: '?',
+  empty: '—',
+  count: {
+    title: 'The count',
+    subtitle: 'what you found so far',
+    reproduced: 'Reproduced',
+    tries: (tries: number) => `try ${tries}`,
+    short: 'Short by',
+    guess: 'Your guess',
+    lose: 'Lose money',
+    runs: 'Ways to run',
+  },
+  fix: {
+    title: 'The attack',
+    subtitle: 'every way to run, against the books',
+    before: 'v0.1 loses',
+    of: (losing: number, runs: number) => `${losing} of ${runs}`,
+    ofUnknown: (runs: number) => `? of ${runs}`,
+    /** The same, for a narrow console. */
+    ofShort: (losing: number | string, runs: number) => `${losing}/${runs}`,
+    patch: 'Patch',
+    lose: 'Patch loses',
+    tries: 'Tries',
+  },
+  solved: {
+    title: 'The result',
+    subtitle: 'build v0.1 against the fix',
+    fix: 'The fix',
+    lose: 'Fix loses',
+  },
 }
 
 export const REPRODUCE = {
   heading: 'Reproduce it',
-  goal: "Your job: make the bank pay twice. The customer's two taps are requests A and B, running at once. Tap a step on lane A: A gets slow right after it, B runs past, then A finishes.",
+  goal: "Your job: make the bank pay twice. A and B are the customer's two taps, at once. Tap a step on lane A: A gets slow there, B runs past, A finishes.",
   demoLead: 'Watch one run first.',
   demoDone:
     'That one was fine: A got slow after step 1, then read 20 and was refused. Your turn: tap a step on lane A.',
@@ -94,7 +149,7 @@ export const REPRODUCE = {
   pickLabel: (step: number, label: string) => `Make request A slow after step ${step}: ${label}`,
   slowHere: 'slow here',
   result: { PAID: 'paid 80', REFUSED: 'refused', UNKNOWN: 'unknown' } as Record<string, string>,
-  showCode: 'Show the code it runs',
+  running: (step: number) => `Request A gets slow after step ${step}…`,
   requestTitle: (name: string) => `Request ${name}`,
   tagA: 'build v0.1 · withdraw 80',
   stepState: { DONE: 'done', NOW: 'now', TODO: '' },
@@ -105,59 +160,68 @@ export const REPRODUCE = {
   lostLead: (tries: number) => `Reproduced on try ${tries}.`,
   lost: (line: number, paidOut: number, available: number, short: number) =>
     `With request A slow after step ${line}, the bank paid out ${formatCents(paidOut)} and the balance still shows ${formatCents(available)}. The exchange is ${formatCents(short)} short.`,
-  safeLead: 'No money lost.',
-  safe: (line: number) => `With request A slow after step ${line}, both requests behaved. Try another step.`,
   next: 'Next: how often does this happen? →',
+  nextLocked: 'Next: reproduce it first',
   replay: 'Replay the losing order',
 }
 
 export const COUNT = {
   heading: 'How often does it happen?',
-  receipt: (tries: number, line: number, paidOut: number, available: number, short: number) =>
-    `Reproduced on try ${tries}: A slow after step ${line} → bank paid ${formatCents(paidOut)} · balance ${formatCents(available)} · ${formatCents(short)} short`,
   question: (runs: number) =>
-    `The two requests can run in ${runs} different ways (different orders of their steps). How many of them lose money? Guess first, then let the machine run them all.`,
+    `The two requests can run in ${runs} different ways (orders of their steps). How many lose money? Guess first, then let the machine run them all.`,
+  prompt: (runs: number) => `Your guess first: how many of the ${runs} lose money?`,
   guessLabel: 'Your guess',
   run: (runs: number) => `Run all ${runs}`,
   of: (runs: number) => `of ${runs} ways to run`,
   loseMoney: 'lose money',
-  yourGuess: (guess: string) => `· your guess: ${guess}`,
-  legendSafe: (count: number) => `safe · ${count}`,
-  legendLost: (count: number) => `lost money · ${count}`,
+  legendSafe: (count: number | string) => `safe · ${count}`,
+  legendLost: (count: number | string) => `lost money · ${count}`,
+  notRun: (runs: number) => `Not run yet: ${runs} ways to run, each one a square.`,
   figureTitle: 'Every way the two requests can run.',
   figureText: (runs: number) =>
-    `Build v0.1 loses money whenever both requests read the balance before either one saves. Each square is one order of the eight steps; the machine ran all ${runs} and checked the books after each.`,
+    `Each square is one order of the eight steps; the machine runs all ${runs} and checks the books after each.`,
   result: (losing: number, runs: number, guess: string) =>
     `${losing} of ${runs} ways to run lose money${guess ? ` (your guess: ${guess})` : ''}. Build v0.1 loses money whenever both requests read the balance before either one saves.`,
   next: 'Next: fix it →',
+  nextLocked: 'Next: run them first',
 }
 
 export const FIX = {
   heading: 'Fix it',
-  receipt: (losing: number, runs: number, guess: string) =>
-    `${losing} of ${runs} ways to run lose money${guess ? ` · you guessed ${guess}` : ''}`,
   goal: 'Pick a patch. The machine will attack it with every way the two requests can run.',
+  prompt: 'Pick a patch, then attack it.',
+  ready: (name: string) => `Ready: attack "${name}" with every way the two requests can run.`,
   patchesLegend: 'Patches',
-  showCode: 'show the code',
+  none: 'Pick a patch above to read its code: the lines it changes from build v0.1 are marked. Then attack it.',
+  changed: 'changed',
+  codeLabel: (name: string) => `The code of "${name}"`,
   attack: 'Attack this patch',
+  tryAnother: 'Try another patch',
   stillLoses: (losing: number, runs: number, line: number | null) =>
     `Still loses money in ${losing} of ${runs} ways to run${line ? `, for example when A gets slow after step ${line}` : ''}.`,
   stillLosesWhy: 'The gap between reading and saving is still open. Try another patch.',
   patches: {
     CHECK_TWICE: {
       name: 'Check the balance twice',
+      short: 'Check twice',
       summary: 'Read and check the balance again, just before saving.',
     },
     RESERVE: {
       name: 'Reserve, then settle',
+      short: 'Reserve',
       summary: 'One atomic step moves the 80 to "on hold", only if it is there. Then pay. Then settle.',
     },
-    LOCK_READ: { name: 'Lock only the read', summary: 'Put a lock around reading the balance.' },
+    LOCK_READ: {
+      name: 'Lock only the read',
+      short: 'Lock the read',
+      summary: 'Put a lock around reading the balance.',
+    },
   },
 }
 
 export const SOLVED = {
   heading: (runs: number) => `Fixed: it holds in all ${runs} ways to run`,
+  goal: 'Every way the two requests can run, attacked: none loses money.',
   grid: (runs: number) => `"Reserve, then settle" loses money in 0 of ${runs} ways to run.`,
   why: 'The check and the move are now one atomic step: "move 80 from available to on hold, only if 80 is there". A second request can never reserve money the first one already holds.',
   readCode: 'Read the code and the tests',
@@ -177,9 +241,17 @@ export const SOLVED = {
 
 export const CLEAN_UP = {
   open: 'Go deeper: the bank stops answering',
+  back: '← Back to the result',
+  prompt: 'Pick what you would do. The books show what happens.',
+  /** The screen: one payout, sent, with no answer. */
+  payout: 'payout-1',
+  sent: 'sent to the bank',
+  noAnswer: 'no answer',
+  held: (amount: number) => `${formatCents(amount)} on hold`,
+  choicesLabel: 'What do you do?',
   heading: 'Clean up: the bank timed out',
   situation:
-    'Build v1 is live. A customer withdraws 80. Your code reserves it and calls the bank, and the bank never answers. Did it pay? Your code kept the 80 on hold and marked the payout "unknown". What do you do?',
+    'Build v1 is live. Your code reserved 80 and sent the payout, and the bank never answered. Did it pay? What do you do?',
   choices: {
     SEND_AGAIN: 'Send the payout again',
     ASK_BANK: 'Ask the bank what happened to this payout',

@@ -42,6 +42,8 @@ export interface RaceFigureProps {
   readonly texts: RaceFigureTexts
   /** When set, the steps on lane A are buttons. */
   readonly onPick?: ((step: number) => void) | undefined
+  /** A run is playing: the buttons stay (so focus stays on them) but do nothing until it ends. */
+  readonly busy?: boolean | undefined
   /** Draws attention to lane A's buttons until the first tap. */
   readonly hinting?: boolean | undefined
 }
@@ -78,8 +80,11 @@ function LaneRow(props: { name: 'A' | 'B'; lane: Lane; figure: RaceFigureProps }
                   type="button"
                   class="dot"
                   aria-pressed={figure.slowAfter === index + 1}
+                  aria-disabled={figure.busy ? 'true' : undefined}
                   aria-label={figure.texts.pickLabel(index + 1, step.long)}
-                  onClick={() => pick(index + 1)}
+                  onClick={() => {
+                    if (!figure.busy) pick(index + 1)
+                  }}
                 >
                   <span>{index + 1}</span>
                 </button>
@@ -107,7 +112,11 @@ function LaneRow(props: { name: 'A' | 'B'; lane: Lane; figure: RaceFigureProps }
 
 /** Two lanes, A and B, over the same steps. */
 export function RaceFigure(props: RaceFigureProps) {
-  const classes = ['race', props.hinting ? 'race-hinting' : '', props.onPick ? 'race-pickable' : '']
+  const classes = [
+    'race',
+    props.hinting ? 'race-hinting' : '',
+    props.onPick && !props.busy ? 'race-pickable' : '',
+  ]
   return (
     <fieldset class={classes.filter(Boolean).join(' ')}>
       <legend class="visually-hidden">{props.texts.figure}</legend>

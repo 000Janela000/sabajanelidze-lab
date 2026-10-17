@@ -1,4 +1,5 @@
 import {
+  formatCents,
   type MoneyPicture,
   moneyPicture,
   Race,
@@ -7,16 +8,27 @@ import {
   type WithdrawStatus,
   withdrawV01,
 } from '@lab/core'
+import type { RefObject } from 'preact'
 import { useEffect, useRef, useState } from 'preact/hooks'
 import { CodePanel, type CodePanelTexts } from '../../game/CodePanel.tsx'
 import { FIND_THE_BUG } from '../../game/find-the-bug.ts'
-import { MoneyPanel } from '../../game/MoneyPanel.tsx'
+import { type Said, TONE } from '../../game/Message.tsx'
 import type { PauseGate } from '../../game/pause-gate.ts'
 import { LANE_STATE, type Lane, RaceFigure } from '../../game/RaceFigure.tsx'
+import { READOUT_TONE, type ReadoutCell } from '../../game/Readout.tsx'
 import { REQUEST_STATE, type RequestState } from '../../game/request-state.ts'
+import { ScrollBox } from '../../game/ScrollBox.tsx'
 import type { CodeLine } from '../../lib/code-line.ts'
 import { AMOUNT, CUSTOMER, OPENING, type Reproduction } from './setup.ts'
-import { MONEY_TEXT, REPRODUCE, REQUEST_STATE_TEXT, STEP_SHORT, STEP_TEXT } from './texts.ts'
+import {
+  CONSOLE,
+  MONEY_TEXT,
+  READOUT,
+  REPRODUCE,
+  REQUEST_STATE_TEXT,
+  STEP_SHORT,
+  STEP_TEXT,
+} from './texts.ts'
 
 const NAMES = ['A', 'B'] as const
 type Name = (typeof NAMES)[number]
@@ -24,9 +36,12 @@ type Name = (typeof NAMES)[number]
 /** The step after which A gets slow in the run that plays on arrival: a safe one, so it gives nothing away. */
 const DEMO_STEP = 1
 
+const DEMO = { PLAYING: 'PLAYING', DONE: 'DONE' } as const
+type Demo = (typeof DEMO)[keyof typeof DEMO]
+
 interface Playback {
   readonly lanes: Record<Name, Lane>
-  /** The code line each request waits at, for the "show the code" panel. */
+  /** The code line each request waits at, for the code view. */
   readonly current: number | null
   readonly codeState: RequestState
   readonly picture: MoneyPicture
@@ -75,17 +90,18 @@ function valueAfter(step: string, picture: MoneyPicture): string {
   return '✓'
 }
 
-/**
- * The longest things the message under the figure can say (the numbers of this incident are fixed). They are drawn
- * by CSS from attributes, so they take space without being text on the page (not read, found or indexed).
- */
-const ANNOUNCE_SIZERS = [
-  { lead: `✗ ${REPRODUCE.lostLead(10)}`, text: REPRODUCE.lost(4, AMOUNT * 2, OPENING - AMOUNT, AMOUNT) },
-  { lead: `✓ ${REPRODUCE.safeLead}`, text: REPRODUCE.hintAfterSafe(4) },
-  { lead: '', text: REPRODUCE.demoDone },
+/** The longest things step 1 can say (the numbers of this incident are fixed; 88 stands in for any try count). */
+export const REPRODUCE_SIZERS: readonly Said[] = [
+  {
+    tone: TONE.LOST,
+    lead: REPRODUCE.lostLead(88),
+    text: REPRODUCE.lost(4, AMOUNT * 2, OPENING - AMOUNT, AMOUNT),
+  },
+  { tone: TONE.OK, text: REPRODUCE.hintAfterSafe(4) },
+  { tone: TONE.NONE, text: REPRODUCE.demoDone },
 ]
 
-/** Lane A's first step button, when the steps can be tapped. */
+/** Lane A's first step button. */
 function firstStep(figure: HTMLElement | null): HTMLButtonElement | null {
   return figure?.querySelector<HTMLButtonElement>('.lane-a button') ?? null
 }
@@ -109,21 +125,33 @@ const CODE_TEXTS: CodePanelTexts = {
   lineState: REPRODUCE.stepState,
 }
 
+export interface ReproduceGame {
+  readonly playback: Playback
+  readonly picked: number | null
+  readonly running: boolean
+  readonly hinting: boolean
+  /** The step after which the bug was reproduced, once it was. */
+  readonly losingLine: number | null
+  readonly said: Said | null
+  readonly box: RefObject<HTMLDivElement>
+  readonly lines: readonly CodeLine[]
+  play(afterLine: number, isDemo: boolean): Promise<void>
+}
+
 /**
  * Step 1: the visitor picks where request A gets slow, and two copies of the real build v0.1 run.
  * On arrival one safe run plays by itself, so the figure shows what it does before anyone reads a word.
  */
-export function Reproduce(props: {
+export function useReproduce(props: {
   lines: readonly CodeLine[]
   gate: PauseGate
   onPlaying: (playing: boolean) => void
   onReproduced: (reproduction: Reproduction) => void
-  onNext: () => void
-}) {
+}): ReproduceGame {
   const [playback, setPlayback] = useState<Playback>(START)
   const [picked, setPicked] = useState<number | null>(null)
   const [running, setRunning] = useState(false)
-  const [demo, setDemo] = useState<'PLAYING' | 'DONE' | null>(null)
+  const [demo, setDemo] = useState<Demo | null>(null)
   const [tries, setTries] = useState(0)
   const [result, setResult] = useState<{
     lost: boolean
@@ -133,20 +161,19 @@ export function Reproduce(props: {
   } | null>(null)
   const [losingLine, setLosingLine] = useState<number | null>(null)
   const started = useRef(false)
+  const runningNow = useRef(false)
   const box = useRef<HTMLDivElement>(null)
-  // "Find the bug" was pressed while a run played: focus the first step once the buttons are back.
+  // "Find the bug" was pressed before or during the first run: focus the first step once that run is over.
   const focusWhenReady = useRef(false)
 
-  const steps = props.lines.flatMap((line) =>
-    line.step ? [{ long: STEP_TEXT[line.step], short: STEP_SHORT[line.step] ?? STEP_TEXT[line.step] }] : [],
-  )
-
   async function play(afterLine: number, isDemo: boolean) {
+    if (runningNow.current) return
+    runningNow.current = true
     // A visitor's own run means the demo is no longer needed.
     if (!isDemo) started.current = true
     const attempt = isDemo ? tries : tries + 1
     if (!isDemo) setTries(attempt)
-    setDemo(isDemo ? 'PLAYING' : null)
+    setDemo(isDemo ? DEMO.PLAYING : null)
     setPicked(afterLine)
     setRunning(true)
     props.onPlaying(true)
@@ -231,13 +258,14 @@ export function Reproduce(props: {
       show()
     }
     show(true)
+    runningNow.current = false
     setRunning(false)
     props.onPlaying(false)
 
     const picture = moneyPicture(race.store, race.bank, CUSTOMER, OPENING)
     const lost = picture.lost !== 0
     if (isDemo) {
-      setDemo('DONE')
+      setDemo(DEMO.DONE)
       return
     }
     setResult({ lost, line: afterLine, picture, tries: attempt })
@@ -279,18 +307,17 @@ export function Reproduce(props: {
     return () => observer.disconnect()
   }, [])
 
-  // "Find the bug": once the console has been seen, focus lane A's first step (now, or when the run ends).
-  // Before that the page scrolls to the console as usual, and the first run starts there.
+  // "Find the bug": once the console has been seen and no run plays, focus lane A's first step (now, or when the
+  // run ends). Before that the page scrolls to the console as usual, and the first run starts there.
   useEffect(() => {
     const onFind = (event: Event) => {
-      if (!started.current) {
+      if (!started.current || runningNow.current) {
+        if (started.current) event.preventDefault()
         focusWhenReady.current = true
         return
       }
       event.preventDefault()
-      const button = firstStep(box.current)
-      if (button) button.focus()
-      else focusWhenReady.current = true
+      firstStep(box.current)?.focus()
     }
     window.addEventListener(FIND_THE_BUG, onFind)
     return () => window.removeEventListener(FIND_THE_BUG, onFind)
@@ -303,83 +330,116 @@ export function Reproduce(props: {
   }, [running])
 
   const lastSafe = result && !result.lost ? result.line : null
-  const message = result?.lost ? (
-    <>
-      <span class="x">✗</span> <b>{REPRODUCE.lostLead(result.tries)}</b>{' '}
-      {REPRODUCE.lost(
-        result.line,
-        result.picture.paidOut,
-        result.picture.available,
-        Math.abs(result.picture.lost),
-      )}
-    </>
-  ) : result ? (
-    <>
-      <span class="ok">✓</span> <b>{REPRODUCE.safeLead}</b>{' '}
-      {lastSafe ? REPRODUCE.hintAfterSafe(lastSafe) : null}
-    </>
-  ) : demo === 'PLAYING' ? (
-    REPRODUCE.demoLead
-  ) : demo === 'DONE' ? (
-    REPRODUCE.demoDone
-  ) : null
+  const said: Said | null = result?.lost
+    ? {
+        tone: TONE.LOST,
+        lead: REPRODUCE.lostLead(result.tries),
+        text: REPRODUCE.lost(
+          result.line,
+          result.picture.paidOut,
+          result.picture.available,
+          Math.abs(result.picture.lost),
+        ),
+      }
+    : lastSafe
+      ? { tone: TONE.OK, text: REPRODUCE.hintAfterSafe(lastSafe) }
+      : running && demo === null && picked !== null
+        ? { tone: TONE.NONE, text: REPRODUCE.running(picked) }
+        : demo === DEMO.PLAYING
+          ? { tone: TONE.NONE, text: REPRODUCE.demoLead }
+          : demo === DEMO.DONE
+            ? { tone: TONE.NONE, text: REPRODUCE.demoDone }
+            : null
 
-  return (
-    <>
-      <p class="goal">{REPRODUCE.goal}</p>
-      <div ref={box}>
-        <RaceFigure
-          steps={steps}
-          lanes={playback.lanes}
-          slowAfter={picked}
-          lost={playback.final && playback.picture.lost !== 0}
-          texts={{
-            figure: REPRODUCE.laneFigure,
-            lane: REPRODUCE.lane,
-            pickLabel: REPRODUCE.pickLabel,
-            slowHere: REPRODUCE.slowHere,
-          }}
-          onPick={running ? undefined : (step) => play(step, false)}
-          hinting={demo === 'DONE' && tries === 0}
-        />
-      </div>
-      <div class="announce">
-        {/* The longest messages, laid out but invisible, so the box never changes height. */}
-        {ANNOUNCE_SIZERS.map((sizer) => (
-          <p
-            key={sizer.text}
-            class="sizer"
-            aria-hidden="true"
-            data-lead={sizer.lead}
-            data-text={sizer.text}
-          />
-        ))}
-        <p aria-live="polite">{message}</p>
-      </div>
-      <MoneyPanel picture={playback.picture} final={playback.final} texts={MONEY_TEXT} />
-      {losingLine !== null ? (
-        <div class="next">
-          <button type="button" class="btn" onClick={props.onNext} disabled={running}>
-            {REPRODUCE.next}
-          </button>
-          <button type="button" class="link" onClick={() => play(losingLine, false)} disabled={running}>
-            {REPRODUCE.replay}
-          </button>
-        </div>
-      ) : null}
-      <details class="code-view">
-        <summary>{REPRODUCE.showCode}</summary>
-        <CodePanel
-          id="A"
-          lines={props.lines}
-          current={playback.current}
-          state={playback.codeState}
-          texts={CODE_TEXTS}
-          onPick={running ? undefined : (step) => play(step, false)}
-          paused={picked}
-          pausedLost={playback.final && playback.picture.lost !== 0}
-        />
-      </details>
-    </>
+  return {
+    playback,
+    picked,
+    running,
+    hinting: demo === DEMO.DONE && tries === 0,
+    losingLine,
+    said,
+    box,
+    lines: props.lines,
+    play,
+  }
+}
+
+const STEPS_OF = (lines: readonly CodeLine[]) =>
+  lines.flatMap((line) =>
+    line.step ? [{ long: STEP_TEXT[line.step], short: STEP_SHORT[line.step] ?? STEP_TEXT[line.step] }] : [],
   )
+
+/** The race: two copies of build v0.1, with a button on each of lane A's steps. */
+export function RaceView(props: { game: ReproduceGame }) {
+  const { game } = props
+  return (
+    <div ref={game.box} class="v-race">
+      <RaceFigure
+        steps={STEPS_OF(game.lines)}
+        lanes={game.playback.lanes}
+        slowAfter={game.picked}
+        lost={game.playback.final && game.playback.picture.lost !== 0}
+        texts={{
+          figure: REPRODUCE.laneFigure,
+          lane: REPRODUCE.lane,
+          pickLabel: REPRODUCE.pickLabel,
+          slowHere: REPRODUCE.slowHere,
+        }}
+        onPick={(step) => game.play(step, false)}
+        busy={game.running}
+        hinting={game.hinting}
+      />
+    </div>
+  )
+}
+
+/** The code request A runs, with the line it waits at lit up; each step line is a button too. */
+export function CodeView(props: { game: ReproduceGame }) {
+  const { game } = props
+  return (
+    <ScrollBox
+      label={CODE_TEXTS.title}
+      moreText={CONSOLE.more}
+      reveal=".line.current, .line.lost"
+      revealKey={`${game.playback.current}-${game.playback.final}`}
+    >
+      <CodePanel
+        id="A"
+        lines={game.lines}
+        current={game.playback.current}
+        state={game.playback.codeState}
+        texts={CODE_TEXTS}
+        onPick={(step) => game.play(step, false)}
+        busy={game.running}
+        paused={game.picked}
+        pausedLost={game.playback.final && game.playback.picture.lost !== 0}
+      />
+    </ScrollBox>
+  )
+}
+
+/** The books as five numbers: our ledger next to the bank's own record. "…" until a run is over. */
+export function booksCells(picture: MoneyPicture | null, final: boolean): ReadoutCell[] {
+  const tone = picture ? READOUT_TONE.PLAIN : READOUT_TONE.PENDING
+  // On a narrow console the amounts lose their cents (as on the race), so five numbers fit one strip.
+  const amount = (cents: number) =>
+    picture ? { value: formatCents(cents), short: short(cents) } : { value: READOUT.empty }
+  const lost = picture ? picture.lost !== 0 : false
+  const verdict =
+    picture && final
+      ? lost
+        ? { value: `✗ ${formatCents(Math.abs(picture.lost))}`, short: `✗ ${short(Math.abs(picture.lost))}` }
+        : { value: `✓ ${MONEY_TEXT.none}` }
+      : { value: MONEY_TEXT.pending }
+  return [
+    { label: MONEY_TEXT.had, ...amount(picture?.deposited ?? 0), tone },
+    { label: MONEY_TEXT.balance, ...amount(picture?.available ?? 0), tone },
+    { label: MONEY_TEXT.held, ...amount(picture?.held ?? 0), tone },
+    { label: MONEY_TEXT.paidOut, ...amount(picture?.paidOut ?? 0), tone },
+    {
+      label: MONEY_TEXT.lost,
+      ...verdict,
+      tone: picture && final ? (lost ? READOUT_TONE.LOST : READOUT_TONE.SAFE) : READOUT_TONE.PENDING,
+    },
+  ]
 }

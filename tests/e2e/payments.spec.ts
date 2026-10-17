@@ -92,36 +92,54 @@ async function recordConsoleHeights(page: Page) {
     })
 }
 
-test('nothing in the console jumps while a run plays: one height from start to result', async ({
+test('the console keeps one height from arrival to the clean-up: nothing is added under anything', async ({
   page,
 }, info) => {
   test.skip(info.project.name !== 'desktop', 'runs animate only with motion')
+  test.setTimeout(90_000)
   for (const viewport of [
     { width: 1280, height: 720 },
     { width: 390, height: 844 },
   ]) {
     await page.setViewportSize(viewport)
     await page.goto('/day/payments')
+    await page.evaluate(() => document.fonts.ready)
     await openTheConsole(page)
+    const stop = await recordConsoleHeights(page)
 
-    // A safe run: the pause control, the step values, the books and the message all keep their size.
-    let stop = await recordConsoleHeights(page)
+    // Every kind of change: a safe run, the losing run, the code view, each step, a failed patch, the clean-up.
     await page.getByRole('button', { name: /Make request A slow after step 1/ }).click()
     await expect(page.getByText(/No money lost after step 1/)).toBeVisible()
-    let heights = await stop()
-    expect(Math.max(...heights) - Math.min(...heights), `safe run at ${viewport.width} px`).toBeLessThan(1)
-
-    // The losing run adds the "Next" row under the books (new content under the result). A replay then holds still.
     await page.getByRole('button', { name: /Make request A slow after step 2/ }).click()
     await expect(page.getByText(/^Reproduced on try 2\./)).toBeVisible()
-    stop = await recordConsoleHeights(page)
+    await page.getByRole('button', { name: 'Code', exact: true }).click()
+    await page.getByRole('button', { name: 'Race', exact: true }).click()
     await page.getByRole('button', { name: 'Replay the losing order' }).click()
-    await expect(page.getByRole('button', { name: 'Replay the losing order' })).toBeDisabled()
     await expect(page.getByRole('button', { name: 'Replay the losing order' })).toBeEnabled({
       timeout: 10000,
     })
-    heights = await stop()
-    expect(Math.max(...heights) - Math.min(...heights), `replay at ${viewport.width} px`).toBeLessThan(1)
+    await page.getByRole('button', { name: 'Next: how often does this happen?' }).click()
+    await page.getByLabel('Your guess').fill('20')
+    await page.getByRole('button', { name: 'Run all 54' }).click()
+    await expect(page.getByRole('img', { name: /36 of 54 ways to run lose money/ })).toBeVisible()
+    await page.waitForTimeout(1600)
+    await page.getByRole('button', { name: 'Next: fix it' }).click()
+    await page.getByRole('radio', { name: /Check the balance twice/ }).check()
+    await page.getByRole('button', { name: 'Attack this patch' }).click()
+    await expect(page.getByText(/Still loses money in 120 of 182 ways to run/)).toBeVisible()
+    await page.getByRole('button', { name: 'Try another patch' }).click()
+    await page.getByRole('radio', { name: /Reserve, then settle/ }).check()
+    await page.getByRole('button', { name: 'Attack this patch' }).click()
+    await expect(page.getByRole('heading', { name: 'Fixed: it holds in all 24 ways to run' })).toBeVisible()
+    await page.getByRole('button', { name: 'Go deeper: the bank stops answering' }).click()
+    await page.getByRole('button', { name: 'Send the payout again' }).click()
+    await expect(page.getByText(/Now it has paid twice/)).toBeVisible()
+
+    const heights = await stop()
+    expect(
+      Math.max(...heights) - Math.min(...heights),
+      `whole incident at ${viewport.width} px`,
+    ).toBeLessThan(1)
   }
 })
 
@@ -172,7 +190,7 @@ for (const scheme of ['light', 'dark'] as const) {
     // The red "money lost" line and the highlighted line are the hardest backgrounds.
     await page.getByRole('button', { name: /Make request A slow after step 2/ }).click()
     await expect(page.getByText('MONEY LOST', { exact: true })).toBeVisible()
-    await page.getByText('Show the code it runs').click()
+    await page.getByRole('button', { name: 'Code', exact: true }).click()
     await page.locator('#proof > summary').click()
     const contrast = async () =>
       (

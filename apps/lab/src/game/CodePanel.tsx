@@ -1,6 +1,6 @@
 import type { Step } from '@lab/core'
 import type { CodeLine } from '../lib/code-line.ts'
-import { CodeText } from './CodeText.tsx'
+import { IndentedCode } from './CodeText.tsx'
 import { REQUEST_STATE, type RequestState } from './request-state.ts'
 
 export const LINE_STATE = { DONE: 'DONE', NOW: 'NOW', TODO: 'TODO' } as const
@@ -27,6 +27,8 @@ export interface CodePanelProps {
   readonly texts: CodePanelTexts
   /** When set, each step line becomes a button. */
   readonly onPick?: ((stepNumber: number) => void) | undefined
+  /** A run is playing: the line buttons stay (so focus stays on them) but do nothing until it ends. */
+  readonly busy?: boolean | undefined
   /** The step number after which this request was made slow, if any. */
   readonly paused?: number | null | undefined
   /** True when that pause made the exchange lose money. */
@@ -99,9 +101,7 @@ export function CodePanel(props: CodePanelProps) {
               <span class="n" aria-hidden="true">
                 {number ?? ''}
               </span>
-              <code>
-                <CodeText tokens={line.tokens} />
-              </code>
+              <IndentedCode tokens={line.tokens} />
               {label ? <span class="label">{label}</span> : null}
             </>
           )
@@ -112,8 +112,11 @@ export function CodePanel(props: CodePanelProps) {
                   type="button"
                   class="row"
                   aria-pressed={pausedHere}
+                  aria-disabled={props.busy ? 'true' : undefined}
                   aria-label={texts.pickLabel(number, label)}
-                  onClick={() => props.onPick?.(number)}
+                  onClick={() => {
+                    if (!props.busy) props.onPick?.(number)
+                  }}
                 >
                   {content}
                 </button>

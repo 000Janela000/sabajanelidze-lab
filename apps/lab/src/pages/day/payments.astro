@@ -34,6 +34,11 @@ const shareUrl = 'https://lab.sabajanelidze.com/day/payments'
         v01={data.v01Lines}
         runs={data.runs.naive.runs}
         patches={data.patches}
+        patchRuns={{
+          CHECK_TWICE: data.runs.checkTwice.runs,
+          RESERVE: data.runs.reserve.runs,
+          LOCK_READ: data.runs.lockRead.runs,
+        }}
         shareUrl={shareUrl}
         bookUrl={bookACall('payments')}
         proofId="proof"
@@ -90,8 +95,9 @@ const shareUrl = 'https://lab.sabajanelidze.com/day/payments'
     scroll-margin-top: calc(var(--header-h) + var(--space-3));
   }
   @media (min-width: 1024px) {
+    /* The console gets up to 40rem, so each of its parts fits one row; the text column takes the rest. */
     .hero {
-      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      grid-template-columns: minmax(18rem, 1fr) minmax(0, 40rem);
       align-items: start;
       gap: var(--space-7);
     }

@@ -10,22 +10,30 @@ import {
   withdraw,
 } from '@lab/core'
 import { useState } from 'preact/hooks'
-import { MoneyPanel } from '../../game/MoneyPanel.tsx'
+import { type Said, TONE } from '../../game/Message.tsx'
 import { AMOUNT, CUSTOMER, OPENING } from './setup.ts'
-import { CLEAN_UP, MONEY_TEXT } from './texts.ts'
+import { CLEAN_UP, REQUEST_STATE_TEXT } from './texts.ts'
 
 const CHOICE = { SEND_AGAIN: 'SEND_AGAIN', ASK_BANK: 'ASK_BANK', RECONCILE: 'RECONCILE' } as const
 type Choice = (typeof CHOICE)[keyof typeof CHOICE]
 
+/** Everything the clean-up can say, so the message keeps one height whichever answer comes back. */
+export const CLEAN_UP_SIZERS: readonly Said[] = [
+  { tone: TONE.LOST, text: CLEAN_UP.sendAgain(2 * AMOUNT, AMOUNT) },
+  ...Object.values(CLEAN_UP.askBank).map((text) => ({ tone: TONE.OK, text })),
+  { tone: TONE.OK, text: CLEAN_UP.reconcile(['payout-1']) },
+  { tone: TONE.NONE, text: CLEAN_UP.prompt },
+]
+
+export interface CleanUpGame {
+  readonly result: { choice: Choice; picture: MoneyPicture; text: string; good: boolean } | null
+  readonly said: Said
+  play(choice: Choice): Promise<void>
+}
+
 /** Go deeper: the senior part. The fix is live, and now the bank does not answer. */
-export function CleanUp() {
-  const [open, setOpen] = useState(false)
-  const [result, setResult] = useState<{
-    choice: Choice
-    picture: MoneyPicture
-    text: string
-    good: boolean
-  } | null>(null)
+export function useCleanUp(): CleanUpGame {
+  const [result, setResult] = useState<CleanUpGame['result']>(null)
 
   async function play(choice: Choice) {
     const store = new MemoryPaymentsStore({ [CUSTOMER]: OPENING })
@@ -44,7 +52,8 @@ export function CleanUp() {
       text = CLEAN_UP.sendAgain(2 * AMOUNT, AMOUNT)
       good = false
     } else if (choice === CHOICE.ASK_BANK) {
-      text = CLEAN_UP.askBank[await resolveUnknownPayout(ports, 'payout-1')]
+      const resolution = await resolveUnknownPayout(ports, 'payout-1')
+      text = CLEAN_UP.askBank[resolution]
       good = true
     } else {
       const lines = await reconcile(store, bank)
@@ -56,42 +65,36 @@ export function CleanUp() {
     setResult({ choice, picture: moneyPicture(store, bank, CUSTOMER, OPENING), text, good })
   }
 
-  if (!open) {
-    return (
-      <div class="go-deeper">
-        <button type="button" class="btn-2" onClick={() => setOpen(true)}>
-          {CLEAN_UP.open}
-        </button>
-      </div>
-    )
-  }
+  const said: Said = result
+    ? { tone: result.good ? TONE.OK : TONE.LOST, text: result.text }
+    : { tone: TONE.NONE, text: CLEAN_UP.prompt }
 
+  return { result, said, play }
+}
+
+/** The payout nobody answered, and the three things you could do about it. */
+export function BankScreen(props: { game: CleanUpGame }) {
+  const { game } = props
   return (
-    <section class="cleanup" aria-labelledby="cleanup-heading">
-      <h3 id="cleanup-heading">{CLEAN_UP.heading}</h3>
-      <p>{CLEAN_UP.situation}</p>
-      <div class="actions">
+    <div class="v-bank">
+      <p class="m-bankline">
+        <span class="chip">{CLEAN_UP.payout}</span> {CLEAN_UP.sent} · <strong>{CLEAN_UP.noAnswer}</strong> ·{' '}
+        <span class="chip chip-unknown">{REQUEST_STATE_TEXT.UNKNOWN}</span> · {CLEAN_UP.held(AMOUNT)}
+      </p>
+      <fieldset class="m-choices">
+        <legend class="visually-hidden">{CLEAN_UP.choicesLabel}</legend>
         {Object.values(CHOICE).map((choice) => (
           <button
             key={choice}
             type="button"
-            class="btn-2"
-            aria-pressed={result?.choice === choice}
-            onClick={() => play(choice)}
+            class="btn-2 m-choice"
+            aria-pressed={game.result?.choice === choice}
+            onClick={() => void game.play(choice)}
           >
             {CLEAN_UP.choices[choice]}
           </button>
         ))}
-      </div>
-      {result ? (
-        <div aria-live="polite">
-          <p class={result.good ? 'verdict-good' : 'verdict-bad'}>
-            <span aria-hidden="true">{result.good ? '✓ ' : '✗ '}</span>
-            {result.text}
-          </p>
-          <MoneyPanel picture={result.picture} final texts={MONEY_TEXT} />
-        </div>
-      ) : null}
-    </section>
+      </fieldset>
+    </div>
   )
 }
