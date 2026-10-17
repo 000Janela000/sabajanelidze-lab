@@ -44,7 +44,7 @@ test('incident 1 plays from reproduce to clean-up on the real code', async ({ pa
 
   await page.getByRole('button', { name: 'Next: how often does this happen?' }).click()
   await page.getByLabel('Your guess').fill('20')
-  await page.getByRole('button', { name: 'Run all 54' }).click()
+  await page.getByRole('button', { name: 'Run all 54', exact: true }).click()
   await expect(
     page.getByRole('img', { name: /36 of 54 ways to run lose money \(your guess: 20\)/ }),
   ).toBeVisible()
@@ -120,7 +120,7 @@ test('the console keeps one height from arrival to the clean-up: nothing is adde
     })
     await page.getByRole('button', { name: 'Next: how often does this happen?' }).click()
     await page.getByLabel('Your guess').fill('20')
-    await page.getByRole('button', { name: 'Run all 54' }).click()
+    await page.getByRole('button', { name: 'Run all 54', exact: true }).click()
     await expect(page.getByRole('img', { name: /36 of 54 ways to run lose money/ })).toBeVisible()
     await page.waitForTimeout(1600)
     await page.getByRole('button', { name: 'Next: fix it' }).click()

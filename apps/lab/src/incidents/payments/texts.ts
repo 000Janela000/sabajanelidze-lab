@@ -86,14 +86,14 @@ export const CONSOLE = {
       short: 'v0.1 · real code · simulated timing',
     },
     COUNT: {
-      long: 'build v0.1 · every order of its 8 steps · real code',
+      long: 'build v0.1 · two requests · every order · real code',
       short: 'v0.1 · every order · real code',
     },
     FIX: { long: 'three patches · real code', short: 'three patches · real code' },
     SOLVED: { long: 'build v1 · reserve, then settle · real code', short: 'v1 · reserve, then settle' },
     DEEPER: {
       long: 'build v1 · real code · a simulated bank that stops answering',
-      short: 'v1 · a bank that stops answering',
+      short: 'v1 · simulated bank timeout',
     },
   },
   viewsLabel: 'What the screen shows',
@@ -111,14 +111,14 @@ export const READOUT = {
     subtitle: 'what you found so far',
     reproduced: 'Reproduced',
     tries: (tries: number) => `try ${tries}`,
-    short: 'Short by',
+    lost: 'Money lost',
     guess: 'Your guess',
     lose: 'Lose money',
     runs: 'Ways to run',
   },
   fix: {
     title: 'The attack',
-    subtitle: 'every way to run, against the books',
+    subtitle: 'the patch, every way to run',
     before: 'v0.1 loses',
     of: (losing: number, runs: number) => `${losing} of ${runs}`,
     ofUnknown: (runs: number) => `? of ${runs}`,
@@ -130,7 +130,7 @@ export const READOUT = {
   },
   solved: {
     title: 'The result',
-    subtitle: 'build v0.1 against the fix',
+    subtitle: 'before and after the fix',
     fix: 'The fix',
     lose: 'Fix loses',
   },
@@ -138,7 +138,7 @@ export const READOUT = {
 
 export const REPRODUCE = {
   heading: 'Reproduce it',
-  goal: "Your job: make the bank pay twice. A and B are the customer's two taps, at once. Tap a step on lane A: A gets slow there, B runs past, A finishes.",
+  goal: "Make the bank pay twice. A and B are the customer's two taps, at the same time. Tap a step on lane A: A gets slow there, B runs past, A finishes.",
   demoLead: 'Watch one run first.',
   demoDone:
     'That one was fine: A got slow after step 1, then read 20 and was refused. Your turn: tap a step on lane A.',
@@ -179,11 +179,11 @@ export const COUNT = {
   notRun: (runs: number) => `Not run yet: ${runs} ways to run, each one a square.`,
   figureTitle: 'Every way the two requests can run.',
   figureText: (runs: number) =>
-    `Each square is one order of the eight steps; the machine runs all ${runs} and checks the books after each.`,
+    `Each square is one distinct order of their steps (4 each). The machine runs all ${runs} and checks the books after each.`,
   result: (losing: number, runs: number, guess: string) =>
     `${losing} of ${runs} ways to run lose money${guess ? ` (your guess: ${guess})` : ''}. Build v0.1 loses money whenever both requests read the balance before either one saves.`,
   next: 'Next: fix it →',
-  nextLocked: 'Next: run them first',
+  nextLocked: (runs: number) => `Next: run all ${runs} first`,
 }
 
 export const FIX = {
@@ -192,7 +192,7 @@ export const FIX = {
   prompt: 'Pick a patch, then attack it.',
   ready: (name: string) => `Ready: attack "${name}" with every way the two requests can run.`,
   patchesLegend: 'Patches',
-  none: 'Pick a patch above to read its code: the lines it changes from build v0.1 are marked. Then attack it.',
+  none: 'Pick a patch to read its code. Lines that are not in build v0.1 are marked. Then attack it.',
   changed: 'changed',
   codeLabel: (name: string) => `The code of "${name}"`,
   attack: 'Attack this patch',
@@ -221,7 +221,7 @@ export const FIX = {
 
 export const SOLVED = {
   heading: (runs: number) => `Fixed: it holds in all ${runs} ways to run`,
-  goal: 'Every way the two requests can run, attacked: none loses money.',
+  goal: 'The machine attacked the fix with every way the two requests can run. None loses money.',
   grid: (runs: number) => `"Reserve, then settle" loses money in 0 of ${runs} ways to run.`,
   why: 'The check and the move are now one atomic step: "move 80 from available to on hold, only if 80 is there". A second request can never reserve money the first one already holds.',
   readCode: 'Read the code and the tests',
@@ -251,7 +251,7 @@ export const CLEAN_UP = {
   choicesLabel: 'What do you do?',
   heading: 'Clean up: the bank timed out',
   situation:
-    'Build v1 is live. Your code reserved 80 and sent the payout, and the bank never answered. Did it pay? What do you do?',
+    'Build v1 is live. Your code reserved 80 and sent the payout. The bank never answered. Did it pay? What do you do?',
   choices: {
     SEND_AGAIN: 'Send the payout again',
     ASK_BANK: 'Ask the bank what happened to this payout',
@@ -265,7 +265,7 @@ export const CLEAN_UP = {
     STILL_UNKNOWN: 'The bank has no record of payout-1 yet. That is not final, so the money stays on hold.',
   } satisfies Record<Resolution, string>,
   reconcile: (settled: string[]) =>
-    `Tonight's job found ${settled.join(', ')} on the bank's statement and settled it. Nothing lost; the customer saw "pending" until then. This is the safety net under the faster answer.`,
+    `Tonight's job asked the bank about ${settled.join(', ')}, heard "paid" and settled the hold. Nothing lost; until then it showed "unknown". The safety net under the faster answer.`,
 }
 
 export const PROOF = {

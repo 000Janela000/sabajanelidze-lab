@@ -114,7 +114,12 @@ export function CountControls(props: { game: CountGame; runs: number; onNext: ()
       >
         {COUNT.run(props.runs)}
       </button>
-      <NextButton open={counted} label={COUNT.next} locked={COUNT.nextLocked} onClick={props.onNext} />
+      <NextButton
+        open={counted}
+        label={COUNT.next}
+        locked={COUNT.nextLocked(props.runs)}
+        onClick={props.onNext}
+      />
     </div>
   )
 }
@@ -160,7 +165,7 @@ export function countCells(reproduction: Reproduction | null, game: CountGame, r
       value: reproduction ? READOUT.count.tries(reproduction.tries) : READOUT.empty,
     },
     {
-      label: READOUT.count.short,
+      label: READOUT.count.lost,
       value: reproduction ? formatCents(reproduction.short) : READOUT.empty,
       ...(reproduction ? { short: String(Math.round(reproduction.short / 100)) } : {}),
       tone: reproduction ? READOUT_TONE.LOST : READOUT_TONE.PENDING,
