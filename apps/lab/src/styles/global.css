@@ -414,6 +414,13 @@ button {
   line-height: 1.5;
 }
 
+/* A short note under the ticket: what is real and what is simulated. */
+.hero-text .note {
+  max-width: 34em;
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+
 .ticket footer {
   margin-top: var(--space-2);
   font-size: var(--fs-sm);

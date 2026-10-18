@@ -45,11 +45,12 @@ const length = (source: Excerpt) => source.endLine - source.startLine + 1
     <div class="run">
       <p>{PROOF.run.intro} <a class="link" href={REPO_URL}>{PROOF.run.repo}</a></p>
       <pre><code>{PROOF.run.commands.join('\n')}</code></pre>
-      <p class="note">{PROOF.run.note}</p>
+      <p class="note">{PROOF.run.needs} {PROOF.run.note}</p>
     </div>
 
     <h2>{PROOF.whatHappenedHeading}</h2>
     <p>{PROOF.whatHappened}</p>
+    <p class="note">{PROOF.langNote}</p>
     <CodeBlock title={PROOF.v01Title} source={code.v01} />
     <LangTabs
       id="v1"

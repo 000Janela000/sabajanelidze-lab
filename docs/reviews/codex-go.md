@@ -8,7 +8,7 @@ Below is its answer word for word. Only the file links changed: they pointed at 
 
 | # | Finding | What guards it now |
 |---|---|---|
-| 1 | A direct negative reserve could create spendable money | `go/payments/withdraw_test.go`: `TestReserveRefusesBadAmountsAndChangesNothing` (both stores) |
+| 1 | A direct negative reserve could create spendable money | `go/payments/withdraw_test.go`: `TestReserveRefusesBadAmountsAndChangesNothing` (memory store; the Postgres `Reserve` has the same check, without a test of its own) |
 | 2 | The real-Postgres repeated-ID test could not prove ID protection | `go/payments/postgres_test.go`: `TestPostgresSameIDTwentyTimesMovesMoneyOnce` now funds 30,000 (more than one payout), counts every call to the bank and checks the final balance |
 | 3 | The race tests did not force the reserves to overlap | `go/payments/race_test.go`: all 20 requests now wait at `Reserve` until every one has arrived, then go at once |
 | 4 | The bank-refusal path had no Go test | `go/payments/withdraw_test.go`: `TestWithdrawReleasesTheHoldWhenTheBankRefuses` |

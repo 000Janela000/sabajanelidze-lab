@@ -137,8 +137,9 @@ describe('Postgres store on PGlite (the SQL, one request at a time)', () => {
 
 /**
  * Many connections at once on a real Postgres server (CI starts one and sets DATABASE_URL).
- * The store waits 20 ms after each read, like a slow network, so the naive code's gap is wide
- * enough to hit every time. Build v1 gets the same delay and must still pay out exactly once.
+ * The store waits 20 ms after each balance read, like a slow network, so the naive code's gap is wide
+ * enough to hit every time. Build v1 never reads the balance on its own (its reserve is one statement), so
+ * the delay does not touch it; its 20 requests still hit the same row at once and must pay out exactly once.
  */
 describe.skipIf(!process.env.DATABASE_URL)('Postgres store on a real server (20 withdrawals at once)', () => {
   let pool: pg.Pool

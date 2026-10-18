@@ -20,7 +20,7 @@ export const GAME_NAME = 'On call'
 
 /** Who made the lab and what he offers: after the game's hook and its first action, never before. */
 export const MAKER = {
-  text: 'Made by Saba Janelidze, principal engineer: I build payment and ledger systems for fintech and crypto teams. Hiring, or need help with payments?',
+  text: 'Made by Saba Janelidze, principal engineer. I build payment and ledger systems for fintech and crypto teams. Hiring, or need help with payments?',
   book: 'Book a call →',
 }
 
@@ -46,7 +46,7 @@ export const NOT_FOUND = {
 export const HOME = {
   title: 'On call: one day at a tiny crypto exchange',
   description:
-    'A working demo by Saba Janelidze. You are the on-call engineer at a made-up crypto exchange. Each incident is a 2-minute puzzle on real code: reproduce how the money was lost, count how often it happens, pick the fix that survives every way the code can run. Test mode, fake money.',
+    'You are on call at a made-up crypto exchange. Each incident is a 2-minute puzzle on real code by Saba Janelidze: reproduce the loss, count how often it happens, pick the fix that holds in every order. Test mode, fake money.',
   meta: 'a 2-minute puzzle at a made-up crypto exchange',
   heading: 'A customer was paid 160 from a balance of 100.',
   lead: 'Two taps on Withdraw 80 at the same moment, and the bank paid twice. Find how on the real code, then pick the fix that holds in every order.',
@@ -62,11 +62,11 @@ export const HOME = {
     },
   ],
   noCode:
-    'You never write code. You tap steps with plain labels. Every tap runs the real code, the same files the "How it works" card links to, with their tests.',
+    'You never write code. You tap steps with plain labels, and each one runs the real code in your browser: the same files the incident\'s "How it works" card links to, with their tests.',
   incidentsHeading: 'Incidents',
   incident: (number: number, name: string) => `Incident ${number} · ${name}`,
   take: 'Play this incident',
-  next: 'Next: incident 2, new customers: approved yesterday, pending again this morning. Later: deposits on a test network, a support AI that must not be tricked, and the end-of-shift books.',
+  next: 'Next: incident 2, new customers ("approved yesterday, pending again this morning"). Later: deposits on a test network, a support AI that must not be tricked, and the end-of-shift books.',
   tickets: {
     payments: '"I tapped Withdraw 80 twice. The bank paid me 160 and my balance still shows 20."',
     kyc: '"I was approved yesterday. This morning my status says pending again."',

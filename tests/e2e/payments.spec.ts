@@ -59,8 +59,8 @@ test('incident 1 plays from reproduce to clean-up on the real code', async ({ pa
   await expect(page.getByRole('heading', { name: 'Fixed: it holds in all 24 ways to run' })).toBeVisible()
 
   await page.getByRole('button', { name: 'Go deeper: the bank stops answering' }).click()
-  await page.getByRole('button', { name: 'Send the payout again' }).click()
-  await expect(page.getByText(/Now it has paid twice/)).toBeVisible()
+  await page.getByRole('button', { name: 'Send a new payout' }).click()
+  await expect(page.getByText(/it paid twice/)).toBeVisible()
   await page.getByRole('button', { name: 'Ask the bank what happened to this payout' }).click()
   await expect(page.getByText(/The bank says payout-1 was paid/)).toBeVisible()
 
@@ -132,8 +132,8 @@ test('the console keeps one height from arrival to the clean-up: nothing is adde
     await page.getByRole('button', { name: 'Attack this patch' }).click()
     await expect(page.getByRole('heading', { name: 'Fixed: it holds in all 24 ways to run' })).toBeVisible()
     await page.getByRole('button', { name: 'Go deeper: the bank stops answering' }).click()
-    await page.getByRole('button', { name: 'Send the payout again' }).click()
-    await expect(page.getByText(/Now it has paid twice/)).toBeVisible()
+    await page.getByRole('button', { name: 'Send a new payout' }).click()
+    await expect(page.getByText(/it paid twice/)).toBeVisible()
 
     const heights = await stop()
     expect(
@@ -262,9 +262,9 @@ test('"Find the bug" pressed while the game is still loading still ends on the f
   })
 })
 
-test('"Read the code and tests" goes straight to the proof card', async ({ page }) => {
+test('"Read the code and the tests" goes straight to the proof card', async ({ page }) => {
   await page.goto('/day/payments')
-  await page.getByRole('link', { name: /Read the code and tests/ }).click()
+  await page.getByRole('link', { name: /Read the code and the tests/ }).click()
   await expect(page).toHaveURL(/#proof$/)
 })
 

@@ -14,7 +14,7 @@ Below is its answer word for word. Only the file links changed: they pointed at 
 | 4 | Negative amounts were accepted | `5ccb90f` | `withdraw.test.ts`: "refuses an amount of 0, -8000 and 0.5 and changes nothing" |
 | 5 | "Every possible order" counted some orders twice | `5ccb90f` | `packages/core/test/simulation/race.test.ts`: "no two counted runs are the same sequence of steps" (the count went from 70 to 54) |
 | 6 | The page linked to Postgres code and a CI claim before they were committed | `ba4cc68` | The site build fails in CI when a linked file is not in the commit it links to (`apps/lab/src/lib/source.ts`), and CI runs the real-database job on every push |
-| 7 | Some numbers on the page were typed by hand | `ba4cc68` | Every number is computed at build time by running the code (`apps/lab/src/incidents/payments/build-data.ts`) |
+| 7 | Some numbers on the page were typed by hand | `ba4cc68` | The race counts are computed at build time by running the code (`apps/lab/src/incidents/payments/build-data.ts`) |
 | 8 | "Read the code and the tests" did not move keyboard focus | `ba4cc68` | `tests/e2e/payments.spec.ts`: the play-through test checks that focus moves into the card |
 
 ## Codex's answer

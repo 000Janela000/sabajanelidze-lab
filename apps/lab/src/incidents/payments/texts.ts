@@ -59,14 +59,16 @@ export const MONEY_TEXT = {
 export const PAGE = {
   title: 'Incident 1: the bank paid out twice · On call',
   description:
-    'A working demo by Saba Janelidze on real code: find how two withdrawals of 80 from a balance of 100 make the bank pay out 160, then pick the fix that survives every way they can run. Test mode, fake money.',
+    'Two withdrawals of 80 from a balance of 100, and the bank paid 160. Find how on real code, then pick the fix that holds in every order. A 2-minute puzzle by Saba Janelidze. Test mode, fake money.',
   meta: 'Incident 1 · Payments · about 2 minutes',
   heading: 'The bank paid out twice',
   ticket:
     'I had 100. I tapped Withdraw 80 twice by accident. The bank paid me 160, and my balance still shows 20.',
   ticketFrom: 'Customer #42 · support chat · a made-up ticket',
+  /** Under the ticket: what is real, what is simulated, and what the two builds are. */
+  note: 'The code is real and runs in your browser; the customer and the bank are simulated. Build v0.1 is the withdrawal code as it ran this morning; build v1 is the fix you will pick.',
   findTheBug: 'Find the bug',
-  readCode: 'Read the code and tests',
+  readCode: 'Read the code and the tests',
   textFold: 'Full text version (contains the answers)',
 }
 
@@ -212,7 +214,7 @@ export const FIX = {
       summary: 'One atomic step moves the 80 to "on hold", only if it is there. Then pay. Then settle.',
     },
     LOCK_READ: {
-      name: 'Lock only the read',
+      name: 'Lock the read',
       short: 'Lock the read',
       summary: 'Put a lock around reading the balance.',
     },
@@ -228,7 +230,7 @@ export const SOLVED = {
   book: 'Book a call',
   copyResult: 'Copy result',
   copied: 'Copied ✓',
-  sendToCto: 'Send this to your CTO',
+  sendToCto: 'Copy the link',
   linkCopied: 'Link copied ✓',
   copyFailed: (url: string) => `Copying didn't work here. The link: ${url}`,
   share: (tries: number, guess: string, losing: number, runs: number, patchTries: number) => [
@@ -253,14 +255,14 @@ export const CLEAN_UP = {
   situation:
     'Build v1 is live. Your code reserved 80 and sent the payout. The bank never answered. Did it pay? What do you do?',
   choices: {
-    SEND_AGAIN: 'Send the payout again',
+    SEND_AGAIN: 'Send a new payout',
     ASK_BANK: 'Ask the bank what happened to this payout',
     RECONCILE: "Leave it on hold for tonight's reconciliation",
   },
   sendAgain: (paid: number, amount: number) =>
-    `The bank had already paid. Now it has paid twice: ${formatCents(paid)} for one withdrawal of ${formatCents(amount)}.`,
+    `The bank had already paid. A new payout ID is a new payment: it paid twice, ${formatCents(paid)} for one withdrawal of ${formatCents(amount)}.`,
   askBank: {
-    PAID: 'The bank says payout-1 was paid. The hold is settled, nothing was paid twice, and the customer sees "paid" a moment later.',
+    PAID: 'The bank says payout-1 was paid. The hold is settled, and nothing was paid twice.',
     RELEASED: 'The bank says payout-1 was refused. The hold is released and the money is available again.',
     STILL_UNKNOWN: 'The bank has no record of payout-1 yet. That is not final, so the money stays on hold.',
   } satisfies Record<Resolution, string>,
@@ -274,10 +276,10 @@ export const PROOF = {
     label: 'The results',
     v01: 'Build v0.1 (naive)',
     v1: 'Build v1 (the fix)',
-    lose: (losing: number, runs: number) => `${losing} of ${runs} orders lose money`,
-    postgres: 'Real Postgres, 20 withdrawals at once',
+    lose: (losing: number, runs: number) => `${losing} of ${runs} ways to run lose money`,
+    postgres: 'Real Postgres database, 20 withdrawals at once',
     paidOnce: 'build v1 pays out once',
-    ci: 'CI on this build',
+    ci: 'Automatic checks (CI) on this build',
     ciLink: 'see the result',
     note: 'Each build has its own steps, so its own number of orders. The first two numbers are computed from the code when the site is built; the third is what the real-database test checks on every push.',
   },
@@ -285,12 +287,14 @@ export const PROOF = {
     intro: 'Run the tests yourself:',
     repo: 'the code on GitHub',
     commands: ['pnpm install', 'pnpm --filter @lab/core test', 'cd go && go test -race ./...'],
+    needs: 'Needs Node 24 with pnpm, and Go 1.25 for the last line.',
     note: 'The real-database tests also run when DATABASE_URL points at a Postgres server.',
   },
   showCode: (lines: number) => `Show the code (${lines} lines)`,
   whatHappenedHeading: 'What happened, and the fix',
   whatHappened:
-    'Build v0.1 reads, checks and saves the balance in separate steps, so two requests can both pass the check. Build v1 makes the check and the move one atomic step.',
+    'Build v0.1 reads, checks and saves the balance in separate steps, so two requests can both pass the check. Build v1 makes the check and the move one atomic step: it happens whole or not at all, so no second request can slip in between.',
+  langNote: 'The game runs the TypeScript version. The Go tab shows the same fix in Go.',
   v01Title: 'Build v0.1 (naive)',
   v1Title: 'Build v1 (reserve, then settle)',
   answerTitle: 'The stored answer for a repeated payout ID',
@@ -312,31 +316,31 @@ export const PROOF = {
       ': a timeout keeps the money on hold; it is resolved by asking the bank, never by paying again.',
     goRace: 'The Go version',
     goRaceText:
-      ": the same fix in Go, with the same codes and the same reserve SQL. Its tests send 20 withdrawals at once, in memory and on a real Postgres server, under Go's race detector (a tool that fails the test when one part of the program writes to memory while another part reads or writes it, with nothing keeping them in order). Build v1 pays out once; build v0.1 pays out more than once.",
+      ": the same fix in Go, with the same codes and the same reserve SQL. Its tests send 20 withdrawals at once, in memory and on a real Postgres server, under Go's race detector. (That tool fails a test when two parts of the program touch the same memory at the same time with nothing keeping them in order.) Build v1 pays out once; build v0.1 pays out more than once.",
   },
   tradeOffHeading: 'The trade-off',
   tradeOff: (losing: number, runs: number, naiveRuns: number) =>
-    `A lock around both the read and the save also holds: ${losing} of its ${runs} ways to run lose money (its steps differ from build v0.1, so it has ${runs} ways to run, not ${naiveRuns}). The reserve is still the better step, for two reasons. It is one statement, so there is no lock to forget to release on an early return (look at the extra unlock the lock version needs). And money in flight gets its own state, "on hold", so a timeout or a refused payout can be settled or released later from the books.`,
+    `A lock around both the read and the save also holds: ${losing} of its ${runs} ways to run lose money (its steps differ from build v0.1, so it has ${runs} ways to run, not ${naiveRuns}). The reserve is still the better step, for two reasons. It is one statement, so there is no lock to forget to release on an early return (look at the extra unlock the lock version needs). And money in flight gets its own state, "on hold" (it has left the balance but not yet the exchange), so a timeout or a refused payout can be settled or released later from the books.`,
   lockBothTitle: 'Lock around the read and the save (also safe)',
   realDatabaseHeading: 'On a real database',
   postgresIntro:
-    'On a real database the reserve is one statement: a conditional update, and the payout record in the same statement. The CHECK (available >= 0) on the table is a backstop, not the fix.',
+    'On a real database the reserve is one SQL statement: it moves the 80 to "on hold" only if the balance covers it, and writes the payout record in the same statement. The CHECK (available >= 0) on the table is a backstop (a last line of defence), not the fix.',
   postgresTitle: 'The reserve on Postgres',
   realDatabase: 'The real-database race',
   realDatabaseText:
-    ': in CI, 20 withdrawals of 80 hit a real Postgres server at once, each waiting 20 ms after its read like a slow network. Build v1 pays out exactly once. Build v0.1, on the same database, pays out more than once.',
+    ": in CI, 20 withdrawals of 80 hit a real Postgres server at once. Build v0.1's requests each wait 20 ms after reading the balance, like a slow network, so its gap is always hit: it pays out more than once. Build v1 has no separate read; it pays out exactly once.",
   deadlock:
     "That test also caught a bug the in-memory model can't show: a deadlock. A request repeating a payout ID held the balance row and waited for the payout row, while the settle of the first request held the payout row and waited for the balance row. The fix is the usual one: settle and release now lock the balance row first, in the same order as the reserve.",
   lockOrderTitle: 'The lock order (found by the real-database test)',
   cleanUpHeading: 'The clean-up code',
   cleanUpIntro:
-    "When the bank doesn't answer, the money stays on hold, and two pieces of code settle it later. One asks the bank about a single payout. The end-of-day job checks every open hold and the bank's statement for the day. Both work on either store, and the end-of-day job is tested on Postgres too.",
+    "When the bank doesn't answer, the money stays on hold, and two pieces of code settle it later. One asks the bank about a single payout. The end-of-day job checks every open hold and the bank's statement for the day. Both work on either store, and the end-of-day job has a Postgres test of its own.",
   resolveTitle: 'Resolve an unknown payout',
   reconcileTitle: 'The end-of-day reconciliation',
   chainHeading: 'How this code was built',
   chain: (commits: number, agentCommits: number, checksRun: number, refusals: number) =>
-    `${commits} ${commits === 1 ? 'commit' : 'commits'} on this code, ${agentCommits === commits ? 'all' : agentCommits} written by an AI agent (Claude). The local checks before a commit ran ${checksRun} ${checksRun === 1 ? 'time' : 'times'} on this code and refused ${refusals}; on every push, CI runs the tests, the real-database race and Go's race detector. Codex (another company's AI) reviewed the money code twice: eight problems in the TypeScript, four in the Go version. All were fixed, with tests for the money cases.`,
-  ciLink: 'CI result for this build',
+    `${commits} ${commits === 1 ? 'commit' : 'commits'} on this code, ${agentCommits === commits ? 'all' : agentCommits} written by an AI agent (Claude). The local checks before a commit ran ${checksRun} ${checksRun === 1 ? 'time' : 'times'} on this code and refused ${refusals}; on every push, CI runs the tests, the real-database race and Go's race detector. Codex (another company's AI) reviewed this incident twice: eight findings on the TypeScript and its page, four on the Go version. All were fixed, with tests for the money cases.`,
+  ciLink: 'Result of the automatic checks (CI) for this build',
   lastChange: 'Last change:',
   reviewsLead: 'The reviews, word for word:',
   reviewIncident: 'incident 1',
@@ -369,5 +373,5 @@ export const TEXT_VERSION = {
   },
   cleanUpHeading: 'Go deeper: the bank stops answering',
   cleanUp:
-    'With build v1 live, a payout of 80 times out at the bank. The money stays on hold and the payout is marked "unknown". Sending the payout again pays twice if the bank had already paid. Asking the bank about this payout settles the hold at once if the bank paid; "not found" is not final, so the money stays on hold. Tonight\'s reconciliation checks every open hold with the bank, and every payout on the bank\'s statement against our own records, so it also catches a payout our books can\'t explain.',
+    'With build v1 live, a payout of 80 times out at the bank. The money stays on hold and the payout is marked "unknown". Sending a new payout (a new payout ID) pays twice if the bank had already paid. Asking the bank about this payout settles the hold at once if the bank paid; "not found" is not final, so the money stays on hold. Tonight\'s reconciliation checks every open hold with the bank, and every payout on the bank\'s statement against our own records, so it also catches a payout our books can\'t explain.',
 }
