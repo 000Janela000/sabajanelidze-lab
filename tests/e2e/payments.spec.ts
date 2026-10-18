@@ -247,6 +247,21 @@ test('"Find the bug" puts focus on the first step the visitor can tap, after the
   await expect(page.getByText(/Your turn: tap a step on lane A\./)).toBeVisible()
 })
 
+test('"Find the bug" pressed while the game is still loading still ends on the first step', async ({
+  page,
+}) => {
+  // A slow phone: the game's code arrives 1.5 s after the page. The press must not be lost.
+  await page.route(/PaymentsIncident\..*\.js$/, async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 1500))
+    await route.continue()
+  })
+  await page.goto('/day/payments', { waitUntil: 'domcontentloaded' })
+  await page.getByRole('link', { name: 'Find the bug' }).click()
+  await expect(page.getByRole('button', { name: /Make request A slow after step 1/ })).toBeFocused({
+    timeout: 10000,
+  })
+})
+
 test('"Read the code and tests" goes straight to the proof card', async ({ page }) => {
   await page.goto('/day/payments')
   await page.getByRole('link', { name: /Read the code and tests/ }).click()

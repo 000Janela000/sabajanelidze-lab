@@ -59,11 +59,13 @@ const shareUrl = 'https://lab.sabajanelidze.com/day/payments'
 </Base>
 
 <script>
-  import { FIND_THE_BUG } from '../../game/find-the-bug.ts'
+  import { FIND_THE_BUG, FIND_THE_BUG_PENDING } from '../../game/find-the-bug.ts'
 
   // With the console on screen, "Find the bug" moves focus to lane A's first step (after the first run, if it
   // is playing). Before the console has been seen, the link scrolls to it and the first run starts there.
   document.querySelector('.find')?.addEventListener('click', (event) => {
+    // A note the game reads when it loads, in case it is not listening yet (the press would be lost).
+    document.documentElement.setAttribute(FIND_THE_BUG_PENDING, '')
     const handled = !window.dispatchEvent(new Event(FIND_THE_BUG, { cancelable: true }))
     if (handled) event.preventDefault()
   })

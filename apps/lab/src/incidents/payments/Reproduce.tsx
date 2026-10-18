@@ -11,7 +11,7 @@ import {
 import type { RefObject } from 'preact'
 import { useEffect, useRef, useState } from 'preact/hooks'
 import { CodePanel, type CodePanelTexts } from '../../game/CodePanel.tsx'
-import { FIND_THE_BUG } from '../../game/find-the-bug.ts'
+import { FIND_THE_BUG, FIND_THE_BUG_PENDING } from '../../game/find-the-bug.ts'
 import { type Said, TONE } from '../../game/Message.tsx'
 import type { PauseGate } from '../../game/pause-gate.ts'
 import { LANE_STATE, type Lane, RaceFigure } from '../../game/RaceFigure.tsx'
@@ -310,7 +310,9 @@ export function useReproduce(props: {
   // "Find the bug": once the console has been seen and no run plays, focus lane A's first step (now, or when the
   // run ends). Before that the page scrolls to the console as usual, and the first run starts there.
   useEffect(() => {
+    const root = document.documentElement
     const onFind = (event: Event) => {
+      root.removeAttribute(FIND_THE_BUG_PENDING)
       if (!started.current || runningNow.current) {
         if (started.current) event.preventDefault()
         focusWhenReady.current = true
@@ -320,11 +322,18 @@ export function useReproduce(props: {
       firstStep(box.current)?.focus()
     }
     window.addEventListener(FIND_THE_BUG, onFind)
+    // Pressed before the game had loaded (a slow phone): the page scrolled here; focus the step after the first run.
+    const missed = root.hasAttribute(FIND_THE_BUG_PENDING)
+    if (missed) {
+      root.removeAttribute(FIND_THE_BUG_PENDING)
+      focusWhenReady.current = true
+    }
     return () => window.removeEventListener(FIND_THE_BUG, onFind)
   }, [])
 
   useEffect(() => {
-    if (running || !focusWhenReady.current) return
+    // Only once the first run has started and ended, so focus does not land on a step before the run it explains.
+    if (running || !focusWhenReady.current || !started.current) return
     focusWhenReady.current = false
     firstStep(box.current)?.focus()
   }, [running])
