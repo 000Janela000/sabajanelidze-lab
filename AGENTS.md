@@ -26,11 +26,14 @@ Saba Janelidze's demo lab: a browser game, **"Run a crypto exchange for one day"
 | `private/` | Gitignored notes (this repo is meant to be public) |
 | `decisions/` | One file per real decision, once there are some |
 
-The code layout and architecture are planned in `docs/game-design.md` section 10. Nothing is built yet.
+The code layout follows `docs/game-design.md` section 10: `packages/core` (the money logic and its tests), `packages/race-figure` (the shared `<race-figure>` element), `go/` (the Go version), `apps/lab` (the site), `tests/e2e` (browser tests).
 
 ## Run, check, deploy
-- Not set up yet. This section gets the real commands when the first code lands.
-- **Deploy:** not set up. Creating the Worker, the `lab.sabajanelidze.com` subdomain or the GitHub repo needs Saba's OK.
+- **Install:** `pnpm install`. **Run:** `pnpm build`, then `pnpm --filter @lab/site exec astro preview` (one preview server at a time).
+- **Checks:** `pnpm check` (lint, types, core and figure tests, build; the pre-commit hook runs it). Browser tests: `pnpm exec playwright test` (stop your own preview first). Go: `cd go && go test ./...`.
+- **Hosting:** a Cloudflare Worker that only serves files (`apps/lab/wrangler.jsonc`, name `sabajanelidze-lab`): `apps/lab/dist` with `apps/lab/public/_headers` (security and cache headers), `robots.txt`, the sitemap and a 404 page. The link-preview picture is made by `apps/lab/scripts/og-image.mjs`.
+- **Dry run before every deploy:** `pnpm --filter @lab/site cf:dry` (builds, lists the files, uploads nothing). Run wrangler only from `apps/lab` with `--config wrangler.jsonc`, never from the repo root (`../_shared/decisions/0004-deploy-safety.md`).
+- **Deploy:** not done yet. Deploying, the `lab.sabajanelidze.com` route and making the GitHub repo public each need Saba's OK.
 
 ## Rules
 

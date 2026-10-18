@@ -34,6 +34,15 @@ export const STATION_NAME: Record<string, string> = {
   books: 'End of shift',
 }
 
+/** The page for an address that does not exist. */
+export const NOT_FOUND = {
+  title: 'Page not found · On call',
+  description: "This page does not exist. The lab's incidents are on its home page.",
+  heading: 'This page does not exist.',
+  text: "Maybe the link is old, or it has a typo. The incidents are on the lab's home page.",
+  home: 'Go to the incidents →',
+}
+
 export const HOME = {
   title: 'On call: one day at a tiny crypto exchange',
   description:

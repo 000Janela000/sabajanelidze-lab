@@ -9,10 +9,17 @@ interface Props {
   title: string
   description: string
   station: string
+  /** A page search engines should not list (the page for a missing address). */
+  noindex?: boolean
 }
 
-const { title, description, station } = Astro.props
-const canonical = new URL(Astro.url.pathname, Astro.site)
+const { title, description, station, noindex = false } = Astro.props
+// The address the page is served at: without ".html" (the build writes day/payments.html, the Worker serves
+// /day/payments) and without "index" (the home page is /).
+const path = Astro.url.pathname.replace(/(index)?\.html$/, '').replace(/(.)\/$/, '$1') || '/'
+const canonical = new URL(path, Astro.site)
+// The picture a link preview shows (chat apps, social sites): the home page's first screen, 1200 x 630.
+const image = new URL('/og-image.png', Astro.site)
 
 // Applies a saved Light/Dark choice before the first paint, the same as the portfolio (key "theme"; the old
 // values "paper" and "blueprint" are read as light and dark). If storage is blocked, the system setting decides,
@@ -27,11 +34,16 @@ const themeBoot = `(function(){var d=document.documentElement;d.classList.add("j
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
-    <link rel="canonical" href={canonical} />
+    {noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta property="og:type" content="website" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={image} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
     <meta name="theme-color" content="#f7f5f0" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#15181d" media="(prefers-color-scheme: dark)" />
     <Fonts />

@@ -1,0 +1,21 @@
+---
+import Base from '../layouts/Base.astro'
+import { NOT_FOUND } from '../site-texts.ts'
+---
+
+<Base title={NOT_FOUND.title} description={NOT_FOUND.description} station="404" noindex>
+  <section class="missing">
+    <h1 class="h1">{NOT_FOUND.heading}</h1>
+    <p>{NOT_FOUND.text}</p>
+    <p><a class="btn" href="/">{NOT_FOUND.home}</a></p>
+  </section>
+</Base>
+
+<style>
+  .missing {
+    display: grid;
+    gap: var(--space-4);
+    padding-block: var(--space-8);
+    max-width: 40em;
+  }
+</style>

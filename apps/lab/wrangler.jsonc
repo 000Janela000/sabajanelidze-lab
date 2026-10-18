@@ -1,0 +1,21 @@
+// Cloudflare Worker "sabajanelidze-lab": serves the built static site (dist/). No Worker code, only files.
+// SAFETY (../../_shared/decisions/0004-deploy-safety.md): run wrangler ONLY from apps/lab with --config wrangler.jsonc,
+// and run `pnpm --filter @lab/site cf:dry` (builds, then a dry run that uploads nothing) before every deploy.
+// Never deploy without Saba's OK.
+// No routes on purpose: lab.sabajanelidze.com does not exist yet. At launch, after Saba's OK, add
+// { "pattern": "lab.sabajanelidze.com", "custom_domain": true }.
+// public/_headers sets the security and cache headers; dist/404.html answers unknown addresses.
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "sabajanelidze-lab",
+  "compatibility_date": "2026-10-15",
+  // A first real deploy goes only to the workers.dev address (noindex, see public/_headers), never the live domain.
+  "workers_dev": true,
+  "preview_urls": true,
+  "assets": {
+    "directory": "./dist",
+    // /day/payments is served from dist/day/payments.html, and /day/payments/ redirects to it.
+    "html_handling": "drop-trailing-slash",
+    "not_found_handling": "404-page"
+  }
+}
