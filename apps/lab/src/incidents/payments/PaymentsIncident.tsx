@@ -403,11 +403,12 @@ export function PaymentsIncident(props: Props) {
             </div>
           </Layer>
           <Layer on={stage === STAGE.DEEPER}>
+            {/* No filled button here: the move is one of the three choices on the screen (Saba, 2026-10-19). */}
             <div class="m-deck-row">
               <button type="button" class="btn-2" onClick={() => goTo(STAGE.SOLVED)}>
                 {CLEAN_UP.back}
               </button>
-              <button type="button" class="btn" onClick={() => openProof(props.proofId)}>
+              <button type="button" class="btn-2" onClick={() => openProof(props.proofId)}>
                 {SOLVED.readCode}
               </button>
             </div>
