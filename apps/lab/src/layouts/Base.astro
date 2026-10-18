@@ -25,6 +25,10 @@ const image = new URL('/og-image.png', Astro.site)
 // values "paper" and "blueprint" are read as light and dark). If storage is blocked, the system setting decides,
 // as it does without JavaScript.
 const themeBoot = `(function(){var d=document.documentElement;d.classList.add("js");try{var t=localStorage.getItem("theme");if(t==="paper")t="light";if(t==="blueprint")t="dark";if(t==="light"||t==="dark"){d.setAttribute("data-theme",t);var c=t==="light"?"#f7f5f0":"#15181d";document.querySelectorAll('meta[name="theme-color"]').forEach(function(m){m.setAttribute("content",c)})}}catch(e){}})();`
+
+// Cloudflare Web Analytics (no cookies; the site "lab.sabajanelidze.com", made 2026-10-18; the token is public). It
+// loads only on the live address, so the browser tests on this PC and in CI are never counted as visits.
+const analytics = `if(location.hostname==="lab.sabajanelidze.com"){var s=document.createElement("script");s.defer=true;s.src="https://static.cloudflareinsights.com/beacon.min.js";s.setAttribute("data-cf-beacon",'{"token": "20d734c484b24e8dbb00dbcbfd4ec244"}');document.body.appendChild(s)}`
 ---
 
 <!doctype html>
@@ -71,5 +75,6 @@ const themeBoot = `(function(){var d=document.documentElement;d.classList.add("j
         <ThemeSwitch texts={LAYOUT.theme} />
       </div>
     </footer>
+    <script is:inline set:html={analytics} />
   </body>
 </html>
