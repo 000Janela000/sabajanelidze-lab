@@ -169,11 +169,20 @@ export function PaymentsIncident(props: Props) {
     else if (fix.last) fix.show(FIX_VIEW.RESULT)
   }
   const isRepro = stage === STAGE.REPRODUCE
+  // A patch that still loses, on screen: its readout gets the red edge, as a lost run's books do.
+  const fixLost =
+    fix.last !== null &&
+    fix.last.summary.losing > 0 &&
+    fix.last.id === fix.choice &&
+    fix.view === FIX_VIEW.RESULT &&
+    fix.filling === null
+  // The first move, spotlit: after the run on arrival and until the first tap, lane A's steps stand out.
+  const spotlit = isRepro && reproView === REPRO_VIEW.RACE && reproduce.hinting && !reproduce.running
 
   return (
     <section
       ref={machine}
-      class={`console machine${busy ? ' is-running' : ''}${moved ? ' moved' : ''}`}
+      class={`console machine${busy ? ' is-running' : ''}${moved ? ' moved' : ''}${spotlit ? ' is-spotlit' : ''}`}
       aria-label={CONSOLE.label}
     >
       <header class="m-head">
@@ -339,6 +348,7 @@ export function PaymentsIncident(props: Props) {
               title={READOUT.fix.title}
               subtitle={READOUT.fix.subtitle}
               cells={fixCells(count.summary, fix, props.patchRuns)}
+              lost={fixLost}
             />
           </Layer>
           <Layer on={stage === STAGE.SOLVED}>

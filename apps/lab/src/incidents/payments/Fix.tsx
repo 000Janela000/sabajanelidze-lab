@@ -13,7 +13,7 @@ import { IndentedCode } from '../../game/CodeText.tsx'
 import { Layer } from '../../game/Layer.tsx'
 import { type Said, TONE } from '../../game/Message.tsx'
 import { READOUT_TONE, type ReadoutCell } from '../../game/Readout.tsx'
-import { RunGrid } from '../../game/RunGrid.tsx'
+import { RunGrid, untilFilled } from '../../game/RunGrid.tsx'
 import { ScrollBox } from '../../game/ScrollBox.tsx'
 import type { CodeLine } from '../../lib/code-line.ts'
 import { AMOUNT, OPENING, PATCH, type PatchId, type PatchOption } from './setup.ts'
@@ -46,6 +46,8 @@ export interface FixGame {
   readonly choice: PatchId | null
   readonly view: FixView
   readonly last: Attack | null
+  /** A losing attack's runs while its grid fills (the result is told after). */
+  readonly filling: AllRunsSummary | null
   readonly running: boolean
   readonly tries: number
   readonly canAttack: boolean
@@ -62,6 +64,8 @@ export function useFix(props: { onFixed: (summary: AllRunsSummary) => void }): F
   const [choice, setChoice] = useState<PatchId | null>(null)
   const [view, setView] = useState<FixView>(FIX_VIEW.PATCH)
   const [last, setLast] = useState<Attack | null>(null)
+  // A patch that still loses: its runs, while the grid fills; the result is told once the last square is in.
+  const [filling, setFilling] = useState<AllRunsSummary | null>(null)
   const [running, setRunning] = useState(false)
   const [tries, setTries] = useState(0)
   const tabs = useRef<HTMLFieldSetElement>(null)
@@ -84,10 +88,18 @@ export function useFix(props: { onFixed: (summary: AllRunsSummary) => void }): F
         }
       }
     }
+    // The fix goes straight on to its own screen, which fills its grid there.
+    const holds = summary.losing === 0
+    if (!holds) {
+      setFilling(summary)
+      setView(FIX_VIEW.RESULT)
+      await untilFilled()
+      setFilling(null)
+    }
     setLast({ id: choice, summary, losingLine })
     setView(FIX_VIEW.RESULT)
     setRunning(false)
-    if (summary.losing === 0) props.onFixed(summary)
+    if (holds) props.onFixed(summary)
   }
 
   function choose(id: PatchId) {
@@ -114,14 +126,17 @@ export function useFix(props: { onFixed: (summary: AllRunsSummary) => void }): F
           lead: FIX.stillLoses(failed.summary.losing, failed.summary.runs, failed.losingLine),
           text: FIX.stillLosesWhy,
         }
-      : choice && !attackedThis
-        ? { tone: TONE.NONE, text: FIX.ready(FIX.patches[choice].name) }
-        : { tone: TONE.NONE, text: FIX.prompt }
+      : choice && running
+        ? { tone: TONE.NONE, text: FIX.attacking(FIX.patches[choice].name) }
+        : choice && !attackedThis
+          ? { tone: TONE.NONE, text: FIX.ready(FIX.patches[choice].name) }
+          : { tone: TONE.NONE, text: FIX.prompt }
 
   return {
     choice,
     view,
     last,
+    filling,
     running,
     tries,
     canAttack,
@@ -177,6 +192,8 @@ export function FixScreen(props: {
   const capacity = Math.max(...Object.values(props.patchRuns))
   const base = lineTexts(props.base)
   const last = game.last
+  // What the grid shows: a losing attack while it fills, else the last attack.
+  const shown = game.filling ?? last?.summary ?? null
   return (
     <div class="v-fix">
       <fieldset class="m-tabs" ref={game.tabs}>
@@ -214,20 +231,22 @@ export function FixScreen(props: {
         ))}
         <Layer on={game.view === FIX_VIEW.RESULT}>
           <RunGrid
-            key={`${last?.id ?? 'none'}-${game.tries}`}
-            outcomes={last?.summary.outcomes ?? null}
-            runs={last?.summary.runs ?? capacity}
+            key={`attack-${game.tries}`}
+            outcomes={shown?.outcomes ?? null}
+            runs={shown?.runs ?? capacity}
             capacity={capacity}
             small
             texts={{
-              of: COUNT.of(last?.summary.runs ?? capacity),
+              of: COUNT.of(shown?.runs ?? capacity),
               loseMoney: COUNT.loseMoney,
               legendSafe: COUNT.legendSafe,
               legendLost: COUNT.legendLost,
               unknown: READOUT.unknown,
-              summary: last
-                ? FIX.stillLoses(last.summary.losing, last.summary.runs, last.losingLine)
-                : COUNT.notRun(capacity),
+              summary: game.filling
+                ? COUNT.figureTitle
+                : last
+                  ? FIX.stillLoses(last.summary.losing, last.summary.runs, last.losingLine)
+                  : COUNT.notRun(capacity),
             }}
           />
         </Layer>

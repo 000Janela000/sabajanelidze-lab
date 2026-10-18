@@ -29,6 +29,8 @@ export interface RaceFigureTexts {
   readonly lane: (name: string) => string
   readonly pickLabel: (step: number, label: string) => string
   readonly slowHere: string
+  /** Under lane A's steps, pointing up at them, until the first tap. */
+  readonly yourMove: string
 }
 
 export interface RaceFigureProps {
@@ -100,6 +102,11 @@ function LaneRow(props: { name: 'A' | 'B'; lane: Lane; figure: RaceFigureProps }
         <div class="node end">
           <span class="res">{lane.result ?? ''}</span>
         </div>
+        {name === 'A' && figure.hinting && figure.onPick ? (
+          <span class="your-move" aria-hidden="true">
+            {figure.texts.yourMove}
+          </span>
+        ) : null}
         {name === 'A' && figure.slowAfter !== null ? (
           <span class="slow-mark" style={{ '--after': figure.slowAfter }}>
             <span>{figure.texts.slowHere}</span>

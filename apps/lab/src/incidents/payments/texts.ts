@@ -150,6 +150,8 @@ export const REPRODUCE = {
   laneFigure: 'Two requests racing through the same four steps',
   pickLabel: (step: number, label: string) => `Make request A slow after step ${step}: ${label}`,
   slowHere: 'slow here',
+  /** Under lane A's steps until the first tap (the spotlight). */
+  yourMove: '↑ Your move: tap a step',
   result: { PAID: 'paid 80', REFUSED: 'refused', UNKNOWN: 'unknown' } as Record<string, string>,
   running: (step: number) => `Request A gets slow after step ${step}…`,
   requestTitle: (name: string) => `Request ${name}`,
@@ -174,6 +176,8 @@ export const COUNT = {
   prompt: (runs: number) => `Your guess first: how many of the ${runs} lose money?`,
   guessLabel: 'Your guess',
   run: (runs: number) => `Run all ${runs}`,
+  /** While the grid fills, before the count is told. */
+  running: (runs: number) => `Running all ${runs} ways…`,
   of: (runs: number) => `of ${runs} ways to run`,
   loseMoney: 'lose money',
   legendSafe: (count: number | string) => `safe · ${count}`,
@@ -198,6 +202,8 @@ export const FIX = {
   changed: 'changed',
   codeLabel: (name: string) => `The code of "${name}"`,
   attack: 'Attack this patch',
+  /** While the attack's grid fills, before its result is told. */
+  attacking: (name: string) => `Attacking "${name}" with every way the two requests can run…`,
   tryAnother: 'Try another patch',
   stillLoses: (losing: number, runs: number, line: number | null) =>
     `Still loses money in ${losing} of ${runs} ways to run${line ? `, for example when A gets slow after step ${line}` : ''}.`,

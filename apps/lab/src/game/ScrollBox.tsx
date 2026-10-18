@@ -36,10 +36,25 @@ export function ScrollBox(props: {
     if (!element || !props.reveal) return
     const target = element.querySelector<HTMLElement>(props.reveal)
     if (!target) return
-    const top = target.offsetTop
+    // Positions in the box's scrolled content.
+    const contentTop = element.getBoundingClientRect().top - element.scrollTop
+    const at = (node: HTMLElement) => node.getBoundingClientRect().top - contentTop
+    // A sticky head covers the top of the box, and the "more below" fade its foot: a line there is not in view.
+    const covered = element.querySelector<HTMLElement>('.req-head')?.offsetHeight ?? 0
+    const fade = Math.min(48, element.clientHeight / 4)
+    const top = at(target)
     const bottom = top + target.offsetHeight
-    const inView = top >= element.scrollTop && bottom <= element.scrollTop + element.clientHeight
-    if (!inView) element.scrollTop = Math.max(0, top - element.clientHeight / 3)
+    const inView =
+      top >= element.scrollTop + covered && bottom <= element.scrollTop + element.clientHeight - fade
+    if (!inView) {
+      // The whole target above the fade, with as many whole lines above it as fit: scroll to the first line start
+      // that is far enough down, so no line is cut in half at the top. A target taller than the box starts at its top.
+      const lowest = bottom - (element.clientHeight - fade)
+      const highest = top - covered
+      const starts = [...element.querySelectorAll<HTMLElement>('li')].map((line) => at(line) - covered)
+      const start = starts.find((offset) => offset >= lowest && offset <= highest) ?? highest
+      element.scrollTop = Math.max(0, start)
+    }
     check()
   }, [props.revealKey])
 

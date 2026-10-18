@@ -1,8 +1,8 @@
-import { type AllRunsSummary, allRuns, formatCents, withdrawV01 } from '@lab/core'
+import { type AllRunsSummary, allRuns, formatCents, type RaceOutcome, withdrawV01 } from '@lab/core'
 import { useState } from 'preact/hooks'
 import { type Said, TONE } from '../../game/Message.tsx'
 import { READOUT_TONE, type ReadoutCell } from '../../game/Readout.tsx'
-import { RunGrid } from '../../game/RunGrid.tsx'
+import { RunGrid, untilFilled } from '../../game/RunGrid.tsx'
 import { AMOUNT, OPENING, type Reproduction } from './setup.ts'
 import { COUNT, READOUT } from './texts.ts'
 
@@ -24,6 +24,9 @@ function cleanGuess(text: string, runs: number): string {
 
 export interface CountGame {
   readonly guess: string
+  /** What the grid shows: every run, as soon as they ran (it fills in over 1.5 s). */
+  readonly outcomes: readonly RaceOutcome[] | null
+  /** The count, told once the grid is full. */
   readonly summary: AllRunsSummary | null
   readonly running: boolean
   readonly said: Said
@@ -35,6 +38,7 @@ export interface CountGame {
 /** Step 2: guess, then the machine runs build v0.1 every way it can run. */
 export function useCount(props: { runs: number }): CountGame {
   const [guess, setGuess] = useState('')
+  const [outcomes, setOutcomes] = useState<readonly RaceOutcome[] | null>(null)
   const [summary, setSummary] = useState<AllRunsSummary | null>(null)
   const [running, setRunning] = useState(false)
 
@@ -42,13 +46,18 @@ export function useCount(props: { runs: number }): CountGame {
     if (running || summary) return
     setRunning(true)
     const result = await allRuns(withdrawV01, OPENING, AMOUNT)
+    // The grid fills first; the count is told once its last square is in.
+    setOutcomes(result.outcomes)
+    await untilFilled()
     setSummary(result)
     setRunning(false)
   }
 
   const said: Said = summary
     ? { tone: TONE.LOST, text: COUNT.result(summary.losing, summary.runs, guess) }
-    : { tone: TONE.NONE, text: COUNT.prompt(props.runs) }
+    : running
+      ? { tone: TONE.NONE, text: COUNT.running(props.runs) }
+      : { tone: TONE.NONE, text: COUNT.prompt(props.runs) }
 
   function setCleanGuess(text: string): string {
     const cleaned = cleanGuess(text, props.runs)
@@ -56,15 +65,15 @@ export function useCount(props: { runs: number }): CountGame {
     return cleaned
   }
 
-  return { guess, summary, running, said, setGuess: setCleanGuess, run }
+  return { guess, outcomes, summary, running, said, setGuess: setCleanGuess, run }
 }
 
 /** Every way to run as a square: empty outlines until the run, then safe or lost. */
 export function CountView(props: { game: CountGame; runs: number }) {
-  const { summary, guess } = props.game
+  const { outcomes, summary, guess } = props.game
   return (
     <RunGrid
-      outcomes={summary?.outcomes ?? null}
+      outcomes={outcomes}
       runs={props.runs}
       texts={{
         of: COUNT.of(props.runs),

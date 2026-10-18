@@ -1,4 +1,23 @@
+import { type ComponentChildren, Fragment } from 'preact'
 import type { CodeToken } from '../lib/code-line.ts'
+
+const BREAK_AFTER = /[.(,]$/
+
+/**
+ * A narrow screen may break a line after a dot, a bracket or a comma, never inside a name (as the proof card does).
+ * The mark goes after every one, also at the end of a token: a "(" is often a token of its own.
+ */
+function breakable(text: string): ComponentChildren {
+  const parts = text.split(/(?<=[.(,])/)
+  const marked = parts.some((part) => BREAK_AFTER.test(part))
+  if (!marked) return text
+  return parts.map((part, index) => (
+    <Fragment key={index}>
+      {part}
+      {BREAK_AFTER.test(part) ? <wbr /> : null}
+    </Fragment>
+  ))
+}
 
 /** One line of code, coloured like a code editor (the colours are worked out at build time). */
 export function CodeText(props: { readonly tokens: readonly CodeToken[] }) {
@@ -7,10 +26,10 @@ export function CodeText(props: { readonly tokens: readonly CodeToken[] }) {
       {props.tokens.map((token, index) =>
         token.color ? (
           <span key={index} style={{ color: token.color }}>
-            {token.text}
+            {breakable(token.text)}
           </span>
         ) : (
-          token.text
+          breakable(token.text)
         ),
       )}
     </>

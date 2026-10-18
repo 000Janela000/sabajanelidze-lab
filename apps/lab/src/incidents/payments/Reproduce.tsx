@@ -393,6 +393,7 @@ export function RaceView(props: { game: ReproduceGame }) {
           lane: REPRODUCE.lane,
           pickLabel: REPRODUCE.pickLabel,
           slowHere: REPRODUCE.slowHere,
+          yourMove: REPRODUCE.yourMove,
         }}
         onPick={(step) => game.play(step, false)}
         busy={game.running}

@@ -47,7 +47,11 @@ export function CodePanel(props: CodePanelProps) {
   const head = (
     <header class="req-head">
       <strong>{texts.title}</strong> <span class="tag">{texts.tag}</span>{' '}
-      <span class={`chip chip-${props.state.toLowerCase()}`}>{texts.state[props.state]}</span>
+      <span
+        class={`chip chip-${props.state.toLowerCase()}${props.pausedLost && props.state === 'PAID' ? ' chip-lost' : ''}`}
+      >
+        {texts.state[props.state]}
+      </span>
     </header>
   )
 

@@ -142,6 +142,7 @@
 .m-status {
   display: flex;
   flex: none;
+  flex-direction: row-reverse;
   align-items: center;
   gap: var(--space-3);
 }
@@ -560,13 +561,34 @@
   visibility: hidden;
 }
 
-/* The grid fills in 1.5 s in total, however many runs there are. */
+/* The grid fills in 1.5 s in total, however many runs there are. A square still waiting keeps the outline it had
+   before the run, and its colour fills in over it, so the grid never looks half drawn. */
 @media (prefers-reduced-motion: no-preference) {
   .runs .cell-safe,
   .runs .cell-lost {
+    position: relative;
+    border: 1px solid var(--line-strong);
+    background: none;
+  }
+
+  .runs .cell-safe::after,
+  .runs .cell-lost::after {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
     opacity: 0;
     animation: cell-in var(--dur-instant) linear forwards;
     animation-delay: var(--d, 0ms);
+  }
+
+  .runs .cell-safe::after {
+    background: var(--safe);
+  }
+
+  .runs .cell-lost::after {
+    background-color: var(--lost);
+    background-image: repeating-linear-gradient(135deg, transparent 0 3px, rgba(0, 0, 0, 0.45) 3px 5px);
   }
 
   @keyframes cell-in {
@@ -725,12 +747,13 @@
 }
 
 /* A code line wraps under its own indent, two characters further in. */
+/* Wraps after a dot, a bracket or a comma (CodeText marks those places), never inside a name, as on the proof card. */
 .wrap-code {
   display: block;
   padding-left: calc(var(--i, 0) * 1ch + 2ch);
   text-indent: -2ch;
   white-space: pre-wrap;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 /* The lines this patch changes, compared with build v0.1. */
@@ -773,6 +796,12 @@
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface);
+}
+
+/* Every step's readout box has one height (the tallest one's), so a shorter one leaves its spare room inside the
+   box, not as a gap under it. */
+.m-readout > .layer {
+  display: grid;
 }
 
 .readout.lost {
@@ -847,16 +876,6 @@
   display: none;
 }
 
-@container console (width < 30rem) {
-  .rc dd .long {
-    display: none;
-  }
-
-  .rc dd .short {
-    display: inline;
-  }
-}
-
 .rc dd.pending {
   color: var(--muted);
 }
@@ -926,9 +945,14 @@
   gap: var(--space-2) var(--space-4);
 }
 
+/* Any button that cannot be pressed now looks the same: a dashed edge, muted words, no fill. Live buttons are solid.
+   (A fresh-eyes test, 2026-10-19: when live and locked buttons looked alike, live ones read as switched off.) */
 .machine .btn[aria-disabled="true"],
 .machine .btn-2[aria-disabled="true"] {
-  opacity: 0.55;
+  border-style: dashed;
+  border-color: var(--line-strong);
+  background: transparent;
+  color: var(--muted);
   cursor: not-allowed;
 }
 
@@ -1105,10 +1129,23 @@
   cursor: pointer;
 }
 
+/* Lane A's steps are buttons and look it: an accent ring on a tinted fill. Lane B's stay plain rings: markers.
+   (A fresh-eyes test, 2026-10-19: when both looked alike, "the circles look like a diagram, not buttons".) */
+.track button.dot > span {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 16%, var(--bg));
+  color: var(--fg);
+}
+
 .track button.dot:hover > span,
 .track button.dot[aria-pressed="true"] > span {
   border-color: var(--accent);
   color: var(--fg);
+}
+
+.track button.dot:hover > span {
+  background: var(--accent);
+  color: var(--accent-fg);
 }
 
 .node.ran .dot > span {
@@ -1242,6 +1279,64 @@
   }
 }
 
+/*
+ * The first move, spotlit (Saba, 2026-10-19). After the run on arrival and until the first tap, lane A's steps, the
+ * step names, the goal, the message and the Race/Code switch stay bright, and "← Your move" points at the steps; the
+ * rest steps back.
+ * 0.78 keeps every dimmed text above 5:1 (the pixel audit and axe), and does not read as "still loading" (0.3 did, in the
+ * fresh-eyes test).
+ */
+.machine .m-head,
+.machine .m-titlebar > :not(.m-toggle),
+.machine .m-readout,
+.machine .m-deck,
+.lane-b,
+.lane-a .lane-name,
+.lane-a .val,
+.slow-mark {
+  transition: opacity var(--dur-base) var(--ease-out);
+}
+
+.machine.is-spotlit .m-head,
+.machine.is-spotlit .m-titlebar > :not(.m-toggle),
+.machine.is-spotlit .m-readout,
+.machine.is-spotlit .m-deck,
+.machine.is-spotlit .lane-b,
+.machine.is-spotlit .lane-a .lane-name,
+.machine.is-spotlit .lane-a .val,
+.machine.is-spotlit .slow-mark {
+  opacity: 0.78;
+}
+
+/* The four steps are the strongest thing on the screen (a deeper tint than a plain button step), and none is picked
+   yet, so they all look the same, whatever the run on arrival did. */
+.machine.is-spotlit .lane-a button.dot > span,
+.machine.is-spotlit .lane-a .node.ran .dot > span {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 30%, var(--bg));
+  color: var(--fg);
+}
+
+/* "Your move", centred under lane A's four steps (any of them), in the strip kept for "slow here". */
+.your-move {
+  position: absolute;
+  bottom: 0.15rem;
+  left: 0;
+  width: calc(100% * (var(--cols) - 1) / var(--cols));
+  color: var(--accent);
+  font-size: var(--fs-sm);
+  font-weight: var(--weight-strong);
+  line-height: 1.2;
+  text-align: center;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* Meanwhile the run on arrival's "slow here" steps aside: the message says where A got slow. */
+.machine.is-spotlit .slow-mark {
+  opacity: 0;
+}
+
 /* ---------- The code a request runs (the screen's Code view) ---------- */
 .req {
   border: 1px solid var(--line);
@@ -1281,6 +1376,12 @@
 .chip-paid {
   border-color: var(--accent);
   color: var(--accent);
+}
+
+/* A payout that was one of the two in a run that lost money: red, as lane A's "paid 80" is. */
+.chip-paid.chip-lost {
+  border-color: var(--lost);
+  color: var(--lost);
 }
 
 .chip-slow {
@@ -1327,9 +1428,10 @@
   color: var(--accent);
 }
 
+/* Wraps at the places CodeText marks (after a dot, a bracket or a comma), never inside a name. */
 .row code {
   white-space: pre-wrap;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .row .label {
@@ -1433,8 +1535,22 @@ button.row:hover {
     padding: var(--space-3) var(--space-2);
   }
 
-  .rc {
-    padding: var(--space-2) 0.375rem;
+  /* The readout becomes a receipt: one line per number, label left, value right. Five columns left a label 38 px
+     at 320 px ("Customer" needs 60), so words broke in the middle; a line each never breaks one, in any language. */
+  .readout-cells {
+    grid-template-columns: minmax(0, 1fr);
+    padding-bottom: 0.25rem;
+  }
+
+  .rc,
+  .rc.wide {
+    grid-column: auto;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto;
+    align-items: baseline;
+    gap: var(--space-3);
+    padding: 0.125rem var(--space-3);
+    border-left: 0;
   }
 
   .rc dd {
