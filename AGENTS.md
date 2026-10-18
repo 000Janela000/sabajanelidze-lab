@@ -1,6 +1,6 @@
 # sabajanelidze-lab — Agent Instructions
 
-Saba Janelidze's demo lab: a browser game, **"Run a crypto exchange for one day"**, and later more working demos. Each part of the game is a real, working demo of a skill Saba sells (payments and ledgers, crypto deposits, identity checks, AI agents). It will run on a Cloudflare Worker at `lab.sabajanelidze.com` (not live yet). The portfolio (`../SabaJanelidze`, www.sabajanelidze.com) links to it.
+Saba Janelidze's demo lab: a browser game, **"On call: one day at a tiny crypto exchange"**, and later more working demos. Each part of the game is a real, working demo of a skill Saba sells (payments and ledgers, crypto deposits, identity checks, AI agents). It runs on a Cloudflare Worker at https://lab.sabajanelidze.com (live since 2026-10-18; the GitHub repo is public since then too). The portfolio (`../SabaJanelidze`, www.sabajanelidze.com) links to it.
 
 **This file is shared by every AI agent.** Claude Code reads it through `CLAUDE.md`. Codex reads it directly. Keep tool-specific notes out of here.
 
@@ -16,7 +16,7 @@ Saba Janelidze's demo lab: a browser game, **"Run a crypto exchange for one day"
 ## End of every session
 1. Update `STATUS.md` (log + open problems + next steps).
 2. Commit only with Saba's OK (see "Rules").
-3. Never push without Saba's OK. Once the Worker exists, a push may deploy the live lab.
+3. Push only within Saba's standing OK (`STATUS.md`, "Approvals in force"). A push does not deploy; only `wrangler deploy` does, and each deploy needs Saba's OK.
 
 ## Where things live
 | Path | What it is |
@@ -33,7 +33,8 @@ The code layout follows `docs/game-design.md` section 10: `packages/core` (the m
 - **Checks:** `pnpm check` (lint, types, core and figure tests, build; the pre-commit hook runs it). Browser tests: `pnpm exec playwright test` (stop your own preview first). Go: `cd go && go test ./...`.
 - **Hosting:** a Cloudflare Worker that only serves files (`apps/lab/wrangler.jsonc`, name `sabajanelidze-lab`): `apps/lab/dist` with `apps/lab/public/_headers` (security and cache headers), `robots.txt`, the sitemap and a 404 page. The link-preview picture is made by `apps/lab/scripts/og-image.mjs`.
 - **Dry run before every deploy:** `pnpm --filter @lab/site cf:dry` (builds, lists the files, uploads nothing). Run wrangler only from `apps/lab` with `--config wrangler.jsonc`, never from the repo root (`../_shared/decisions/0004-deploy-safety.md`).
-- **Deploy:** not done yet. Deploying, the `lab.sabajanelidze.com` route and making the GitHub repo public each need Saba's OK.
+- **Deploy (each one needs Saba's OK):** from `apps/lab`, after the dry run: `pnpm exec wrangler deploy --config wrangler.jsonc`. It goes live at once on `lab.sabajanelidze.com` and on the workers.dev test address (noindex).
+- **Check it live after every deploy:** `LAB_URL=https://lab.sabajanelidze.com pnpm exec playwright test --config playwright.live.config.ts` (the same browser tests, against the live site).
 
 ## Rules
 
@@ -74,7 +75,7 @@ The code layout follows `docs/game-design.md` section 10: `packages/core` (the m
 - **Name what a call gives back before you use it** (Saba, 2026-10-15). In the logic code (`packages/core`, `go/`): (1) a call whose result an `if`, `while` or `? :` tests gets its own named line first: not `if (!isValidAmount(amount))` but `const amountIsValid = isValidAmount(amount)`, then `if (!amountIsValid)`. (2) A call that does work (awaited, a store, the bank, the scheduler) never sits inside a condition, another call or a `return` next to other values: not `if (!(await race.step('A'))) break` but `const stepped = await race.step('A')`, then `if (!stepped) break`; in Go, not `return Result{…}, store.Settle(ctx, id)` but `err = store.Settle(ctx, id)`, then `return Result{…}, err`. Go's `if err := f(); err != nil` already names the result and stays. Screen code (`apps/lab`, `packages/race-figure`) may keep short checks like `if (!button)`, but never an `await` inside a condition or a call. Why: one step per line reads more easily, and in this code every `await` is a moment when another request can run. There is no speed or memory cost: the engine keeps the value either way.
 
 ### Git
-- **No commit and no push without Saba's OK.**
+- **No commit and no push without Saba's OK.** A standing OK for this repo is recorded in `STATUS.md` ("Approvals in force").
 - **Commits:** one line, `type(scope): summary` (types: `feature`, `bugfix`, `refactor`, `docs`, `chore`). No body, no trailers (`../_shared/standards/repo-conventions.md`).
 - Never commit `.env*`, keys or `private/`.
 
