@@ -5,6 +5,7 @@
 > Last updated: **2026-10-18**
 
 ## Where we are
+- **Held by:** the lab session that launched the lab, **handover pending** (2026-10-18, Saba's choice) to a new session started in a new terminal in this folder; its guide is `private/handover/2026-10-18-lab-session.md`. The role moves when Saba confers it in the new session's own window.
 - **Live:** **https://lab.sabajanelidze.com** since 2026-10-18 (incident 1, Payments). Test copy: `sabajanelidze-lab.ssjanelidze.workers.dev` (noindex).
 - **Stage:** Phase 2, launched with incident 1. Design v2 approved (`docs/game-design.md`). **Incident 1, Payments, works end to end** (briefing card → reproduce → count → fix → clean up → proof card), on the real code in `packages/core`. The proof card shows the fix in **TypeScript or Go** (tabs).
 - **Run it locally:** `pnpm install`, then `pnpm build` and `pnpm --filter @lab/site exec astro preview` (one preview server at a time; stop it with `pnpm --filter @lab/site exec astro preview stop` before `pnpm test:e2e`). Checks: `pnpm check`; Go: `cd go && go vet ./... && go test ./...` (the race detector `-race` needs a C compiler, so it runs in CI only on this PC).
