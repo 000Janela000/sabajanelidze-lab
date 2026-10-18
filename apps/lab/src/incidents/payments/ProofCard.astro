@@ -131,7 +131,7 @@ const length = (source: Excerpt) => source.endLine - source.startLine + 1
       {PROOF.chain(chain.commits, chain.agentCommits, chain.checksRun, chain.refusals)}{' '}
       {PROOF.reviewsLead} <a class="link" href={reviews.incident}>{PROOF.reviewIncident}</a>,{' '}
       <a class="link" href={reviews.go}>{PROOF.reviewGo}</a>. <a class="link" href={chain.ciUrl}>{PROOF.ciLink}</a>.{' '}
-      {PROOF.lastChange} <a class="link hash" href={chain.lastCommitUrl}>{chain.lastCommit}</a>. {PROOF.approval}
+      {PROOF.lastChange} <a class="link hash" href={chain.lastCommitUrl}>{chain.lastCommit}</a>.
     </p>
 
     <p class="book">

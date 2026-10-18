@@ -339,13 +339,12 @@ export const PROOF = {
   reconcileTitle: 'The end-of-day reconciliation',
   chainHeading: 'How this code was built',
   chain: (commits: number, agentCommits: number, checksRun: number, refusals: number) =>
-    `${commits} ${commits === 1 ? 'commit' : 'commits'} on this code, ${agentCommits === commits ? 'all' : agentCommits} written by an AI agent (Claude). The local checks before a commit ran ${checksRun} ${checksRun === 1 ? 'time' : 'times'} on this code and refused ${refusals}; on every push, CI runs the tests, the real-database race and Go's race detector. Codex (another company's AI) reviewed this incident twice: eight findings on the TypeScript and its page, four on the Go version. All were fixed, with tests for the money cases.`,
+    `Saba chose what to build, set the rules and approved every step. An AI agent (Claude) wrote ${agentCommits === commits ? 'all' : `${agentCommits} of the`} ${commits} ${commits === 1 ? 'commit' : 'commits'} on this code. The local checks before a commit ran ${checksRun} ${checksRun === 1 ? 'time' : 'times'} on this code and refused ${refusals}; on every push, CI runs the tests, the real-database race and Go's race detector. Codex, OpenAI's AI for code, reviewed this incident twice as a second opinion: eight findings on the TypeScript and its page, four on the Go version. All were fixed, with tests for the money cases.`,
   ciLink: 'Result of the automatic checks (CI) for this build',
   lastChange: 'Last change:',
   reviewsLead: 'The reviews, word for word:',
   reviewIncident: 'incident 1',
   reviewGo: 'the Go version',
-  approval: 'Saba approves each incident before it goes live.',
   book: 'I build this for teams that handle money.',
   bookButton: 'Book a call',
 }

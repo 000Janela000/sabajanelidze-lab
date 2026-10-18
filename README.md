@@ -12,7 +12,7 @@ You are on call at a made-up crypto exchange. Each incident is a 2-minute puzzle
 - Every step of the game runs the TypeScript in `packages/core`, which has its own tests.
 - The same fix is also written in Go, in `go/payments`.
 - On every push, CI sends 20 withdrawals at once to a real Postgres database: build v0.1 pays out more than once, build v1 exactly once.
-- Codex (another company's AI) reviewed this incident twice. Both reviews are published word for word in `docs/reviews/`.
+- Codex, OpenAI's AI for code, reviewed this incident twice as a second opinion. Both reviews are published word for word in `docs/reviews/`.
 
 ## Run the tests yourself
 
