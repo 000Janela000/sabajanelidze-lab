@@ -247,6 +247,24 @@ test('"Find the bug" puts focus on the first step the visitor can tap, after the
   await expect(page.getByText(/Your turn: tap a step on lane A\./)).toBeVisible()
 })
 
+test("on a phone the next move rides at the screen's foot, and never over the console's heading", async ({
+  page,
+}, info) => {
+  test.skip(info.project.name === 'desktop', 'the deck rides on phones only')
+  await page.goto('/day/payments')
+  // Before the console is being played (its top below the middle of the screen), the deck stays in its place.
+  await expect(page.locator('.m-deck')).not.toHaveClass(/can-ride/)
+  await openTheConsole(page)
+  await page.getByRole('button', { name: /Make request A slow after step 2/ }).click()
+  await expect(page.getByText(/^Reproduced on try 1\./)).toBeVisible()
+  // On screen without scrolling (a click would scroll for us, so measure instead).
+  const next = page.getByRole('button', { name: 'Next: how often does this happen? →', exact: true })
+  const box = await next.boundingBox()
+  const screen = page.viewportSize()?.height ?? 0
+  expect(box?.y ?? -1).toBeGreaterThanOrEqual(0)
+  expect((box?.y ?? screen) + (box?.height ?? 1)).toBeLessThanOrEqual(screen)
+})
+
 test('"Find the bug" pressed while the game is still loading still ends on the first step', async ({
   page,
 }) => {

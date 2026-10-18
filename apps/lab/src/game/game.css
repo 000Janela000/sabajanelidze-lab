@@ -32,10 +32,11 @@
 }
 
 /* ---------- The machine ---------- */
+/* Clip, not hidden: the same rounded edge, but no scroll box of its own, so the deck can stick on phones. */
 .console {
   border: 1px solid var(--line-strong);
   border-radius: var(--radius-card);
-  overflow: hidden;
+  overflow: clip;
 }
 
 .machine {
@@ -1557,6 +1558,35 @@ button.row:hover {
     font-size: 0.8125rem;
   }
 
+  /* The deck rides at the screen's foot while the console is on screen, and settles back into its place at the
+     console's foot: of three phone demos, Saba chose this docking deck (2026-10-19), as the console is taller than a
+     phone's screen. Its box keeps its place in the layout, so nothing jumps, and each button exists once. It rides
+     once the console's top is in the upper half of the screen (deck-riding.ts), never over the console's heading. */
+  .m-deck.can-ride {
+    position: sticky;
+    bottom: 0;
+    z-index: 3;
+    background: var(--bg);
+    box-shadow: 0 0 0 var(--space-3) var(--bg);
+  }
+
+  /* While it rides (deck-riding.ts), an edge and a shadow say it floats above the console. */
+  .m-deck::before {
+    content: "";
+    position: absolute;
+    inset: calc(-1 * var(--space-3)) calc(-1 * var(--space-3)) auto;
+    height: 1px;
+    background: var(--line-strong);
+    box-shadow: 0 -14px 24px 6px rgba(5, 7, 10, 0.75);
+    opacity: 0;
+    transition: opacity var(--dur-base) var(--ease-out);
+    pointer-events: none;
+  }
+
+  .m-deck.is-riding::before {
+    opacity: 1;
+  }
+
   /* The race's head row has no free corner here: the stamp lands in a strip kept free for it under lane B. */
   .v-race {
     padding-bottom: 2.75rem;
@@ -1590,6 +1620,14 @@ button.row:hover {
   .m-run-label,
   .m-dots {
     display: none;
+  }
+}
+
+/* On a phone, whatever gets focus scrolls clear of the riding deck (it is about 7.5rem tall), so focus is never
+   hidden under it. */
+@media (max-width: 32.5rem) {
+  :root {
+    scroll-padding-bottom: 8rem;
   }
 }
 

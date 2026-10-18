@@ -1,5 +1,6 @@
 import type { AllRunsSummary } from '@lab/core'
 import { useMemo, useRef, useState } from 'preact/hooks'
+import { useDeckRiding } from '../../game/deck-riding.ts'
 import { Layer } from '../../game/Layer.tsx'
 import { Message, type Said } from '../../game/Message.tsx'
 import { PauseGate } from '../../game/pause-gate.ts'
@@ -62,6 +63,8 @@ export function PaymentsIncident(props: Props) {
   const [moved, setMoved] = useState(false)
   const gate = useRef(new PauseGate())
   const machine = useRef<HTMLElement>(null)
+  const deck = useRef<HTMLDivElement>(null)
+  useDeckRiding(deck, machine)
   const headings = useRef<Partial<Record<Stage, HTMLHeadingElement | null>>>({})
   const fixRuns = props.patchRuns.RESERVE
 
@@ -370,7 +373,7 @@ export function PaymentsIncident(props: Props) {
 
         <Message said={said[stage]} sizers={sizers} />
 
-        <div class="stack m-deck">
+        <div ref={deck} class="stack m-deck">
           <Layer on={stage === STAGE.REPRODUCE}>
             <div class="m-deck-row">
               <NextButton
