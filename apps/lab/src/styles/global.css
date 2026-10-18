@@ -49,10 +49,10 @@
   --accent-soft: rgba(147, 173, 230, 0.12);
   --danger: #ef8f7c;
   --danger-soft: rgba(239, 143, 124, 0.12);
-  --btn-bg: #36528f;
-  --btn-bg-hover: #4562a3;
-  --btn-fg: #ffffff;
-  --btn-border: #6a88c8;
+  --btn-bg: #93ade6;
+  --btn-bg-hover: #b4c8f0;
+  --btn-fg: #121722;
+  --btn-border: transparent;
   --focus: #93ade6;
   background: var(--bg);
   color: var(--fg);
@@ -66,6 +66,23 @@
   descent-override: 22.48%;
   line-gap-override: 0%;
   size-adjust: 107.4%;
+}
+
+/* The same for the headings: Georgia, sized to Newsreader 500's average width and vertical metrics (as the
+   portfolio does), so the swap to Newsreader barely moves the text. */
+@font-face {
+  font-family: "Newsreader Fallback";
+  src: local("Georgia");
+  size-adjust: 98%;
+  ascent-override: 75%;
+  descent-override: 27%;
+  line-gap-override: 0%;
+}
+
+/* Georgian has no serif here: Georgian headings use Noto Sans Georgian 600. */
+:lang(ka) {
+  --font-display: var(--font-ka);
+  --weight-display: var(--weight-strong);
 }
 
 *,
@@ -151,6 +168,13 @@ button {
 }
 
 /* Numbers that line up, in the body font (monospace is only for real code). */
+/* Sources, dates and money figures: the small monospace, digits all one width (tokens v3). */
+.ui-source {
+  font-family: var(--font-source);
+  font-size: var(--fs-source);
+  font-variant-numeric: tabular-nums;
+}
+
 .tnum {
   font-variant-numeric: tabular-nums;
 }
@@ -355,10 +379,17 @@ button {
   font-weight: var(--weight-strong);
 }
 
+/* Headings of 24 px and up are in the heading face (tokens v3); smaller ones stay in Inter. */
+.h1,
+.h2 {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+}
+
 .h1 {
   max-width: 16em;
   font-size: var(--fs-hero);
-  font-weight: var(--weight-strong);
+  font-weight: var(--weight-display);
   line-height: var(--lh-tight);
   letter-spacing: var(--tracking-display);
   text-wrap: balance;
@@ -366,7 +397,7 @@ button {
 
 .h2 {
   font-size: var(--fs-2xl);
-  font-weight: var(--weight-strong);
+  font-weight: var(--weight-display);
   line-height: var(--lh-heading);
   letter-spacing: var(--tracking-heading);
 }

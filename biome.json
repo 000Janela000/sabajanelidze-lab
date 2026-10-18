@@ -9,7 +9,8 @@
       "!build-log",
       "!private",
       "!test-results",
-      "!playwright-report"
+      "!playwright-report",
+      "!apps/lab/src/styles/tokens.css"
     ]
   },
   "formatter": {

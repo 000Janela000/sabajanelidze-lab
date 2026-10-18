@@ -497,9 +497,10 @@
 }
 
 .runs-head .big {
-  font-family: var(--font-code);
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
   font-size: var(--fs-xl);
-  font-weight: var(--weight-strong);
+  font-weight: var(--weight-display);
   line-height: 1;
   font-variant-numeric: tabular-nums;
   color: var(--lost);
@@ -831,8 +832,8 @@
 
 .rc dd {
   margin: 0;
-  font-family: var(--font-code);
-  font-size: 0.9375rem;
+  font-family: var(--font-source);
+  font-size: var(--fs-source);
   font-weight: var(--weight-strong);
   line-height: 1.35;
   white-space: nowrap;

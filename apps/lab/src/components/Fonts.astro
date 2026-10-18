@@ -1,18 +1,30 @@
 ---
-// Self-hosted Inter (Latin), the two weights the design uses (400 and 600), woff2 only.
-// The same set-up as the portfolio, so the two sites look like one family.
+// Self-hosted fonts, the same set-up as the portfolio (tokens v3), so the two sites look like one family.
+// Inter (Latin body): the two weights the design uses (400 and 600), woff2 only.
+// Newsreader (Latin headings of 24 px and up): ONE file, weight 500, optical size 24 to 72, cut down to the
+// characters headings use (25 KB). Copied from the portfolio (src/assets/fonts/), licence next to it
+// (SIL Open Font License 1.1, assets/fonts/Newsreader-OFL.txt).
 import inter400 from '@fontsource/inter/files/inter-latin-400-normal.woff2?url'
 import inter600 from '@fontsource/inter/files/inter-latin-600-normal.woff2?url'
+import newsreader500 from '../assets/fonts/newsreader-latin-500-opsz.woff2?url'
 
 const LATIN =
   'U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD'
 
-const face = (weight: number, url: string) =>
-  `@font-face{font-family:"Inter";font-style:normal;font-weight:${weight};font-display:swap;src:url(${url}) format("woff2");unicode-range:${LATIN}}`
+// Exactly the characters inside the Newsreader file. Anything else in a heading falls back to Georgia.
+const DISPLAY =
+  'U+0020-007E,U+00A0,U+00A9,U+00B7,U+00D7,U+2013-2014,U+2018-2019,U+201C-201D,U+2026,U+2192,U+2212'
 
-const css = face(400, inter400) + face(600, inter600)
+const face = (family: string, weight: number, url: string, range: string) =>
+  `@font-face{font-family:"${family}";font-style:normal;font-weight:${weight};font-display:swap;src:url(${url}) format("woff2");unicode-range:${range}}`
+
+const css =
+  face('Inter', 400, inter400, LATIN) +
+  face('Inter', 600, inter600, LATIN) +
+  face('Newsreader', 500, newsreader500, DISPLAY)
 ---
 
 <link rel="preload" href={inter400} as="font" type="font/woff2" crossorigin />
 <link rel="preload" href={inter600} as="font" type="font/woff2" crossorigin />
+<link rel="preload" href={newsreader500} as="font" type="font/woff2" crossorigin />
 <style is:inline set:html={css}></style>

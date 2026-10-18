@@ -1,5 +1,5 @@
 /* Design tokens: the shared visual contract of sabajanelidze.com.
-   Version 2 (2026-10-15, Phase 1c "Calm"). Human guide and change list: docs/design-tokens.md.
+   Version 3 (2026-10-15, Phase 1e "Calm, with one live proof"). Human guide and change list: docs/design-tokens.md.
 
    Plain CSS custom properties, no build step and no Tailwind needed, so another site
    (for example the lab at lab.sabajanelidze.com) can copy this one file as it is.
@@ -11,33 +11,43 @@
    1. <html data-theme="light"> or <html data-theme="dark"> (the visitor picked one in the footer switch), else
    2. the visitor's system setting (prefers-color-scheme), else light.
    This works without JavaScript; JavaScript only sets data-theme when the visitor picks one.
-   The version 1 names still work: data-theme="paper" = light, data-theme="blueprint" = dark. */
+   The version 1 names still work: data-theme="paper" = light, data-theme="blueprint" = dark.
+
+   Version 3 in one breath: headings in Newsreader (a serif), sources / dates / money figures in a small
+   monospace, the blue accent has three jobs (link underlines, focus rings, movement in the hero figure),
+   and red (--danger) has one: the money loss in the hero figure. */
 
 :root {
   /* ---------- Fonts ---------- */
-  --font-body:
-    "Inter", "Inter Fallback", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --font-body: "Inter", "Inter Fallback", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  /* Headings 24 px and up: h1, h2, the big numbers, the one big card title. Newsreader 500, Latin only,
+     self-hosted (src/assets/fonts/), optical size on. Georgian pages swap in --font-ka (see global.css). */
+  --font-display: "Newsreader", "Newsreader Fallback", Georgia, "Times New Roman", serif;
   --font-ka: "Noto Sans Georgian", "Inter", "Inter Fallback", ui-sans-serif, system-ui, sans-serif;
-  --font-code:
-    ui-monospace, "SF Mono", "Cascadia Mono", "Segoe UI Mono", Consolas, "Liberation Mono", monospace; /* only real commands and code */
+  /* The system monospace (0 KB). Two uses only: real commands and code, and --font-source below. */
+  --font-code: ui-monospace, "SF Mono", "Cascadia Mono", "Segoe UI Mono", Consolas, "Liberation Mono", monospace;
+  /* Sources, dates and money figures, so a sourced fact looks sourced. Always with tabular numbers. */
+  --font-source: var(--font-code);
   --weight-regular: 400;
-  --weight-strong: 600; /* the only two weights the site loads */
+  --weight-strong: 600; /* Inter's only two weights */
+  --weight-display: 500; /* Newsreader's only weight */
 
   /* ---------- Type scale (fluid: grows with the screen, never smaller than the first value) ---------- */
-  --fs-xs: 0.8125rem; /* 13 px: tags only. Never for sources, dates or captions */
-  --fs-sm: 0.9375rem; /* 15 px: sources, dates, meta lines, notes, footer */
+  --fs-xs: 0.8125rem; /* 13 px: tags and the hero figure's small labels only */
+  --fs-source: 0.875rem; /* 14 px: sources, dates and money figures in --font-source (mono runs large) */
+  --fs-sm: 0.9375rem; /* 15 px: meta lines, notes, footer */
   --fs-base: 1.0625rem; /* 17 px: body text */
   --fs-md: clamp(1.0625rem, 0.25vw + 1rem, 1.1875rem); /* 17 to 19 px: section intros, lead paragraphs */
   --fs-lg: clamp(1.125rem, 0.4vw + 1.02rem, 1.3125rem); /* 18 to 21 px: card titles, outcomes */
-  --fs-xl: clamp(1.5rem, 1.1vw + 1.15rem, 2rem); /* 24 to 32 px: the numbers row, big card titles */
+  --fs-xl: clamp(1.5rem, 1.1vw + 1.15rem, 2rem); /* 24 to 32 px: the numbers row, the big card title */
   --fs-2xl: clamp(1.75rem, 1.4vw + 1.3rem, 2.5rem); /* 28 to 40 px: section headings (h2) */
-  --fs-hero: clamp(2rem, 2.3vw + 1.45rem, 3.25rem); /* 32 to 52 px: the pitch (h1) */
-  --lh-tight: 1.12; /* h1 */
-  --lh-heading: 1.18; /* h2, h3 */
+  --fs-hero: clamp(2rem, 1.6vw + 1.4rem, 2.875rem); /* 32 to 46 px: the pitch (h1), in the left of two columns */
+  --lh-tight: 1.1; /* h1 */
+  --lh-heading: 1.16; /* h2, h3 */
   --lh-snug: 1.4; /* short UI text */
   --lh-body: 1.62; /* paragraphs */
-  --tracking-display: -0.026em; /* h1 only (English only: Georgian never gets letter-spacing) */
-  --tracking-heading: -0.018em; /* h2, h3 */
+  --tracking-display: -0.015em; /* h1 (Latin only: Georgian never gets letter-spacing) */
+  --tracking-heading: -0.01em; /* h2, the numbers */
 
   /* ---------- Spacing (4 px base) ---------- */
   --space-1: 0.25rem; /* 4 */
@@ -57,38 +67,43 @@
   /* ---------- Radii (soft, never round except pills) ---------- */
   --radius-tag: 4px; /* tags, small boxes (not --radius-sm: that name belongs to Tailwind) */
   --radius: 8px; /* buttons, inputs */
-  --radius-card: 12px; /* cards, images */
+  --radius-card: 12px; /* cards, images, the hero figure */
   --radius-pill: 999px; /* small round controls */
 
   /* ---------- Motion (AGENTS.md "Motion rules") ---------- */
   --dur-instant: 100ms; /* a press */
-  --dur-fast: 150ms; /* hover, colour */
+  --dur-fast: 150ms; /* hover, colour, the 2 px nudges */
   --dur-base: 250ms; /* menus, reveals */
   --dur-page: 300ms; /* page changes */
   --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1); /* things that appear */
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1); /* things that move from A to B */
+  --nudge: 2px; /* how far a card image lifts or a link arrow moves on hover */
 
   /* ---------- Colours: light (the default) ----------
-     Contrast on --bg (WCAG 2.2, checked by private/design/phase1c/contrast-audit.md):
-     --fg 14.4:1, --muted 7.1:1, --accent 7.3:1, --line-strong 3.3:1 (non-text), --faint 2.9:1 (decoration only). */
+     Contrast on --bg (WCAG 2.2, checked by the pixel audit in private/design/phase1e/):
+     --fg 14.4:1, --muted 7.1:1, --accent 7.3:1, --danger 6.1:1, --line-strong 3.4:1 (non-text), --faint 2.9:1 (decoration only). */
   --bg: #f7f5f0; /* page: warm off-white */
-  --surface: #fdfcf9; /* cards */
+  --surface: #fdfcf9; /* cards, the hero figure */
   --surface-2: #efebe2; /* insets: code, pressed controls */
   --fg: #18233a; /* text (navy) */
   --muted: #4a5366; /* secondary text: sources, dates, meta lines */
   --faint: #8b909b; /* decoration only, never for text */
   --line: #e2ddd2; /* hairlines between rows and around cards (decoration: no contrast needed, never behind text) */
   --line-strong: #80848e; /* lines that carry meaning: control borders, diagram lines (3:1 or more) */
-  --accent: #2b4aa6; /* the one accent: calm blue. Links, the focus ring, diagram marks */
+  /* The one accent: calm blue. Its three jobs: link underlines, the focus ring, movement in the hero figure
+     (its lanes, nodes and checks). It is not a text colour for body copy and not a fill for panels. */
+  --accent: #2b4aa6;
   --accent-hover: #1f3a8a; /* a link under the pointer */
   --accent-fg: #ffffff; /* text on a filled accent surface */
-  --accent-soft: rgba(43, 74, 166, 0.07); /* soft highlight panels */
-  --danger: #a8321c; /* only for failures (case-study diagrams), never a second accent */
+  --accent-soft: rgba(43, 74, 166, 0.07); /* parked explainers only; never behind text on the home page */
+  /* Red has exactly one job: the money loss in the hero figure (later also failures in case-study diagrams).
+     Never a second accent, never a warning colour for anything else. */
+  --danger: #a8321c;
   --danger-soft: rgba(168, 50, 28, 0.07);
-  --btn-bg: #18233a; /* main button: navy */
+  --btn-bg: #18233a; /* main button: navy, no border */
   --btn-bg-hover: #2b4aa6;
   --btn-fg: #ffffff;
-  --btn-border: #18233a; /* the main button's edge (3:1 or more against --bg) */
+  --btn-border: transparent; /* kept for old copies; the main button has no visible border since v3 */
   --focus: #2b4aa6; /* the focus ring */
   --ring: var(--faint); /* empty states of diagram nodes (parked explainers) */
   --theme-color: #f7f5f0; /* the browser bar colour on phones */
@@ -98,7 +113,8 @@
 /* ---------- Colours: dark ----------
    Two copies of the same block: one for "the visitor picked dark", one for
    "the visitor picked nothing and the system is dark". Keep them identical.
-   Contrast on --bg: --fg 14.5:1, --muted 8.2:1, --accent 7.9:1, --line-strong 3.8:1 (non-text). */
+   Contrast on --bg: --fg 14.5:1, --muted 8.2:1, --accent 7.9:1, --danger 7.5:1, --line-strong 3.8:1 (non-text).
+   The main button is the accent itself (v3): dark text on calm blue, 8.0:1, no border. */
 :root[data-theme="dark"],
 :root[data-theme="blueprint"] {
   --bg: #15181d;
@@ -115,10 +131,10 @@
   --accent-soft: rgba(147, 173, 230, 0.1);
   --danger: #ef8f7c;
   --danger-soft: rgba(239, 143, 124, 0.1);
-  --btn-bg: #36528f;
-  --btn-bg-hover: #4562a3;
-  --btn-fg: #ffffff;
-  --btn-border: #6a88c8;
+  --btn-bg: #93ade6;
+  --btn-bg-hover: #b4c8f0;
+  --btn-fg: #121722;
+  --btn-border: transparent;
   --focus: #93ade6;
   --ring: var(--faint);
   --theme-color: #15181d;
@@ -140,10 +156,10 @@
     --accent-soft: rgba(147, 173, 230, 0.1);
     --danger: #ef8f7c;
     --danger-soft: rgba(239, 143, 124, 0.1);
-    --btn-bg: #36528f;
-    --btn-bg-hover: #4562a3;
-    --btn-fg: #ffffff;
-    --btn-border: #6a88c8;
+    --btn-bg: #93ade6;
+    --btn-bg-hover: #b4c8f0;
+    --btn-fg: #121722;
+    --btn-border: transparent;
     --focus: #93ade6;
     --ring: var(--faint);
     --theme-color: #15181d;
