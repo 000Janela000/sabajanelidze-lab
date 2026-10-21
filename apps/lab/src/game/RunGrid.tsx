@@ -31,22 +31,29 @@ export function untilFilled(): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, fill))
 }
 
+/** Whether a run of incident 1 lost money. */
+export const raceLost = (outcome: RaceOutcome): boolean => outcome.picture.lost !== 0
+
 /**
  * Every run as one square: solid blue safe, hatched red lost. Before the run (`outcomes` null) the squares are
  * empty outlines, so the grid already has its final size. `capacity` keeps room for a larger run than this one (the
  * extra squares are laid out but not shown), so grids of different sizes take the same space. Cells fill one by one
  * over their outlines (at once with reduced motion); key the grid by the run to replay that. The number and the
- * legend wait for the last square, so the result lands with its proof, not before it.
+ * legend wait for the last square, so the result lands with its proof, not before it. With `labels`, each run is a
+ * small card with its label written on it (the order its messages arrived in) and a bar under it that fills: the
+ * label never sits on the hatched red.
  */
-export function RunGrid(props: {
-  outcomes: readonly RaceOutcome[] | null
+export function RunGrid<T>(props: {
+  outcomes: readonly T[] | null
+  isLost: (outcome: T) => boolean
+  labels?: readonly string[]
   runs: number
   capacity?: number
   small?: boolean
   texts: RunGridTexts
 }) {
-  const { outcomes, texts } = props
-  const [filled, setFilled] = useState<readonly RaceOutcome[] | null>(null)
+  const { outcomes, isLost, texts } = props
+  const [filled, setFilled] = useState<readonly T[] | null>(null)
   useEffect(() => {
     if (!outcomes) {
       setFilled(null)
@@ -56,25 +63,24 @@ export function RunGrid(props: {
     return () => clearTimeout(timer)
   }, [outcomes])
   const ran = filled !== null
-  const losing = filled ? filled.filter((outcome) => outcome.picture.lost !== 0).length : null
+  const losing = filled ? filled.filter(isLost).length : null
   const total = Math.max(props.capacity ?? 0, props.runs)
   const cells: ComponentChildren[] = []
   for (let index = 0; index < total; index++) {
     const outcome = outcomes?.[index]
     const spare = index >= props.runs
-    const kind = spare
-      ? 'cell-spare'
-      : !outcome
-        ? 'cell-empty'
-        : outcome.picture.lost !== 0
-          ? 'cell-lost'
-          : 'cell-safe'
+    const kind = spare ? 'cell-spare' : !outcome ? 'cell-empty' : isLost(outcome) ? 'cell-lost' : 'cell-safe'
+    const delay = outcome ? { '--d': `${Math.round((index * FILL_MS) / props.runs)}ms` } : undefined
+    const label = props.labels?.[index]
     cells.push(
-      <span
-        key={index}
-        class={`cell ${kind}`}
-        style={outcome ? { '--d': `${Math.round((index * FILL_MS) / props.runs)}ms` } : undefined}
-      />,
+      label === undefined ? (
+        <span key={index} class={`cell ${kind}`} style={delay} />
+      ) : (
+        <span key={index} class={`lcell${spare ? ' cell-spare' : ''}`}>
+          <span class="lcell-text">{label}</span>
+          <span class={`cell ${kind}`} style={delay} />
+        </span>
+      ),
     )
   }
   return (
@@ -89,7 +95,7 @@ export function RunGrid(props: {
         <span class="of">{texts.of}</span>
         <strong>{texts.loseMoney}</strong>
       </div>
-      <div class="runs" role="img" aria-label={texts.summary}>
+      <div class={`runs${props.labels ? ' labelled' : ''}`} role="img" aria-label={texts.summary}>
         {cells}
       </div>
       <ul class="legend" aria-hidden="true">
@@ -107,8 +113,8 @@ export function RunGrid(props: {
 }
 
 /** The runs as emoji squares, 10 per row, for a shared result. */
-export function runGridText(outcomes: readonly RaceOutcome[]): string {
-  const cells = outcomes.map((outcome) => (outcome.picture.lost !== 0 ? '🟥' : '🟦'))
+export function runGridText<T>(outcomes: readonly T[], isLost: (outcome: T) => boolean): string {
+  const cells = outcomes.map((outcome) => (isLost(outcome) ? '🟥' : '🟦'))
   const rows: string[] = []
   for (let index = 0; index < cells.length; index += 10) rows.push(cells.slice(index, index + 10).join(''))
   return rows.join('\n')

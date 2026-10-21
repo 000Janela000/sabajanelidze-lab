@@ -3,15 +3,17 @@ import { useMemo, useRef, useState } from 'preact/hooks'
 import { useDeckRiding } from '../../game/deck-riding.ts'
 import { Layer } from '../../game/Layer.tsx'
 import { Message, type Said } from '../../game/Message.tsx'
+import { NextButton } from '../../game/NextButton.tsx'
 import { PauseGate } from '../../game/pause-gate.ts'
 import { Readout } from '../../game/Readout.tsx'
-import { runGridText } from '../../game/RunGrid.tsx'
+import { runGridText, raceLost as runLost } from '../../game/RunGrid.tsx'
+import { openProof, ShareLinks, useShare } from '../../game/share.tsx'
 import type { CodeLine } from '../../lib/code-line.ts'
 import { BankScreen, CLEAN_UP_SIZERS, useCleanUp } from './CleanUp.tsx'
-import { CountControls, CountView, countCells, countSizers, NextButton, useCount } from './Count.tsx'
+import { CountControls, CountView, countCells, countSizers, useCount } from './Count.tsx'
 import { FIX_SIZERS, FIX_VIEW, FixControls, FixScreen, fixCells, solvedCells, useFix } from './Fix.tsx'
 import { booksCells, CodeView, RaceView, REPRODUCE_SIZERS, useReproduce } from './Reproduce.tsx'
-import { openProof, ShareLinks, SolvedScreen, solvedSaid, solvedSizers, useShare } from './Solved.tsx'
+import { SolvedScreen, solvedSaid, solvedSizers } from './Solved.tsx'
 import type { PatchId, PatchOption, Reproduction } from './setup.ts'
 import { CLEAN_UP, CONSOLE, COUNT, FIX, MONEY_TEXT, READOUT, REPRODUCE, SOLVED } from './texts.ts'
 import '../../game/game.css'
@@ -123,7 +125,7 @@ export function PaymentsIncident(props: Props) {
             count.summary.runs,
             fix.tries,
           ),
-          runGridText(count.summary.outcomes),
+          runGridText(count.summary.outcomes, runLost),
           props.shareUrl,
         ].join('\n')
       : ''
@@ -315,6 +317,7 @@ export function PaymentsIncident(props: Props) {
                     shareText={shareText}
                     shareUrl={props.shareUrl}
                     bookUrl={props.bookUrl}
+                    texts={SOLVED}
                   />
                 </SolvedScreen>
               </Layer>

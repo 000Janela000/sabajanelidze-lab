@@ -562,6 +562,30 @@
   visibility: hidden;
 }
 
+/* Runs with their order written on them (incident 2): the order on the console's own dark, a bar under it that
+   fills, so no text ever sits on the hatched red. Seven to a row on a laptop. */
+.runs.labelled {
+  grid-template-columns: repeat(auto-fill, minmax(3.25rem, 1fr));
+  gap: var(--space-2);
+  max-width: 34rem;
+}
+
+.lcell {
+  display: grid;
+  gap: 0.25rem;
+  font-family: var(--font-code);
+  font-size: var(--fs-xs);
+  line-height: 1.2;
+  text-align: center;
+  white-space: nowrap;
+  color: var(--fg);
+}
+
+.lcell .cell {
+  width: 100%;
+  height: 0.5rem;
+}
+
 /* The grid fills in 1.5 s in total, however many runs there are. A square still waiting keeps the outline it had
    before the run, and its colour fills in over it, so the grid never looks half drawn. */
 @media (prefers-reduced-motion: no-preference) {

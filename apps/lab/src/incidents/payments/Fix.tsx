@@ -13,7 +13,7 @@ import { IndentedCode } from '../../game/CodeText.tsx'
 import { Layer } from '../../game/Layer.tsx'
 import { type Said, TONE } from '../../game/Message.tsx'
 import { READOUT_TONE, type ReadoutCell } from '../../game/Readout.tsx'
-import { RunGrid, untilFilled } from '../../game/RunGrid.tsx'
+import { RunGrid, raceLost, untilFilled } from '../../game/RunGrid.tsx'
 import { ScrollBox } from '../../game/ScrollBox.tsx'
 import type { CodeLine } from '../../lib/code-line.ts'
 import { AMOUNT, OPENING, PATCH, type PatchId, type PatchOption } from './setup.ts'
@@ -233,6 +233,7 @@ export function FixScreen(props: {
           <RunGrid
             key={`attack-${game.tries}`}
             outcomes={shown?.outcomes ?? null}
+            isLost={raceLost}
             runs={shown?.runs ?? capacity}
             capacity={capacity}
             small
