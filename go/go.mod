@@ -1,4 +1,4 @@
-module github.com/000Janela000/sabajanelidze-lab/go
+module github.com/sabajanelidze/sabajanelidze-lab/go
 
 go 1.25.0
 
