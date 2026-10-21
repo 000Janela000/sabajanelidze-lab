@@ -20,7 +20,12 @@ export const GAME_NAME = 'On call'
 
 /** Who made the lab and what he offers: after the game's hook and its first action, never before. */
 export const MAKER = {
-  text: 'Made by Saba Janelidze, principal engineer. I build payment and ledger systems for fintech and crypto teams. Hiring, or need help with payments?',
+  text: 'Made by Saba Janelidze, principal engineer. I build payment and ledger systems for fintech and crypto teams.',
+  /** The question it ends with, by page: each incident page asks about its own skill (Saba, 2026-10-21). */
+  question: {
+    kyc: 'Hiring, or need help with identity checks or payments?',
+  } as Record<string, string>,
+  questionElse: 'Hiring, or need help with payments?',
   book: 'Book a call →',
 }
 
@@ -28,7 +33,7 @@ export const TEST_MODE = 'TEST MODE, no real money'
 
 export const STATION_NAME: Record<string, string> = {
   payments: 'Payments',
-  kyc: 'New customers',
+  kyc: 'Identity checks',
   deposits: 'Deposits',
   ai: 'AI support',
   books: 'End of shift',

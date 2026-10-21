@@ -41,6 +41,9 @@ test('incident 2 plays from reproduce to the regulator on the real code', async 
     page.getByText(/^On call · Incident 2 · Identity checks · about 2 minutes · TEST MODE, no real money$/),
   ).toBeVisible()
   await expect(page.getByText(/^Made by Saba Janelidze/)).toBeVisible()
+  await expect(page.locator('main .maker')).toContainText(
+    'Hiring, or need help with identity checks or payments?',
+  )
 
   // On arrival a normal night plays by itself in the console, then it asks for the first move.
   await openTheConsole(page)

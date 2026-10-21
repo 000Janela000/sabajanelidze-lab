@@ -23,19 +23,13 @@ export const RESULT_TEXT: Record<EventResult, string> = {
   MOVE_NOT_ALLOWED: 'move not allowed',
 }
 
-export const COMPARISON_TEXT: Record<Comparison, string> = {
-  MATCHES: 'matches',
-  BEHIND: 'behind',
-  NOT_FROM_PROVIDER: 'not from the provider',
-}
-
 export const PAGE = {
   title: 'Incident 2: approved, then "pending" again · On call',
   description:
     'An approved customer was locked out overnight. Play the network between an identity provider and our server, on real code, then pick the fix that holds in every order. A 2-minute puzzle by Saba Janelidze. Test mode, made-up customers.',
   meta: 'Incident 2 · Identity checks · about 2 minutes',
   heading: 'Approved, then “pending” again',
-  ticket: 'I was approved yesterday. This morning I can’t trade: my status says “pending” again.',
+  ticket: 'I was approved yesterday. This morning I can’t trade: my status says ‘pending’ again.',
   ticketFrom: 'Anna · support chat · a made-up ticket',
   /** Under the ticket: what is real, what is simulated, and what the two builds are. */
   note: 'The code is real and runs in your browser; Anna, Boris (a second applicant), the identity provider and the network are simulated. The provider numbers each applicant’s messages: #1, #2, #3. Build v0.1 is the code that handled them last night; build v1 is the fix you will pick.',
@@ -88,7 +82,6 @@ export const REPRODUCE = {
   nightLabel: 'The night, in order',
   cut: (version: number) => `Lose our answer to #${version}`,
   cutBoth: 'Lose both answers',
-  planned: (version: number, status: string) => `#${version} ${status} · will be sent`,
   answer: (version: number, again: boolean) => `200 OK · our answer to #${version}${again ? ' again' : ''}`,
   answerLost: '✂ our answer lost',
   arrival: (version: number, status: string, again: boolean) =>
@@ -342,7 +335,7 @@ export const PROOF = {
   tradeOff:
     'Two ways hold. Where the provider numbers its messages (this one does), apply them in version order, as here. Where it does not, treat each message as a nudge: ask the provider’s API for the applicant’s current status and save that. Saba uses both, depending on the provider. Asking costs one call per message and needs the provider’s API to answer; version order needs no call, but an early message waits until the one before it arrives.',
   notFixes:
-    'Not fixes: ignoring older timestamps (the provider stamps its messages to the second, so two can carry the same time), and refusing moves that are not allowed (it throws away a message that came early, and that message never comes back).',
+    'Not fixes: ignoring older timestamps (the provider stamps its messages to the second, so two can carry the same time), and refusing moves that are not allowed (it throws away a message that came early; unless a copy comes later, it is lost).',
   noRetry:
     'Why not answer with an error and let the provider send it again later? That leans on the provider’s retry schedule, whose waits grow to hours, and providers ask for a fast answer. Parking is the same idea, done on our side.',
   realDatabaseHeading: 'On a real database',

@@ -11,7 +11,8 @@ const { station } = Astro.props
 ---
 
 <p class="maker">
-  {MAKER.text} <a class="link" href={bookACall(station)}>{MAKER.book}</a>
+  {MAKER.text} {MAKER.question[station] ?? MAKER.questionElse}{' '}
+  <a class="link" href={bookACall(station)}>{MAKER.book}</a>
 </p>
 
 <style>
