@@ -191,8 +191,14 @@ describe.skipIf(!process.env.DATABASE_URL)('identity-check store on a real serve
     }
   }
 
-  /** #1 first; #2 10 ms later, while #1 is between its look and its save. */
+  /**
+   * #1 first; #2 10 ms later, while #1 is between its look and its save. The applicant exists before the race, as
+   * it does from the start of a check: creating the row inside #1's transaction would make #2 wait for #1 by itself.
+   */
   async function race(store: PostgresKycStore, applicantId: string) {
+    await sql.query("INSERT INTO kyc_applicants (applicant_id, status) VALUES ($1, 'NOT_STARTED')", [
+      applicantId,
+    ])
     const [pending, approved] = await messagesFor(applicantId, await annaMessages())
     if (!pending || !approved) throw new Error('missing messages')
     const ports = {
