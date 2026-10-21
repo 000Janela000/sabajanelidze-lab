@@ -48,6 +48,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: typecheck (astro check)
         run: pnpm --filter @lab/site run typecheck
+      - name: the counter's tests (the Worker's only code)
+        run: pnpm --filter @lab/site run test
       - name: build (fails if a code excerpt marker or a linked file is missing)
         run: pnpm --filter @lab/site run build
       - name: install the test browser
