@@ -1,18 +1,31 @@
-import { EVENT_RESULT } from './codes.ts'
+import { EVENT_RESULT, RECORD_RESULT } from './codes.ts'
 import type { HandleEvent, ProviderEvent } from './ports.ts'
 
 // #region kyc-build-v1
 /**
  * Build v1: check the signature first, store each message once, and apply messages in the provider's
  * version order. A message that arrives before an earlier version is parked, and applied as soon as
- * the gap closes. One applicant's messages never interleave (a row lock in Postgres).
+ * the gap closes. One applicant's messages never interleave (a row lock in Postgres). A refused
+ * message is logged as evidence, apart from the stored ones, so it can never use up a real message's ID.
  */
-export const handleEvent: HandleEvent = async ({ store, signatures }, event) => {
+export const handleEvent: HandleEvent = async ({ store, signatures, refusals }, event) => {
   const signatureValid = await signatures.verify(event)
-  if (!signatureValid) return EVENT_RESULT.BAD_SIGNATURE
+  if (!signatureValid) {
+    await refusals.record(event, EVENT_RESULT.BAD_SIGNATURE)
+    return EVENT_RESULT.BAD_SIGNATURE
+  }
   return store.forApplicant(event.applicantId, async (tx) => {
-    const firstTime = await tx.recordEvent(event)
-    if (!firstTime) return EVENT_RESULT.DUPLICATE
+    const recorded = await tx.recordEvent(event)
+    if (recorded === RECORD_RESULT.SAME_ID) return EVENT_RESULT.DUPLICATE
+    if (recorded === RECORD_RESULT.SAME_VERSION) {
+      // The same version under a new ID: a copy if it says the same, a conflict if it says something else.
+      const kept = await tx.storedEvent(event.version)
+      const sameContent = kept?.status === event.status
+      if (!sameContent) {
+        await refusals.record(event, EVENT_RESULT.VERSION_CONFLICT)
+        return EVENT_RESULT.VERSION_CONFLICT
+      }
+    }
     let applicant = await tx.loadApplicant()
     if (event.version <= applicant.version) return EVENT_RESULT.STALE
     if (event.version > applicant.version + 1) return EVENT_RESULT.PARKED

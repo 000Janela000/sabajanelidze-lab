@@ -4,7 +4,13 @@
  * kyc/ (the identity provider's messages: the same layout), simulation/ (running real code one step at a
  * time, or delivering messages in every order).
  */
-export { MemoryKycStore } from './kyc/adapters/memory-store.ts'
+export {
+  MemoryKycStore,
+  MemoryProviderApi,
+  MemoryRefusalLog,
+  newApplicant,
+  type RefusedMessage,
+} from './kyc/adapters/memory-store.ts'
 export * from './kyc/codes.ts'
 export { handleEvent } from './kyc/handle-event.ts'
 export type {
@@ -13,10 +19,28 @@ export type {
   HandleEvent,
   KycPorts,
   KycStore,
+  ProviderApi,
+  ProviderEntry,
   ProviderEvent,
+  ProviderRecord,
+  RefusalLog,
   SignatureCheck,
 } from './kyc/ports.ts'
-export { ANNA, annaMessages, BORIS, borisMessages, forgedApprovalForBoris } from './kyc/scenarios.ts'
+export {
+  canTrade,
+  compareWithProvider,
+  type Position,
+  type ProviderComparison,
+  reconcileWithProvider,
+} from './kyc/provider-check.ts'
+export {
+  ANNA,
+  annaMessages,
+  BORIS,
+  borisMessages,
+  forgedApprovalForBoris,
+  providerRecords,
+} from './kyc/scenarios.ts'
 export { PROVIDER_TEST_KEY, sign, signatureCheck } from './kyc/signature.ts'
 export { handleEventV01 } from './kyc/teaching/build-v01.ts'
 export { ALLOWED_MOVES, handleEventAllowedMoves, handleEventTimestamp } from './kyc/teaching/patches.ts'
@@ -58,6 +82,8 @@ export {
   type DeliveryOutcome,
   deliver,
   deliveryOrders,
+  lastNightOnV01,
+  lostAnswerNight,
 } from './simulation/deliveries.ts'
 export { gatedPaymentPorts } from './simulation/gated-ports.ts'
 export {
