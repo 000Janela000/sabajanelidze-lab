@@ -11,6 +11,7 @@ export {
   newApplicant,
   type RefusedMessage,
 } from './kyc/adapters/memory-store.ts'
+export { KYC_POSTGRES_SCHEMA, PostgresKycStore, PostgresRefusalLog } from './kyc/adapters/postgres-store.ts'
 export * from './kyc/codes.ts'
 export { handleEvent } from './kyc/handle-event.ts'
 export type {

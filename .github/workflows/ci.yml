@@ -56,7 +56,7 @@ jobs:
         run: pnpm exec playwright test
 
   postgres:
-    name: real database race (20 withdrawals at once)
+    name: real database races (withdrawals, identity-check messages at once)
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -81,8 +81,8 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: concurrency test on a real Postgres server
-        run: pnpm --filter @lab/core exec vitest run test/payments/postgres.test.ts
+      - name: concurrency tests on a real Postgres server
+        run: pnpm --filter @lab/core exec vitest run test/payments/postgres.test.ts test/kyc/postgres.test.ts
 
   go:
     name: Go version (race detector + real Postgres)
