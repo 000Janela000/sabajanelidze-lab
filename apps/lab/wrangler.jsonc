@@ -1,4 +1,5 @@
-// Cloudflare Worker "sabajanelidze-lab": serves the built static site (dist/). No Worker code, only files.
+// Cloudflare Worker "sabajanelidze-lab": serves the built static site (dist/), plus one piece of code: the cookie-free
+// counter at /api/count (worker/index.ts, decisions/0002-cookie-free-counter.md). Every other address is a file.
 // SAFETY (../../_shared/decisions/0004-deploy-safety.md): run wrangler ONLY from apps/lab with --config wrangler.jsonc,
 // and run `pnpm --filter @lab/site cf:dry` (builds, then a dry run that uploads nothing) before every deploy.
 // Never deploy without Saba's OK.
@@ -9,6 +10,11 @@
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "sabajanelidze-lab",
   "compatibility_date": "2026-10-15",
+  // Runs only for /api/* (see run_worker_first below); pages, scripts and pictures are served without it.
+  "main": "./worker/index.ts",
+  // The counts: Workers Analytics Engine (free plan: 100,000 a day, kept 3 months). Read them with
+  // `node apps/lab/scripts/counts.mjs`.
+  "analytics_engine_datasets": [{ "binding": "COUNTS", "dataset": "lab_counts" }],
   "routes": [{ "pattern": "lab.sabajanelidze.com", "custom_domain": true }],
   // The workers.dev address stays on for checks (noindex, see public/_headers); search engines see only the domain.
   "workers_dev": true,
@@ -17,6 +23,7 @@
     "directory": "./dist",
     // /day/payments is served from dist/day/payments.html, and /day/payments/ redirects to it.
     "html_handling": "drop-trailing-slash",
-    "not_found_handling": "404-page"
+    "not_found_handling": "404-page",
+    "run_worker_first": ["/api/*"]
   }
 }

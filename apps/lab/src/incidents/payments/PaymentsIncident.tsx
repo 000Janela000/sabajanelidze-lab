@@ -9,6 +9,8 @@ import { Readout } from '../../game/Readout.tsx'
 import { runGridText, raceLost as runLost } from '../../game/RunGrid.tsx'
 import { openProof, ShareLinks, useShare } from '../../game/share.tsx'
 import type { CodeLine } from '../../lib/code-line.ts'
+import { countEvent } from '../../lib/count.ts'
+import { COUNT_EVENT } from '../../lib/count-codes.ts'
 import { BankScreen, CLEAN_UP_SIZERS, useCleanUp } from './CleanUp.tsx'
 import { CountControls, CountView, countCells, countSizers, useCount } from './Count.tsx'
 import { FIX_SIZERS, FIX_VIEW, FixControls, FixScreen, fixCells, solvedCells, useFix } from './Fix.tsx'
@@ -109,6 +111,7 @@ export function PaymentsIncident(props: Props) {
   const fix = useFix({
     onFixed: (summary) => {
       setFixed(summary)
+      countEvent(COUNT_EVENT.FINISHED, 'payments')
       goTo(STAGE.SOLVED)
     },
   })

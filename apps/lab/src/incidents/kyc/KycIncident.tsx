@@ -9,6 +9,8 @@ import { Readout } from '../../game/Readout.tsx'
 import { runGridText } from '../../game/RunGrid.tsx'
 import { openProof, ShareLinks, useShare } from '../../game/share.tsx'
 import type { CodeLine } from '../../lib/code-line.ts'
+import { countEvent } from '../../lib/count.ts'
+import { COUNT_EVENT } from '../../lib/count-codes.ts'
 import { CLEAN_UP_SIZERS, deeperCells, RegulatorScreen, useCleanUp } from './CleanUp.tsx'
 import { CountControls, CountView, countCells, countSizers, lockedOut, useCount } from './Count.tsx'
 import { FIX_SIZERS, FIX_VIEW, FixControls, FixScreen, fixCells, useFix } from './Fix.tsx'
@@ -105,6 +107,7 @@ export function KycIncident(props: Props) {
   const fix = useFix({
     onFixed: (summary) => {
       setFixed(summary)
+      countEvent(COUNT_EVENT.FINISHED, 'kyc')
       goTo(STAGE.SOLVED)
     },
   })

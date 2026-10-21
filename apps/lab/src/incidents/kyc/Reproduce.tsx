@@ -22,6 +22,8 @@ import type { PauseGate } from '../../game/pause-gate.ts'
 import { READOUT_TONE, type ReadoutCell } from '../../game/Readout.tsx'
 import { ScrollBox } from '../../game/ScrollBox.tsx'
 import type { CodeLine } from '../../lib/code-line.ts'
+import { countEvent } from '../../lib/count.ts'
+import { COUNT_EVENT } from '../../lib/count-codes.ts'
 import { CUT, type CutId, type Reproduction } from './setup.ts'
 import { CONSOLE, READOUT, REPRODUCE, RESULT_TEXT, STATUS_TEXT } from './texts.ts'
 
@@ -156,6 +158,7 @@ export function useReproduce(props: {
     if (runningNow.current || (phase !== PHASE.CHOOSE && phase !== PHASE.DONE)) return
     const attempt = tries + 1
     setTries(attempt)
+    countEvent(COUNT_EVENT.STARTED, 'kyc')
     await play(CUT[id], false, id)
   }
 

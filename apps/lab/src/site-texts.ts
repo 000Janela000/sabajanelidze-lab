@@ -12,6 +12,8 @@ export const LAYOUT = {
   footerName: 'Saba Janelidze',
   footerAfter: '. New code written for this lab, no employer code.',
   footerTestMode: 'Test mode: fake money and made-up customers. Nothing here moves real money.',
+  footerPrivacy:
+    'Privacy: no cookies. The site counts page views, finished puzzles and clicks on the code, and nothing about you.',
   theme: { label: 'Theme:', light: 'Light', dark: 'Dark', auto: 'Auto' },
 }
 

@@ -56,6 +56,10 @@ const shareUrl = 'https://lab.sabajanelidze.com/day/kyc'
 
 <script>
   import { FIND_THE_BUG, FIND_THE_BUG_PENDING } from '../../game/find-the-bug.ts'
+  import { countCodeClicks } from '../../lib/count.ts'
+
+  // The cookie-free counter: a click on the code on GitHub (decisions/0002-cookie-free-counter.md).
+  countCodeClicks('kyc')
 
   // With the console on screen, "Find the bug" moves focus to the first cut (after the normal night, if it is
   // playing). Before the console has been seen, the link scrolls to it and the normal night starts there.

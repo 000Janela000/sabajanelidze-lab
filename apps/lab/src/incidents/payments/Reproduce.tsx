@@ -19,6 +19,8 @@ import { READOUT_TONE, type ReadoutCell } from '../../game/Readout.tsx'
 import { REQUEST_STATE, type RequestState } from '../../game/request-state.ts'
 import { ScrollBox } from '../../game/ScrollBox.tsx'
 import type { CodeLine } from '../../lib/code-line.ts'
+import { countEvent } from '../../lib/count.ts'
+import { COUNT_EVENT } from '../../lib/count-codes.ts'
 import { AMOUNT, CUSTOMER, OPENING, type Reproduction } from './setup.ts'
 import {
   CONSOLE,
@@ -169,8 +171,9 @@ export function useReproduce(props: {
   async function play(afterLine: number, isDemo: boolean) {
     if (runningNow.current) return
     runningNow.current = true
-    // A visitor's own run means the demo is no longer needed.
+    // A visitor's own run means the demo is no longer needed (and is their first move, for the counter).
     if (!isDemo) started.current = true
+    if (!isDemo) countEvent(COUNT_EVENT.STARTED, 'payments')
     const attempt = isDemo ? tries : tries + 1
     if (!isDemo) setTries(attempt)
     setDemo(isDemo ? DEMO.PLAYING : null)
