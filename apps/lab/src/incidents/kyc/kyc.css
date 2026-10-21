@@ -53,7 +53,7 @@
   column-gap: var(--space-2);
   width: 100%;
   height: 100%;
-  padding: 0.0625rem 1.1rem 0;
+  padding: 0.125rem 1.1rem 0;
   border: 0;
   border-radius: var(--radius-tag);
   background: none;
@@ -207,6 +207,12 @@ button.n-pick::before {
 button.n-pick:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: -2px;
+}
+
+/* While you point at an arrival, every one has a blue outline; keyboard focus is the console's light text colour, so
+   it stands out from them (and keeps 3:1 where it crosses the grey lifelines). */
+.n-scene.is-diagnosing button.n-pick:focus-visible {
+  outline-color: var(--fg);
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -434,12 +440,12 @@ button.n-pick:focus-visible {
 @container console (width < 30rem) {
   /* Room for what build v0.1 did on its own line, under what came. */
   .n-row {
-    height: 3.5rem;
+    height: 3.75rem;
   }
 
   .n-pick {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: 1rem 1rem 0.35rem 1rem;
+    grid-template-rows: 1.15rem 1.05rem 0.35rem 1.05rem;
     grid-template-areas:
       "label"
       "result"

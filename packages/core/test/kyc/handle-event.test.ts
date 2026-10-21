@@ -157,6 +157,17 @@ describe('build v1: one message from the identity provider', () => {
     expect(store.applicant(ANNA).status).toBe(KYC_STATUS.PENDING)
   })
 
+  test('a signature cannot be moved to another applicant by moving a "|" from one field to the next', async () => {
+    const { store, send } = setUp()
+    const [, approved] = await annaMessages()
+    if (!approved) throw new Error('missing message')
+    // Signed by the provider for an applicant whose ID holds a "|"; replayed with that part moved into the event ID.
+    const signed = await sign({ ...approved, eventId: 'evt', applicantId: `x|${BORIS}` }, PROVIDER_TEST_KEY)
+    const moved = { ...signed, eventId: 'evt|x', applicantId: BORIS }
+    expect(await send(moved)).toBe(EVENT_RESULT.BAD_SIGNATURE)
+    expect(store.applicant(BORIS).status).toBe(KYC_STATUS.NOT_STARTED)
+  })
+
   test('a real message with one field changed is refused', async () => {
     const { store, send } = setUp()
     const [pending] = await borisMessages()

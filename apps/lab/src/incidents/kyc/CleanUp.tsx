@@ -12,7 +12,7 @@ import {
   reconcileWithProvider,
 } from '@lab/core'
 import type { ComponentChildren } from 'preact'
-import { useEffect, useState } from 'preact/hooks'
+import { useEffect, useRef, useState } from 'preact/hooks'
 import { type Said, TONE } from '../../game/Message.tsx'
 import { READOUT_TONE, type ReadoutCell } from '../../game/Readout.tsx'
 import { CLEAN_UP, READOUT, STATUS_TEXT } from './texts.ts'
@@ -81,6 +81,8 @@ export function useCleanUp(): CleanUpGame {
   const [choice, setChoice] = useState<Choice | null>(null)
   const [rows, setRows] = useState<readonly Row[] | null>(null)
   const [kept, setKept] = useState(0)
+  // Each click's number: only the latest click's result is shown, even if an earlier one finishes after it.
+  const clicks = useRef(0)
 
   useEffect(() => {
     void (async () => {
@@ -96,12 +98,16 @@ export function useCleanUp(): CleanUpGame {
   }, [])
 
   async function play(next: Choice) {
+    clicks.current += 1
+    const click = clicks.current
     if (next === CHOICE.ASK) {
       const after = await askTheProvider()
+      if (click !== clicks.current) return
       setRows((before) => before?.map((row) => ({ ...row, after: after.get(row.id) ?? row.after })) ?? null)
     } else {
       // What a search of our records could find: the messages build v0.1 kept for Boris.
       const store = await lastNight()
+      if (click !== clicks.current) return
       const borisKept = store.events(BORIS).length
       setKept(borisKept)
     }

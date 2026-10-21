@@ -138,7 +138,7 @@ test('the console keeps one height from arrival to the regulator, and fits a lap
     // Every kind of change: a safe night, the locking night, a wrong pick, the code view, each step, a failed patch,
     // the clean-up before and after asking.
     await page.getByRole('button', { name: 'Lose both answers' }).click()
-    await expect(machine(page).getByText(/Both copies came again/)).toBeVisible()
+    await expect(machine(page).getByText(/Both copies came in order/)).toBeVisible()
     await page.getByRole('button', { name: 'Lose our answer to #1' }).click()
     await expect(machine(page).getByText(/Which arrival locked her out\?/)).toBeVisible()
     await page.getByRole('button', { name: 'Point at this arrival: message #2', exact: true }).click()

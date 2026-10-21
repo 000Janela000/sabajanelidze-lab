@@ -12,10 +12,18 @@ import (
 // applicants. A real key lives only as a server secret.
 const ProviderTestKey = "lab-kyc-provider-test-key"
 
-// signedText is the exact bytes that are signed: every field, in a fixed order (the same as the TypeScript code).
+// signedText is the exact bytes that are signed: every field, in a fixed order, each one after its length in bytes
+// and a colon ("4:anna"), the same as the TypeScript code. The lengths keep the fields apart: with a plain separator,
+// event "e|anna" for applicant "boris" would be signed as the same bytes as event "e" for applicant "anna|boris".
 func signedText(event ProviderEvent) []byte {
 	fields := []string{event.EventID, event.ApplicantID, strconv.Itoa(event.Version), string(event.Status), event.SentAt}
-	return []byte(strings.Join(fields, "|"))
+	var text strings.Builder
+	for _, field := range fields {
+		text.WriteString(strconv.Itoa(len(field)))
+		text.WriteString(":")
+		text.WriteString(field)
+	}
+	return []byte(text.String())
 }
 
 // Sign returns the message signed the way the provider signs it (HMAC-SHA256, hex).

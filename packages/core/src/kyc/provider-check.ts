@@ -1,5 +1,6 @@
 import { COMPARISON, type Comparison, HOLD_REASON, KYC_STATUS, type KycStatus } from './codes.ts'
-import type { Applicant, KycStore, ProviderApi, ProviderRecord } from './ports.ts'
+import { applyFollowing } from './handle-event.ts'
+import type { Applicant, ApplicantTx, KycStore, ProviderApi, ProviderRecord } from './ports.ts'
 
 /** A status at a version, as one side sees it. */
 export interface Position {
@@ -37,34 +38,55 @@ export function compareWithProvider(applicant: Applicant, record: ProviderRecord
 // #endregion kyc-compare
 
 // #region kyc-reconcile
+/** How many times the clean-up asks the provider before it decides that a status did not come from it. */
+const ASKS = 2
+
 /**
- * The clean-up: ask the provider (over our authenticated connection), compare, and act. Behind → catch up to
- * the provider's latest. Not from the provider → hold trading and keep the record as it is, as evidence (the
- * version is not rolled back, so a genuine message with that version is still recognised as new when it comes).
+ * The clean-up: ask the provider (over our authenticated connection), compare, and act. Behind → catch up to the
+ * provider's latest, then apply any message we parked that now follows on. Not from the provider → hold trading and
+ * keep the record as it is, as evidence (it is not rolled back; a person lifts the hold after the review, never a
+ * message). The provider is asked outside the applicant's lock, so that a slow answer holds up none of their
+ * messages; a real message can therefore be applied after the provider answered. So when our record is newer than
+ * the answer, the provider is asked again before anything is called "not from the provider".
  */
 export async function reconcileWithProvider(
   store: KycStore,
   provider: ProviderApi,
   applicantId: string,
 ): Promise<ProviderComparison> {
-  const record = await provider.record(applicantId)
-  return store.forApplicant(applicantId, async (tx) => {
-    const applicant = await tx.loadApplicant()
-    const comparison = compareWithProvider(applicant, record)
-    if (comparison.result === COMPARISON.BEHIND) {
-      const latest = record.history.find((entry) => entry.version === comparison.provider.version)
-      await tx.saveApplicant({
-        ...applicant,
-        status: comparison.provider.status,
-        version: comparison.provider.version,
-        lastSentAt: latest?.sentAt ?? applicant.lastSentAt,
-      })
+  for (let ask = 1; ; ask++) {
+    const record = await provider.record(applicantId)
+    const lastAsk = ask >= ASKS
+    const comparison = await store.forApplicant(applicantId, (tx) => settle(tx, record, lastAsk))
+    if (comparison) return comparison
+  }
+}
+
+/** Inside the applicant's lock: compare and act; or do nothing (null) while the provider's answer may be out of date. */
+async function settle(
+  tx: ApplicantTx,
+  record: ProviderRecord,
+  lastAsk: boolean,
+): Promise<ProviderComparison | null> {
+  const applicant = await tx.loadApplicant()
+  const comparison = compareWithProvider(applicant, record)
+  const ahead = applicant.version > comparison.provider.version
+  if (comparison.result === COMPARISON.NOT_FROM_PROVIDER && ahead && !lastAsk) return null
+  if (comparison.result === COMPARISON.BEHIND) {
+    const latest = record.history.find((entry) => entry.version === comparison.provider.version)
+    const caughtUp = {
+      ...applicant,
+      status: comparison.provider.status,
+      version: comparison.provider.version,
+      lastSentAt: latest?.sentAt ?? applicant.lastSentAt,
     }
-    if (comparison.result === COMPARISON.NOT_FROM_PROVIDER) {
-      await tx.saveApplicant({ ...applicant, hold: HOLD_REASON.NOT_FROM_PROVIDER })
-    }
-    return comparison
-  })
+    const withParked = await applyFollowing(tx, caughtUp)
+    await tx.saveApplicant(withParked)
+  }
+  if (comparison.result === COMPARISON.NOT_FROM_PROVIDER) {
+    await tx.saveApplicant({ ...applicant, hold: HOLD_REASON.NOT_FROM_PROVIDER })
+  }
+  return comparison
 }
 // #endregion kyc-reconcile
 

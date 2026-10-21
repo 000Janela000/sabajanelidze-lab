@@ -28,9 +28,25 @@ func handle(t *testing.T, store Store, refusals RefusalLog, event ProviderEvent)
 // The same scheme as the TypeScript code: Anna's first message has the same signature in both languages.
 func TestSignatureMatchesTheTypeScriptCode(t *testing.T) {
 	pending, _ := annaMessages("anna")
-	want := "076861b85705a0aa60b73dd40070cb557b8ce4e517dfeaf685cc81c4f57bfd0e"
+	want := "0436090c7efd80fa68c1d43f82c220b10fa86c8dc57887dbae6aebc23dda0ee1"
 	if pending.Signature != want {
 		t.Fatalf("signature %s, want %s", pending.Signature, want)
+	}
+}
+
+// A message signed for an applicant whose ID holds a "|", replayed with that part moved into the event ID: with a
+// plain separator one signature would fit both.
+func TestASignatureCannotBeMovedToAnotherApplicantByMovingASeparator(t *testing.T) {
+	_, approved := annaMessages("anna")
+	approved.EventID = "evt"
+	approved.ApplicantID = "x|boris"
+	signed := Sign(approved, ProviderTestKey)
+	moved := signed
+	moved.EventID = "evt|x"
+	moved.ApplicantID = "boris"
+	movedValid := NewSignatureCheck(ProviderTestKey).Verify(moved)
+	if movedValid {
+		t.Fatal("the moved message passed the signature check")
 	}
 }
 

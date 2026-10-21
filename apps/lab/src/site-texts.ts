@@ -69,7 +69,7 @@ export const HOME = {
   incidentsHeading: 'Incidents',
   incident: (number: number, name: string) => `Incident ${number} · ${name}`,
   take: 'Play this incident',
-  next: 'Next: incident 3, deposits on a test network ("we paid out 1.0 that never arrived"). Later: a support AI that must not be tricked, and the end-of-shift books.',
+  next: 'Next: incident 3, deposits on a test network. Later: a support AI that must not be tricked, and the end-of-shift books.',
   tickets: {
     payments: '"I tapped Withdraw 80 twice. The bank paid me 160 and my balance still shows 20."',
     kyc: '"I was approved yesterday. This morning my status says pending again."',

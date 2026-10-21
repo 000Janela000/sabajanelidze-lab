@@ -8,10 +8,17 @@ export const PROVIDER_TEST_KEY = 'lab-kyc-provider-test-key'
 
 type Unsigned = Omit<ProviderEvent, 'signature'>
 
-/** The exact bytes that are signed: every field, in a fixed order. */
+/**
+ * The exact bytes that are signed: every field, in a fixed order, each one after its length in bytes and a colon
+ * ("4:anna"). The lengths keep the fields apart: with a plain separator, event "e|anna" for applicant "boris" would
+ * be signed as the same bytes as event "e" for applicant "anna|boris", and one signature would fit both.
+ */
 function signedText(event: Unsigned): Uint8Array<ArrayBuffer> {
   const { eventId, applicantId, version, status, sentAt } = event
-  return new TextEncoder().encode([eventId, applicantId, version, status, sentAt].join('|'))
+  const encoder = new TextEncoder()
+  const fields = [eventId, applicantId, String(version), status, sentAt]
+  const text = fields.map((field) => `${encoder.encode(field).length}:${field}`).join('')
+  return encoder.encode(text)
 }
 
 function hmacKey(secret: string): Promise<CryptoKey> {

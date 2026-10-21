@@ -38,7 +38,7 @@ export const PAGE = {
   ticket: 'I was approved yesterday. This morning I can’t trade: my status says “pending” again.',
   ticketFrom: 'Anna · support chat · a made-up ticket',
   /** Under the ticket: what is real, what is simulated, and what the two builds are. */
-  note: 'The code is real and runs in your browser; Anna, Boris, the identity provider and the network are simulated. Build v0.1 is the code that handled the provider’s messages last night; build v1 is the fix you will pick.',
+  note: 'The code is real and runs in your browser; Anna, Boris (a second applicant), the identity provider and the network are simulated. The provider numbers each applicant’s messages: #1, #2, #3. Build v0.1 is the code that handled them last night; build v1 is the fix you will pick.',
   findTheBug: 'Find the bug',
   readCode: 'Read the code and the tests',
   textFold: 'Full text version (contains the answers)',
@@ -100,11 +100,11 @@ export const REPRODUCE = {
   reveal: 'same ID as #1 · version 1 < 2',
   safeTwo: {
     lead: 'Still approved.',
-    text: 'The copy of #2 says what #2 said, so nothing changed. Try another answer.',
+    text: 'The copy of #2 says what #2 said, so nothing changed. Try another cut.',
   },
   safeBoth: {
     lead: 'Still approved.',
-    text: 'Both copies came again in their order, so #2 came last. Try losing just one.',
+    text: 'Both copies came in order, so #2 still came last. Try losing just one.',
   },
   diagnose: { lead: 'Anna is “pending” again.', text: 'Which arrival locked her out? Tap it.' },
   wrongFirst: 'That one came first: #2 approved her after it. Look further down.',
@@ -140,7 +140,8 @@ export const COUNT = {
 
 export const FIX = {
   heading: 'Fix it',
-  goal: 'Pick a patch. The machine attacks it with all 14 orders, and with a forged “approved” for Boris.',
+  goal: (orders: number) =>
+    `Pick a patch. The machine attacks it with all ${orders} orders, and with a forged “approved” for Boris.`,
   prompt: 'Pick a patch, then attack it.',
   ready: (name: string) => `Ready: attack “${name}” with every order, and the forgery.`,
   attacking: (name: string) => `Attacking “${name}” with every order, and the forgery…`,
@@ -166,7 +167,7 @@ export const FIX = {
       name: 'Keep once, apply in order',
       short: 'Apply in order',
       summary:
-        'Keep each message once by its ID, apply them in the provider’s version order, and park an early one until the gap closes.',
+        'Keep each message once by its ID, apply them in version order, and park an early one until the one before it arrives.',
     },
     ALLOWED_MOVES: {
       name: 'Refuse moves that aren’t allowed',
@@ -253,7 +254,7 @@ export const READOUT = {
     reproduced: 'Reproduced',
     tries: (tries: number) => `try ${tries}`,
     guess: 'Your guess',
-    lockOut: 'Lock her out',
+    lockOut: 'Locked out',
     orders: 'Orders',
   },
   fix: {
@@ -310,7 +311,7 @@ export const PROOF = {
   showCode: (lines: number) => `Show the code (${lines} lines)`,
   whatHappenedHeading: 'What happened, and the fix',
   whatHappened:
-    'The identity provider tells us about each change as a signed message with a version number. When our answer to a message gets lost, it sends the same message again, so a message can arrive twice, and late. Build v0.1 let the last message to arrive win, so a late copy of “pending” undid “approved”. Build v1 checks the signature first, keeps each message once by its ID, and applies them in version order: an old version changes nothing, and an early one waits (it is parked) until the one before it arrives. Messages for one applicant are handled one at a time, under a lock on that applicant’s row.',
+    'The identity provider tells us about each change as a signed message (it carries a code made with a key only the provider and we hold, so a forged message can be told apart), numbered per applicant: 1, 2, 3. When our answer to a message gets lost, it sends the same message again, so a message can arrive twice, and late. Build v0.1 let the last message to arrive win, so a late copy of “pending” undid “approved”. Build v1 checks the signature first, keeps each message once by its ID, and applies them in version order: an old version changes nothing, and an early one waits (it is parked) until the one before it arrives. Messages for one applicant are handled one at a time, under a lock on that applicant’s row.',
   langNote: 'The game runs the TypeScript version. The Go tab shows the same fix in Go.',
   v01Title: 'Build v0.1 (last message wins)',
   v1Title: 'Build v1 (keep once, apply in order)',
@@ -346,16 +347,16 @@ export const PROOF = {
     'Why not answer with an error and let the provider send it again later? That leans on the provider’s retry schedule, whose waits grow to hours, and providers ask for a fast answer. Parking is the same idea, done on our side.',
   realDatabaseHeading: 'On a real database',
   postgresIntro:
-    'On Postgres, each message first locks its applicant’s row (SELECT … FOR UPDATE), so two messages for one applicant are handled one after the other. Each message is kept once: its ID is the key, so a copy adds nothing (ON CONFLICT DO NOTHING). A different message that claims a version already kept is refused and logged, because each applicant can hold only one message per version (UNIQUE (applicant, version)).',
+    'On Postgres, each message first locks its applicant’s row (SELECT … FOR UPDATE), so two messages for one applicant are handled one after the other. Each message is kept once: its ID is the key, so a copy adds nothing (ON CONFLICT DO NOTHING). A message with a new ID that claims a version already kept, and says something else, is refused and logged, because each applicant can hold only one message per version (UNIQUE (applicant, version)); one that says the same is a copy.',
   lockTitle: 'The row lock on Postgres',
   recordTitle: 'Keeping each message once',
   realDatabase: 'The real-database race',
   realDatabaseText:
-    ': in CI, #1, #2 and their copies hit a real Postgres server at once, 20 deliveries, with a slow step after each one loads the applicant. Anna ends approved at version 2, with each message kept once. Without the row lock, the same race leaves her stuck at #1.',
+    ': in CI, on a real Postgres server, #2 arrives while #1 is being saved (each look for the next version waits 40 ms). With the row lock, Anna ends approved at version 2; without it, she is stuck at #1. Another test sends #1, #2 and their copies, 20 deliveries at once: approved at version 2, each message kept once.',
   cleanUpHeading: 'The clean-up code',
   cleanUpIntro:
-    'After a night on build v0.1, ask the provider for its own record of each applicant (over our authenticated connection) and compare. Behind: catch up to the provider’s latest. A status the provider never sent: hold trading and keep the record as it is, as evidence. Its version is not rolled back, so a real message with that version is still new when it comes.',
-  cleanUpTest: 'Its test runs last night on build v0.1, then the clean-up',
+    'After a night on build v0.1, ask the provider’s API for its own record of each applicant (a connection where we log in, so no one else can answer; simulated here) and compare. Behind: catch up to the provider’s latest, then apply any message we parked. A status the provider never sent: hold trading. The record is not rolled back: it stays as the night left it, as evidence, even the time it says it was sent, which only the message claimed. A person lifts the hold after the review, never a message. And if our record is newer than the provider’s answer (a real message can land while it answers), the provider is asked again before anything is called “not from the provider”.',
+  cleanUpTest: 'Its test replays last night on build v0.1, then runs the clean-up',
   compareTitle: 'Our record against the provider’s',
   reconcileTitle: 'The clean-up',
   chainHeading: 'How this code was built',
@@ -378,7 +379,7 @@ export const TEXT_VERSION = {
     `Lose our answer to #1: the provider sends #1 again after #2, and Anna ends “${one}”: locked out. Lose our answer to #2: the copy of #2 says the same as #2, and she ends “${two}”. Lose both: the copies come in their order, #2 last, and she ends “${both}”.`,
   countHeading: '2. Count',
   count: (orders: number, wrong: number, percent: string) =>
-    `Each message can arrive once or twice, in any order: ${orders} delivery orders. ${wrong} of them (${percent}) lock Anna out on build v0.1: every one where #1 arrives last. Every order, in the order the messages arrived:`,
+    `Each message can arrive once or twice, in any order: ${orders} delivery orders (both once: 2 orders; one of them twice: 3 + 3; both twice: 6). ${wrong} of them (${percent}) lock Anna out on build v0.1: every one where #1 arrives last. Every order, in the order the messages arrived:`,
   approved: 'approved',
   lockedOut: 'locked out',
   fixHeading: '3. Fix',
@@ -386,7 +387,7 @@ export const TEXT_VERSION = {
     timestamp: (wrong: number, orders: number) =>
       `still locks Anna out in ${wrong} of ${orders} orders. Both messages left the provider in the same second, so “older” can’t order them.`,
     allowedMoves: (wrong: number, orders: number) =>
-      `still locks Anna out in ${wrong} of ${orders} orders. When #2 comes first, “approved” before “pending” is not an allowed move, so it is thrown away, and it never comes back.`,
+      `still locks Anna out in ${wrong} of ${orders} orders. When #2 comes first, “approved” before “pending” is not an allowed move, so that arrival is thrown away. Unless a copy of #2 comes later, Anna stays “pending”.`,
     versionOrder: (wrong: number, orders: number) =>
       `locks Anna out in ${wrong} of ${orders} orders. This is build v1.`,
   },
@@ -396,5 +397,5 @@ export const TEXT_VERSION = {
       : 'A forged “approved” for Boris gets in with at least one patch.',
   cleanUpHeading: 'Go deeper: the regulator asks',
   cleanUp:
-    'Build v1 is live, but last night ran build v0.1, and the regulator asks for Boris’s file. Our record says “approved” at version 3. But build v0.1 kept only the latest status, so our record only repeats what that message said, and no message is on file to search. Asking the provider for its record shows it never sent Boris a version 3: that approval did not come from the provider. So Boris’s trading is held, his record is kept as evidence, what he did while “approved” is reviewed, and it is reported as a security incident. Anna, who was only behind, catches up to “approved” and can trade.',
+    'Build v1 is live, but last night ran build v0.1, and the regulator asks for Boris’s file. Our record says “approved” at version 3, sent at 03:12; but that time, too, is only what the message said. Build v0.1 kept only the latest status, so our record only repeats what that message said, and no message is on file to search. Asking the provider for its record shows it never sent Boris a version 3: that approval did not come from the provider. So Boris’s trading is held until a person lifts it, his record is kept as evidence, what he did while “approved” is reviewed, and it is reported as a security incident. Anna, who was only behind, catches up to “approved” and can trade.',
 }

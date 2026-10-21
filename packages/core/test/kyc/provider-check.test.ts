@@ -1,17 +1,26 @@
 import { describe, expect, test } from 'vitest'
 import {
   ANNA,
+  annaMessages,
   BORIS,
   COMPARISON,
   canTrade,
   compareWithProvider,
+  EVENT_RESULT,
   HOLD_REASON,
+  handleEvent,
   KYC_STATUS,
   lastNightOnV01,
+  MemoryKycStore,
   MemoryProviderApi,
+  MemoryRefusalLog,
   newApplicant,
+  PROVIDER_TEST_KEY,
+  type ProviderApi,
   providerRecords,
   reconcileWithProvider,
+  sign,
+  signatureCheck,
 } from '../../src/index.ts'
 
 const anna = providerRecords().find((record) => record.applicantId === ANNA)
@@ -73,5 +82,57 @@ describe('the clean-up after last night on build v0.1', () => {
       hold: HOLD_REASON.NOT_FROM_PROVIDER,
     })
     expect(canTrade(store.applicant(BORIS))).toBe(false)
+  })
+})
+
+describe('the clean-up while messages still arrive', () => {
+  function setUp() {
+    const store = new MemoryKycStore([ANNA])
+    const ports = { store, signatures: signatureCheck(PROVIDER_TEST_KEY), refusals: new MemoryRefusalLog() }
+    return { store, ports }
+  }
+
+  test('a message parked before the clean-up is applied once the clean-up has caught up', async () => {
+    const { store, ports } = setUp()
+    const [pending] = await annaMessages()
+    if (!pending) throw new Error('missing message')
+    // #3 "rejected" comes before #2 and is parked; the provider's answer still ends at #2.
+    const third = await sign(
+      {
+        eventId: 'evt_anna_3',
+        applicantId: ANNA,
+        version: 3,
+        status: KYC_STATUS.REJECTED,
+        sentAt: '2026-10-14T17:05:00Z',
+      },
+      PROVIDER_TEST_KEY,
+    )
+    await handleEvent(ports, pending)
+    expect(await handleEvent(ports, third)).toBe(EVENT_RESULT.PARKED)
+    const comparison = await reconcileWithProvider(store, new MemoryProviderApi(providerRecords()), ANNA)
+    expect(comparison.result).toBe(COMPARISON.BEHIND)
+    expect(store.applicant(ANNA)).toMatchObject({ status: KYC_STATUS.REJECTED, version: 3 })
+    expect(canTrade(store.applicant(ANNA))).toBe(false)
+  })
+
+  test('a real message applied after the provider answered is not called forged: the provider is asked again', async () => {
+    const { store, ports } = setUp()
+    const [pending, approved] = await annaMessages()
+    if (!pending || !approved || !anna) throw new Error('missing message')
+    await handleEvent(ports, pending)
+    // The first answer was made before #2; #2 is applied while that answer is on its way.
+    let asks = 0
+    const provider: ProviderApi = {
+      async record() {
+        asks++
+        if (asks > 1) return anna
+        await handleEvent(ports, approved)
+        return { applicantId: ANNA, history: anna.history.slice(0, 1) }
+      },
+    }
+    const comparison = await reconcileWithProvider(store, provider, ANNA)
+    expect(asks).toBe(2)
+    expect(comparison.result).toBe(COMPARISON.MATCHES)
+    expect(store.applicant(ANNA)).toMatchObject({ status: KYC_STATUS.APPROVED, version: 2, hold: null })
   })
 })

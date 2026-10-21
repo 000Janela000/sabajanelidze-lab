@@ -1,5 +1,5 @@
 import { EVENT_RESULT, type EventResult, RECORD_RESULT } from './codes.ts'
-import type { ApplicantTx, HandleEvent, ProviderEvent } from './ports.ts'
+import type { Applicant, ApplicantTx, HandleEvent, ProviderEvent } from './ports.ts'
 
 // #region kyc-build-v1
 /**
@@ -30,17 +30,25 @@ async function applyInOrder(tx: ApplicantTx, event: ProviderEvent): Promise<Even
     const sameContent = kept?.status === event.status
     if (!sameContent) return EVENT_RESULT.VERSION_CONFLICT
   }
-  let applicant = await tx.loadApplicant()
+  const applicant = await tx.loadApplicant()
   if (event.version <= applicant.version) return EVENT_RESULT.STALE
   if (event.version > applicant.version + 1) return EVENT_RESULT.PARKED
 
   // Apply this message, then every parked one that now follows on.
-  let next: ProviderEvent | null = event
+  const applied = { ...applicant, status: event.status, version: event.version, lastSentAt: event.sentAt }
+  const caughtUp = await applyFollowing(tx, applied)
+  await tx.saveApplicant(caughtUp)
+  return EVENT_RESULT.APPLIED
+}
+
+/** From this state on, applies every kept message that follows on, one version after another (not saved yet). */
+export async function applyFollowing(tx: ApplicantTx, from: Applicant): Promise<Applicant> {
+  let applicant = from
+  let next = await tx.storedEvent(applicant.version + 1)
   while (next) {
     applicant = { ...applicant, status: next.status, version: next.version, lastSentAt: next.sentAt }
     next = await tx.storedEvent(applicant.version + 1)
   }
-  await tx.saveApplicant(applicant)
-  return EVENT_RESULT.APPLIED
+  return applicant
 }
 // #endregion kyc-build-v1

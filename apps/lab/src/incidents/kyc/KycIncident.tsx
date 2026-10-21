@@ -153,7 +153,7 @@ export function KycIncident(props: Props) {
   const missions: Record<Stage, { heading: string; goal: string }> = {
     REPRODUCE: { heading: REPRODUCE.heading, goal: REPRODUCE.goal },
     COUNT: { heading: COUNT.heading, goal: COUNT.goal },
-    FIX: { heading: FIX.heading, goal: FIX.goal },
+    FIX: { heading: FIX.heading, goal: FIX.goal(props.orders) },
     SOLVED: { heading: SOLVED.heading(props.orders), goal: SOLVED.goal },
     DEEPER: { heading: CLEAN_UP.heading, goal: CLEAN_UP.situation },
   }
