@@ -62,6 +62,7 @@ func (s *PostgresStore) ForApplicant(ctx context.Context, applicantID string, wo
 		return "", err
 	}
 	defer tx.Rollback(ctx) //nolint:errcheck // a no-op after Commit
+	// #region kyc-postgres-lock-go
 	// The applicant's row exists from the start of the check; a first message creates it if not. Then the row is
 	// locked, before the message is kept: every message for this applicant waits here until the one before it has
 	// committed (and a copy waits on the lock, not on a half-written row).
@@ -75,6 +76,7 @@ func (s *PostgresStore) ForApplicant(ctx context.Context, applicantID string, wo
 			return "", err
 		}
 	}
+	// #endregion kyc-postgres-lock-go
 	result, err := work(postgresTx{tx: tx, applicantID: applicantID})
 	if err != nil {
 		return "", err

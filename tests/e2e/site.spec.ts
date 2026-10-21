@@ -6,7 +6,11 @@ test('each page names the address it is served at, the same as the sitemap, and 
 }) => {
   const sitemap = await (await request.get('/sitemap.xml')).text()
   const addresses = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1])
-  expect(addresses).toEqual(['https://lab.sabajanelidze.com/', 'https://lab.sabajanelidze.com/day/payments'])
+  expect(addresses).toEqual([
+    'https://lab.sabajanelidze.com/',
+    'https://lab.sabajanelidze.com/day/payments',
+    'https://lab.sabajanelidze.com/day/kyc',
+  ])
   for (const address of addresses) {
     if (!address) continue
     await page.goto(new URL(address).pathname)

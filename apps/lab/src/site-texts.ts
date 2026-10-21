@@ -54,8 +54,11 @@ export const HOME = {
   startNote: 'no sign-up',
   howHeading: 'How each incident works',
   how: [
-    { step: 'Reproduce', text: 'pick the step where one request gets slow, and watch two requests race.' },
-    { step: 'Count', text: 'guess, then see how many of all the possible orders lose money.' },
+    {
+      step: 'Reproduce',
+      text: 'break it on purpose (make one request slow, or lose an answer) and watch the real code fail.',
+    },
+    { step: 'Count', text: 'guess, then see how many of all the possible orders go wrong.' },
     {
       step: 'Fix',
       text: 'pick a patch. The machine tries it in every order; wrong patches fail in front of you.',
@@ -66,7 +69,7 @@ export const HOME = {
   incidentsHeading: 'Incidents',
   incident: (number: number, name: string) => `Incident ${number} · ${name}`,
   take: 'Play this incident',
-  next: 'Next: incident 2, new customers ("approved yesterday, pending again this morning"). Later: deposits on a test network, a support AI that must not be tricked, and the end-of-shift books.',
+  next: 'Next: incident 3, deposits on a test network ("we paid out 1.0 that never arrived"). Later: a support AI that must not be tricked, and the end-of-shift books.',
   tickets: {
     payments: '"I tapped Withdraw 80 twice. The bank paid me 160 and my balance still shows 20."',
     kyc: '"I was approved yesterday. This morning my status says pending again."',

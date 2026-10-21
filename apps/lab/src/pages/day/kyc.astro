@@ -1,0 +1,116 @@
+---
+import Maker from '../../components/Maker.astro'
+import { kycBuildData } from '../../incidents/kyc/build-data.ts'
+import { KycIncident } from '../../incidents/kyc/KycIncident.tsx'
+import ProofCard from '../../incidents/kyc/ProofCard.astro'
+import TextVersion from '../../incidents/kyc/TextVersion.astro'
+import { PAGE } from '../../incidents/kyc/texts.ts'
+import Base from '../../layouts/Base.astro'
+import { bookACall } from '../../lib/links.ts'
+import { GAME_NAME, TEST_MODE } from '../../site-texts.ts'
+
+const data = await kycBuildData()
+const shareUrl = 'https://lab.sabajanelidze.com/day/kyc'
+---
+
+<Base title={PAGE.title} description={PAGE.description} station="kyc">
+  <section class="hero">
+    <div class="hero-text">
+      <p class="meta"><b class="game-name">{GAME_NAME}</b> · {PAGE.meta} · <span class="nowrap">{TEST_MODE}</span></p>
+      <h1 class="h1">{PAGE.heading}</h1>
+      <blockquote class="ticket">
+        <p>“{PAGE.ticket}”</p>
+        <footer>{PAGE.ticketFrom}</footer>
+      </blockquote>
+      <p class="hero-actions">
+        <a class="btn find" href="#play">{PAGE.findTheBug}</a>
+        <a class="link" href="#proof">{PAGE.readCode} →</a>
+      </p>
+      <Maker station="kyc" />
+      <p class="note">{PAGE.note}</p>
+    </div>
+    <div class="hero-game" id="play">
+      <KycIncident
+        client:load
+        v01={data.v01Lines}
+        orders={data.runs.naive.orders}
+        patches={data.patches}
+        shareUrl={shareUrl}
+        bookUrl={bookACall('kyc')}
+        proofId="proof"
+      />
+    </div>
+  </section>
+
+  <section class="section">
+    <ProofCard id="proof" data={data} />
+  </section>
+
+  <section class="section">
+    <details class="text-fold">
+      <summary>{PAGE.textFold}</summary>
+      <TextVersion data={data} />
+    </details>
+  </section>
+</Base>
+
+<script>
+  import { FIND_THE_BUG, FIND_THE_BUG_PENDING } from '../../game/find-the-bug.ts'
+
+  // With the console on screen, "Find the bug" moves focus to the first cut (after the normal night, if it is
+  // playing). Before the console has been seen, the link scrolls to it and the normal night starts there.
+  document.querySelector('.find')?.addEventListener('click', (event) => {
+    // A note the game reads when it loads, in case it is not listening yet (the press would be lost).
+    document.documentElement.setAttribute(FIND_THE_BUG_PENDING, '')
+    const handled = !window.dispatchEvent(new Event(FIND_THE_BUG, { cancelable: true }))
+    if (handled) event.preventDefault()
+  })
+</script>
+
+<style>
+  .hero {
+    display: grid;
+    gap: var(--space-6);
+    padding-top: var(--space-6);
+  }
+  .hero-text {
+    display: grid;
+    align-content: start;
+    gap: var(--space-4);
+  }
+  .hero-text .h1 {
+    margin-top: var(--space-2);
+  }
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3) var(--space-5);
+    margin-top: var(--space-2);
+  }
+  .hero-game {
+    min-width: 0;
+    scroll-margin-top: calc(var(--header-h) + var(--space-3));
+  }
+  @media (min-width: 1024px) {
+    /* The console gets up to 40rem, so each of its parts fits one row; the text column takes the rest. */
+    .hero {
+      grid-template-columns: minmax(18rem, 1fr) minmax(0, 40rem);
+      align-items: start;
+      gap: var(--space-7);
+    }
+    .hero-text .h1 {
+      font-size: clamp(2rem, 2vw + 1.2rem, 2.75rem);
+    }
+  }
+  .text-fold {
+    border-top: 1px solid var(--line);
+    padding-top: var(--space-5);
+  }
+  .text-fold summary {
+    min-height: 44px;
+    font-size: var(--fs-lg);
+    font-weight: var(--weight-strong);
+    cursor: pointer;
+  }
+</style>

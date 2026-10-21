@@ -14,8 +14,8 @@ test('the home page names the game, says who made it, and lists only playable in
     'href',
     'https://www.sabajanelidze.com/book?from=lab-home',
   )
-  await expect(page.getByRole('link', { name: 'Play this incident' })).toHaveCount(1)
-  await expect(page.getByText(/^Next: incident 2, new customers/)).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Play this incident' })).toHaveCount(2)
+  await expect(page.getByText(/^Next: incident 3, deposits/)).toBeVisible()
   await expect(page.getByText('Not built yet')).toHaveCount(0)
   await expect(page.getByText(/\bof 5\b/)).toHaveCount(0)
 })
@@ -25,7 +25,7 @@ test('on a laptop screen the maker line and its "Book a call" are on the first s
 }, info) => {
   test.skip(info.project.name !== 'desktop', 'a desktop layout check')
   await page.setViewportSize({ width: 1280, height: 720 })
-  for (const path of ['/', '/day/payments']) {
+  for (const path of ['/', '/day/payments', '/day/kyc']) {
     await page.goto(path)
     const box = await page.locator('main .maker').boundingBox()
     expect(box, path).not.toBeNull()

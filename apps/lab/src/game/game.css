@@ -563,10 +563,10 @@
 }
 
 /* Runs with their order written on them (incident 2): the order on the console's own dark, a bar under it that
-   fills, so no text ever sits on the hatched red. Seven to a row on a laptop. */
+   fills, so no text ever sits on the hatched red. Seven to a row on a laptop; a card is as wide as four arrivals. */
 .runs.labelled {
-  grid-template-columns: repeat(auto-fill, minmax(3.25rem, 1fr));
-  gap: var(--space-2);
+  grid-template-columns: repeat(auto-fill, minmax(4rem, 1fr));
+  gap: 0.375rem var(--space-2);
   max-width: 34rem;
 }
 
@@ -994,6 +994,20 @@
 .m-next .lock {
   margin-right: 0.25rem;
   vertical-align: -0.1em;
+}
+
+/* Each label keeps its own weight, so the hidden one takes the room it will need: the open label is bold, and
+   would wrap on a phone where the locked one did not. */
+.m-next .label-stack {
+  align-items: center;
+}
+
+.m-next .label-stack > :first-child {
+  font-weight: var(--weight-regular);
+}
+
+.m-next .label-stack > :last-child {
+  font-weight: var(--weight-strong);
 }
 
 .m-link-btn {

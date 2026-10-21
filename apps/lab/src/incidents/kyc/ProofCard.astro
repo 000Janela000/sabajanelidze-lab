@@ -1,0 +1,300 @@
+---
+/*
+ * The proof under incident 2. A CTO's questions first (does it hold, is it checked, can I run it), then the
+ * code: short blocks open, long ones behind "Show the code". Every number and excerpt comes from the code at build time.
+ */
+import CodeBlock from '../../components/CodeBlock.astro'
+import LangTabs from '../../components/LangTabs.astro'
+import { bookACall, REPO_URL } from '../../lib/links.ts'
+import type { Excerpt } from '../../lib/source.ts'
+import type { KycBuildData } from './build-data.ts'
+import { PROOF } from './texts.ts'
+
+interface Props {
+  id: string
+  data: KycBuildData
+}
+
+const { id, data } = Astro.props
+const { code, runs, tests, chain } = data
+const length = (source: Excerpt) => source.endLine - source.startLine + 1
+---
+
+<details id={id} class="proof">
+  <summary>{PROOF.summary}</summary>
+  <div class="proof-body">
+    <dl class="results" aria-label={PROOF.results.label}>
+      <div>
+        <dt>{PROOF.results.v01}</dt>
+        <dd class="lost">{PROOF.results.lockOut(runs.naive.wrong, runs.naive.orders)}</dd>
+      </div>
+      <div>
+        <dt>{PROOF.results.v1}</dt>
+        <dd>{PROOF.results.lockOut(runs.versionOrder.wrong, runs.versionOrder.orders)}</dd>
+      </div>
+      <div>
+        <dt>{PROOF.results.postgres}</dt>
+        <dd><a class="link" href={tests.realDatabase}>{PROOF.results.approved}</a></dd>
+      </div>
+      <div>
+        <dt>{PROOF.results.ci}</dt>
+        <dd><a class="link" href={chain.ciUrl}>{PROOF.results.ciLink}</a></dd>
+      </div>
+    </dl>
+    <p class="note">{PROOF.results.note}</p>
+    <div class="run">
+      <p>{PROOF.run.intro} <a class="link" href={REPO_URL}>{PROOF.run.repo}</a></p>
+      <pre><code>{PROOF.run.commands.join('\n')}</code></pre>
+      <p class="note">{PROOF.run.needs} {PROOF.run.note}</p>
+    </div>
+
+    <h2>{PROOF.whatHappenedHeading}</h2>
+    <p>{PROOF.whatHappened}</p>
+    <p class="note">{PROOF.langNote}</p>
+    <CodeBlock title={PROOF.v01Title} source={code.v01} />
+    <LangTabs
+      id="v1"
+      title={PROOF.v1Title}
+      label={PROOF.langLabel}
+      tabs={[
+        { lang: 'ts', name: PROOF.langs.TS, source: code.v1 },
+        { lang: 'go', name: PROOF.langs.GO, source: code.goHandle },
+      ]}
+    />
+
+    <h2>{PROOF.testsHeading}</h2>
+    <ul class="tests">
+      <li>
+        <a class="link" href={tests.everyOrder}>{PROOF.tests.everyOrder}</a>{
+          PROOF.tests.everyOrderText(runs.naive.orders, runs.naive.wrong)
+        }
+      </li>
+      <li><a class="link" href={tests.randomOrders}>{PROOF.tests.randomOrders}</a>{PROOF.tests.randomOrdersText}</li>
+      <li>
+        <a class="link" href={tests.defenceCheck}>{PROOF.tests.defenceCheck}</a>{PROOF.tests.defenceCheckText}
+        <span class="badge">{PROOF.tests.defenceBadge}</span>
+      </li>
+      <li>
+        <a class="link" href={tests.lock}>{PROOF.tests.lock}</a>{PROOF.tests.lockText}<a class="link" href={tests.lockOff}
+          >{PROOF.tests.lockOff}</a
+        >{PROOF.tests.lockOffText}
+      </li>
+      <li><a class="link" href={tests.forgedId}>{PROOF.tests.forgedId}</a>{PROOF.tests.forgedIdText}</li>
+      <li><a class="link" href={tests.goLock}>{PROOF.tests.goLock}</a>{PROOF.tests.goLockText}</li>
+    </ul>
+
+    <h2>{PROOF.tradeOffHeading}</h2>
+    <p>{PROOF.tradeOff}</p>
+    <p class="spaced">{PROOF.notFixes}</p>
+    <p class="spaced">{PROOF.noRetry}</p>
+
+    <h2>{PROOF.realDatabaseHeading}</h2>
+    <p>{PROOF.postgresIntro}</p>
+    <LangTabs
+      id="row-lock"
+      title={PROOF.lockTitle}
+      label={PROOF.langLabel}
+      tabs={[
+        { lang: 'ts', name: PROOF.langs.TS, source: code.postgresLock },
+        { lang: 'go', name: PROOF.langs.GO, source: code.goPostgresLock },
+      ]}
+    />
+    <CodeBlock title={PROOF.recordTitle} source={code.postgresRecord} />
+    <p class="spaced"><a class="link" href={tests.realDatabase}>{PROOF.realDatabase}</a>{PROOF.realDatabaseText}</p>
+
+    <h2>{PROOF.cleanUpHeading}</h2>
+    <p>{PROOF.cleanUpIntro} <a class="link" href={tests.cleanUp}>{PROOF.cleanUpTest}</a>.</p>
+    <details class="more">
+      <summary>{PROOF.compareTitle}: {PROOF.showCode(length(code.compare))}</summary>
+      <CodeBlock title={PROOF.compareTitle} source={code.compare} />
+    </details>
+    <details class="more">
+      <summary>{PROOF.reconcileTitle}: {PROOF.showCode(length(code.reconcile))}</summary>
+      <CodeBlock title={PROOF.reconcileTitle} source={code.reconcile} />
+    </details>
+
+    <h2>{PROOF.chainHeading}</h2>
+    <p class="chain">
+      {PROOF.chain(chain.commits, chain.agentCommits, chain.checksRun, chain.refusals)}{' '}
+      <a class="link" href={chain.ciUrl}>{PROOF.ciLink}</a>. {PROOF.lastChange}{' '}
+      <a class="link hash" href={chain.lastCommitUrl}>{chain.lastCommit}</a>.
+    </p>
+
+    <p class="book">
+      {PROOF.book} <a class="btn" href={bookACall('kyc')}>{PROOF.bookButton}</a>
+    </p>
+  </div>
+</details>
+
+<style>
+  .proof {
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    background: var(--surface);
+  }
+  .proof > summary {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 56px;
+    padding: var(--space-3) var(--space-5);
+    font-size: var(--fs-lg);
+    font-weight: var(--weight-strong);
+    cursor: pointer;
+    list-style: none;
+  }
+  .proof > summary::-webkit-details-marker {
+    display: none;
+  }
+  /* A plus sign says the card opens; a minus sign that it closes. */
+  .proof > summary::after {
+    content: "+";
+    margin-left: auto;
+    font-size: var(--fs-xl);
+    font-weight: var(--weight-regular);
+    line-height: 1;
+    color: var(--accent);
+  }
+  .proof[open] > summary::after {
+    content: "−";
+  }
+  .proof[open] > summary {
+    border-bottom: 1px solid var(--line-strong);
+  }
+  .proof-body {
+    padding: var(--space-5);
+  }
+  h2 {
+    margin: var(--space-7) 0 var(--space-3);
+    font-size: var(--fs-xl);
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    font-weight: var(--weight-display);
+    line-height: var(--lh-heading);
+    letter-spacing: var(--tracking-heading);
+  }
+  p {
+    max-width: 62em;
+  }
+  .spaced {
+    margin-top: var(--space-4);
+  }
+  .note {
+    margin-top: var(--space-2);
+    font-size: var(--fs-sm);
+    color: var(--muted);
+  }
+
+  /* The results: what a CTO checks first. */
+  .results {
+    display: grid;
+    gap: var(--space-3);
+    margin: 0;
+  }
+  @media (min-width: 640px) {
+    .results {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 1024px) {
+    .results {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+  .results div {
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface-2);
+  }
+  .results dt {
+    font-size: var(--fs-sm);
+    color: var(--muted);
+  }
+  .results dd {
+    margin: var(--space-1) 0 0;
+    font-size: var(--fs-md);
+    font-weight: var(--weight-strong);
+  }
+  .results .lost {
+    color: var(--danger);
+  }
+  .run {
+    margin-top: var(--space-5);
+  }
+  /* Commands are code, so they are the monospace here. */
+  .run pre {
+    margin: var(--space-2) 0 0;
+    padding: var(--space-3);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface-2);
+    font-size: var(--fs-sm);
+    line-height: 1.6;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .tests {
+    margin: var(--space-3) 0 0;
+    padding-left: 1.2em;
+  }
+  .tests li {
+    margin-bottom: 0.5rem;
+    max-width: 62em;
+  }
+  .tests .badge {
+    margin-left: var(--space-2);
+  }
+
+  /* Long code waits behind a line that says what it is and how long. */
+  .more {
+    margin-top: var(--space-4);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+  }
+  .more > summary {
+    min-height: 44px;
+    padding: var(--space-2) var(--space-3);
+    display: flex;
+    align-items: center;
+    color: var(--accent);
+    cursor: pointer;
+  }
+  .more[open] > summary {
+    border-bottom: 1px solid var(--line);
+  }
+  .more :global(.cb) {
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+  }
+  .more :global(.lang-tabs) {
+    margin: 0;
+    padding: 0 var(--space-3) var(--space-3);
+  }
+
+  .chain {
+    margin-top: var(--space-4);
+    padding: var(--space-3) var(--space-4);
+    border-left: 3px solid var(--accent);
+    background: var(--surface-2);
+    line-height: 1.6;
+  }
+  /* The commit hash is a source, so it is the only monospace in the paragraph. */
+  .hash {
+    font-family: var(--font-code);
+    font-size: var(--fs-sm);
+  }
+  .book {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-4);
+    margin-top: var(--space-6);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--line-strong);
+    font-size: var(--fs-lg);
+    font-weight: var(--weight-strong);
+  }
+</style>

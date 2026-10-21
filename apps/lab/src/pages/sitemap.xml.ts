@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro'
 
 /** Every page of the lab, for search engines. A new page is added here; the 404 page is not a page. */
-const PAGES = ['/', '/day/payments']
+const PAGES = ['/', '/day/payments', '/day/kyc']
 
 /** The sitemap, written at build time from the site's address (astro.config.mjs). No dates: Google trusts only exact ones. */
 export const GET: APIRoute = ({ site }) => {

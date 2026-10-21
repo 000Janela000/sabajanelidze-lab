@@ -1,0 +1,89 @@
+---
+import type { KycBuildData } from './build-data.ts'
+import { FIX, STATUS_TEXT, TEXT_VERSION } from './texts.ts'
+
+interface Props {
+  data: KycBuildData
+}
+
+const { data } = Astro.props
+const { runs, forgery, nights, orders } = data
+const percent = (part: number, whole: number) => `${Math.round((100 * part) / whole)}%`
+const forgeryRefusedByAll = !forgery.timestamp && !forgery.allowedMoves && !forgery.versionOrder
+---
+
+<div class="textv">
+  <h2 id="text-version">{TEXT_VERSION.heading}</h2>
+
+  <h3>{TEXT_VERSION.setupHeading}</h3>
+  <p>{TEXT_VERSION.setup}</p>
+
+  <h3>{TEXT_VERSION.reproduceHeading}</h3>
+  <p>{TEXT_VERSION.reproduce(STATUS_TEXT[nights.ONE], STATUS_TEXT[nights.TWO], STATUS_TEXT[nights.BOTH])}</p>
+
+  <h3>{TEXT_VERSION.countHeading}</h3>
+  <p>{TEXT_VERSION.count(runs.naive.orders, runs.naive.wrong, percent(runs.naive.wrong, runs.naive.orders))}</p>
+  <ol class="orders">
+    {
+      orders.map((order) => (
+        <li>
+          <span class="order">{order.label}</span>: {order.lockedOut ? TEXT_VERSION.lockedOut : TEXT_VERSION.approved}
+        </li>
+      ))
+    }
+  </ol>
+
+  <h3>{TEXT_VERSION.fixHeading}</h3>
+  <ul>
+    <li>
+      <strong>{FIX.patches.TIMESTAMP.name}:</strong>{' '}
+      {TEXT_VERSION.fix.timestamp(runs.timestamp.wrong, runs.timestamp.orders)}
+    </li>
+    <li>
+      <strong>{FIX.patches.ALLOWED_MOVES.name}:</strong>{' '}
+      {TEXT_VERSION.fix.allowedMoves(runs.allowedMoves.wrong, runs.allowedMoves.orders)}
+    </li>
+    <li>
+      <strong>{FIX.patches.VERSION_ORDER.name}:</strong>{' '}
+      {TEXT_VERSION.fix.versionOrder(runs.versionOrder.wrong, runs.versionOrder.orders)}
+    </li>
+  </ul>
+  <p>{TEXT_VERSION.forgery(forgeryRefusedByAll)}</p>
+
+  <h3>{TEXT_VERSION.cleanUpHeading}</h3>
+  <p>{TEXT_VERSION.cleanUp}</p>
+</div>
+
+<style>
+  .textv {
+    max-width: 62em;
+  }
+  h2 {
+    font-size: var(--fs-xl);
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    font-weight: var(--weight-display);
+  }
+  h3 {
+    margin-top: var(--space-5);
+    font-size: var(--fs-md);
+    font-weight: var(--weight-strong);
+  }
+  p,
+  ol,
+  ul {
+    margin-top: var(--space-2);
+    color: var(--muted);
+  }
+  strong {
+    color: var(--fg);
+  }
+  /* Fourteen short lines: two columns where there is room. */
+  .orders {
+    columns: 2 14rem;
+  }
+  .order {
+    font-family: var(--font-code);
+    color: var(--fg);
+  }
+</style>
