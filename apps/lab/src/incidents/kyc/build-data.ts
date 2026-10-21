@@ -19,7 +19,7 @@ import {
   type KycStatus,
   lostAnswerNight,
 } from '@lab/core'
-import { buildChain, codeLines, excerpt, lineUrl } from '../../lib/source.ts'
+import { buildChain, codeLines, excerpt, fileUrl, lineUrl } from '../../lib/source.ts'
 import { lockedOut, ORDER_LABELS } from './Count.tsx'
 import { CUT, type CutId, PATCH, type PatchOption } from './setup.ts'
 
@@ -137,6 +137,8 @@ export async function kycBuildData() {
     orders,
     patches,
     tests,
+    // Codex's review, word for word, with what was done about each finding.
+    review: fileUrl('docs/reviews/codex-incident-2.md'),
     chain: buildChain(HISTORY),
   }
 }

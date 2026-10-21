@@ -361,7 +361,9 @@ export const PROOF = {
   reconcileTitle: 'The clean-up',
   chainHeading: 'How this code was built',
   chain: (commits: number, agentCommits: number, checksRun: number, refusals: number) =>
-    `Saba chose what to build, set the rules and approved every step. An AI agent (Claude) wrote ${agentCommits === commits ? 'all' : `${agentCommits} of the`} ${commits} ${commits === 1 ? 'commit' : 'commits'} on this code. The local checks before a commit ran ${checksRun} ${checksRun === 1 ? 'time' : 'times'} on this code and refused ${refusals}; on every push, CI runs the tests, the real-database race and Go’s race detector.`,
+    `Saba chose what to build, set the rules and approved every step. An AI agent (Claude) wrote ${agentCommits === commits ? 'all' : `${agentCommits} of the`} ${commits} ${commits === 1 ? 'commit' : 'commits'} on this code. The local checks before a commit ran ${checksRun} ${checksRun === 1 ? 'time' : 'times'} on this code and refused ${refusals}; on every push, CI runs the tests, the real-database race and Go’s race detector. Codex, OpenAI’s AI for code, reviewed this incident before it was published, as a second opinion: six findings. Five were fixed, three of them with a test that would fail without the fix; one is kept on purpose, with the reason.`,
+  reviewLead: 'The review, word for word:',
+  reviewIncident: 'incident 2',
   ciLink: 'Result of the automatic checks (CI) for this build',
   lastChange: 'Last change:',
   book: 'I build this for teams that onboard customers and handle their money.',

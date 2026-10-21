@@ -16,7 +16,7 @@ interface Props {
 }
 
 const { id, data } = Astro.props
-const { code, runs, tests, chain } = data
+const { code, runs, tests, chain, review } = data
 const length = (source: Excerpt) => source.endLine - source.startLine + 1
 ---
 
@@ -116,6 +116,7 @@ const length = (source: Excerpt) => source.endLine - source.startLine + 1
     <h2>{PROOF.chainHeading}</h2>
     <p class="chain">
       {PROOF.chain(chain.commits, chain.agentCommits, chain.checksRun, chain.refusals)}{' '}
+      {PROOF.reviewLead} <a class="link" href={review}>{PROOF.reviewIncident}</a>.{' '}
       <a class="link" href={chain.ciUrl}>{PROOF.ciLink}</a>. {PROOF.lastChange}{' '}
       <a class="link hash" href={chain.lastCommitUrl}>{chain.lastCommit}</a>.
     </p>
