@@ -37,8 +37,10 @@ export function signatureCheck(secret: string): SignatureCheck {
   const pendingKey = hmacKey(secret)
   return {
     async verify(event) {
-      const wellFormed = /^[0-9a-f]{64}$/.test(event.signature)
-      const bytes = wellFormed ? hexToBytes(event.signature) : null
+      // Hex in capitals is the same bytes (the Go version accepts it too).
+      const hex = event.signature.toLowerCase()
+      const wellFormed = /^[0-9a-f]{64}$/.test(hex)
+      const bytes = wellFormed ? hexToBytes(hex) : null
       if (!bytes) return false
       const key = await pendingKey
       return crypto.subtle.verify('HMAC', key, bytes, signedText(event))

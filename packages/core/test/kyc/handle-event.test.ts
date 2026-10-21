@@ -149,6 +149,14 @@ describe('build v1: one message from the identity provider', () => {
     expect(refusals.list().map((refusal) => refusal.reason)).toEqual([EVENT_RESULT.VERSION_CONFLICT])
   })
 
+  test('a signature written in capitals is the same signature', async () => {
+    const { store, send } = setUp()
+    const [pending] = await annaMessages()
+    if (!pending) throw new Error('missing message')
+    expect(await send({ ...pending, signature: pending.signature.toUpperCase() })).toBe(EVENT_RESULT.APPLIED)
+    expect(store.applicant(ANNA).status).toBe(KYC_STATUS.PENDING)
+  })
+
   test('a real message with one field changed is refused', async () => {
     const { store, send } = setUp()
     const [pending] = await borisMessages()
